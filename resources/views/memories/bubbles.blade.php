@@ -73,17 +73,23 @@
                         </filter>
                     </defs>
 
-                    <circle cx="160" cy="720" r="128" fill="rgba(255,255,255,0.24)"></circle>
-                    <circle cx="1230" cy="150" r="96" fill="rgba(255,255,255,0.30)"></circle>
+                    <circle cx="160" cy="720" r="128" fill="rgba(184, 220, 255, 0.12)"></circle>
+                    <circle cx="1230" cy="150" r="96" fill="rgba(201, 226, 255, 0.14)"></circle>
+                    <circle cx="210" cy="140" r="4" fill="rgba(255,255,255,0.82)"></circle>
+                    <circle cx="320" cy="210" r="2.8" fill="rgba(220,236,255,0.72)"></circle>
+                    <circle cx="1110" cy="112" r="3.2" fill="rgba(255,255,255,0.86)"></circle>
+                    <circle cx="1205" cy="238" r="2.2" fill="rgba(216,232,255,0.72)"></circle>
+                    <circle cx="1048" cy="732" r="3.8" fill="rgba(255,255,255,0.74)"></circle>
+                    <circle cx="248" cy="622" r="2.6" fill="rgba(218,234,255,0.7)"></circle>
 
                     <g filter="url(#shellGlow)">
-                        <circle cx="700" cy="470" r="372" fill="rgba(182, 223, 255, 0.34)"></circle>
+                        <circle cx="700" cy="470" r="372" fill="rgba(124, 187, 255, 0.22)"></circle>
                     </g>
 
-                    <ellipse cx="578" cy="340" rx="120" ry="58" fill="rgba(255,255,255,0.35)" transform="rotate(-20 578 340)"></ellipse>
-                    <ellipse cx="820" cy="585" rx="38" ry="18" fill="rgba(255,255,255,0.18)" transform="rotate(14 820 585)"></ellipse>
+                    <ellipse cx="578" cy="340" rx="120" ry="58" fill="rgba(255,255,255,0.16)" transform="rotate(-20 578 340)"></ellipse>
+                    <ellipse cx="820" cy="585" rx="38" ry="18" fill="rgba(255,255,255,0.10)" transform="rotate(14 820 585)"></ellipse>
 
-                    <circle cx="700" cy="470" r="324" fill="rgba(255,255,255,0.05)"></circle>
+                    <circle cx="700" cy="470" r="324" fill="rgba(202,228,255,0.04)"></circle>
                     <g id="bubbleLayer"></g>
                 </svg>
             </div>
@@ -97,9 +103,11 @@
             padding: 0;
             overflow: hidden;
             background:
-                radial-gradient(circle at 12% 14%, rgba(255, 220, 200, 0.34), transparent 18%),
-                radial-gradient(circle at 86% 18%, rgba(202, 222, 255, 0.30), transparent 18%),
-                linear-gradient(135deg, rgba(255,255,255,0.56), rgba(247,248,252,0.86));
+                radial-gradient(circle at 18% 18%, rgba(86, 132, 255, 0.18), transparent 20%),
+                radial-gradient(circle at 82% 16%, rgba(126, 209, 255, 0.14), transparent 18%),
+                radial-gradient(circle at 50% 72%, rgba(88, 108, 255, 0.12), transparent 26%),
+                linear-gradient(160deg, #02040b 0%, #050916 48%, #0a1124 100%);
+            color: rgba(238, 245, 255, 0.94);
         }
 
         .bubble-stage-copy {
@@ -113,6 +121,7 @@
         .bubble-stage-copy h1 {
             margin: 16px 0 16px;
             font-size: clamp(34px, 4vw, 58px);
+            color: rgba(245, 249, 255, 0.96);
         }
 
         .bubble-stage-shell {
@@ -127,10 +136,10 @@
             width: min(220px, 22vw);
             padding: 16px 18px;
             border-radius: 20px;
-            background: rgba(255, 255, 255, 0.62);
-            border: 1px solid rgba(255, 255, 255, 0.7);
+            background: rgba(11, 18, 36, 0.62);
+            border: 1px solid rgba(171, 205, 255, 0.18);
             backdrop-filter: blur(14px);
-            box-shadow: 0 20px 40px rgba(37, 32, 52, 0.08);
+            box-shadow: 0 20px 40px rgba(3, 6, 18, 0.3);
         }
 
         .bubble-stage-count {
@@ -167,9 +176,9 @@
             width: 100%;
             padding: 12px 14px;
             border-radius: 14px;
-            border: 1px solid rgba(31, 36, 48, 0.12);
-            background: rgba(255, 255, 255, 0.92);
-            color: var(--ink);
+            border: 1px solid rgba(171, 205, 255, 0.2);
+            background: rgba(14, 22, 43, 0.88);
+            color: rgba(239, 245, 255, 0.94);
         }
 
         .bubble-filter-actions {
@@ -181,7 +190,7 @@
         .bubble-side-label {
             display: block;
             margin-bottom: 6px;
-            color: rgba(31, 36, 48, 0.52);
+            color: rgba(188, 214, 255, 0.68);
             font-size: 12px;
             letter-spacing: 0.08em;
             text-transform: uppercase;
@@ -190,6 +199,7 @@
         .bubble-stage-count strong {
             font-size: clamp(32px, 3vw, 44px);
             line-height: 1;
+            color: rgba(245, 249, 255, 0.98);
         }
 
         .bubble-stage-note {
@@ -199,7 +209,7 @@
 
         .bubble-stage-note p {
             margin: 0;
-            color: rgba(31, 36, 48, 0.64);
+            color: rgba(218, 231, 255, 0.78);
             line-height: 1.75;
             font-size: 14px;
         }
@@ -209,7 +219,7 @@
             left: 28px;
             bottom: 22px;
             z-index: 2;
-            color: rgba(31, 36, 48, 0.44);
+            color: rgba(176, 202, 245, 0.58);
             font-size: 12px;
             letter-spacing: 0.14em;
         }
@@ -222,13 +232,13 @@
             transform: translateX(-50%);
             padding: 10px 18px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.68);
-            border: 1px solid rgba(255, 255, 255, 0.78);
-            color: rgba(31, 36, 48, 0.72);
+            background: rgba(10, 18, 39, 0.66);
+            border: 1px solid rgba(178, 210, 255, 0.18);
+            color: rgba(234, 242, 255, 0.9);
             font-size: 14px;
             font-weight: 700;
             letter-spacing: 0.06em;
-            box-shadow: 0 18px 42px rgba(37, 32, 52, 0.08);
+            box-shadow: 0 18px 42px rgba(4, 8, 20, 0.3);
             backdrop-filter: blur(12px);
         }
 
