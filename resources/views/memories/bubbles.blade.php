@@ -27,57 +27,52 @@
                 </div>
             </div>
 
-            <div class="bubble-stage-side bubble-stage-count">
-                <span class="bubble-side-label">全記憶数</span>
-                <strong>{{ $matchingCount }}</strong>
-            </div>
-
-            @if ($layerCount > 1)
-                <div class="bubble-stage-side bubble-stage-nav">
-                    <span class="bubble-side-label">表示階層</span>
-                    <strong>第{{ $currentLayer }}層 / 全{{ $layerCount }}層</strong>
-                    <div class="bubble-nav-actions">
-                        @if ($hasNextLayer)
-                            <a class="bubble-mini-btn" href="{{ route('memories.bubbles', array_merge($bubbleBaseParams, ['layer' => $currentLayer + 1])) }}">もっと見る</a>
-                        @else
-                            <span class="bubble-mini-btn is-disabled">もっと見る</span>
-                        @endif
-
-                        @if ($hasPreviousLayer)
-                            <a class="bubble-mini-btn" href="{{ route('memories.bubbles', array_merge($bubbleBaseParams, ['layer' => $currentLayer - 1])) }}">1つ戻る</a>
-                            <a class="bubble-mini-btn" href="{{ route('memories.bubbles', $bubbleBaseParams) }}">最初に戻る</a>
-                        @else
-                            <span class="bubble-mini-btn is-disabled">1つ戻る</span>
-                            <span class="bubble-mini-btn is-disabled">最初に戻る</span>
-                        @endif
-                    </div>
+            <div class="bubble-stage-rail">
+                <div class="bubble-stage-side bubble-stage-count">
+                    <span class="bubble-side-label">全記憶数</span>
+                    <strong>{{ $matchingCount }}</strong>
                 </div>
-            @endif
 
-            <details class="bubble-stage-side bubble-stage-filter">
-                <summary class="btn btn-secondary">年代別で表示</summary>
-                <form method="get" action="{{ route('memories.bubbles') }}" class="bubble-filter-form">
-                    <label for="period" class="bubble-side-label">年代を選択</label>
-                    <select id="period" name="period" class="bubble-select">
-                        <option value="すべて" {{ $selectedPeriod === 'すべて' ? 'selected' : '' }}>すべて</option>
-                        @foreach ($periods as $period)
-                            <option value="{{ $period }}" {{ $selectedPeriod === $period ? 'selected' : '' }}>{{ $period }}</option>
-                        @endforeach
-                    </select>
-                    <div class="bubble-filter-actions">
-                        <button type="submit" class="btn btn-primary">表示する</button>
-                        @if ($selectedPeriod !== 'すべて')
-                            <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">解除</a>
-                        @endif
+                @if ($layerCount > 1)
+                    <div class="bubble-stage-side bubble-stage-nav">
+                        <span class="bubble-side-label">表示階層</span>
+                        <strong>第{{ $currentLayer }}層 / 全{{ $layerCount }}層</strong>
+                        <div class="bubble-nav-actions">
+                            @if ($hasNextLayer)
+                                <a class="bubble-mini-btn" href="{{ route('memories.bubbles', array_merge($bubbleBaseParams, ['layer' => $currentLayer + 1])) }}">もっと見る</a>
+                            @else
+                                <span class="bubble-mini-btn is-disabled">もっと見る</span>
+                            @endif
+
+                            @if ($hasPreviousLayer)
+                                <a class="bubble-mini-btn" href="{{ route('memories.bubbles', array_merge($bubbleBaseParams, ['layer' => $currentLayer - 1])) }}">1つ戻る</a>
+                                <a class="bubble-mini-btn" href="{{ route('memories.bubbles', $bubbleBaseParams) }}">最初に戻る</a>
+                            @else
+                                <span class="bubble-mini-btn is-disabled">1つ戻る</span>
+                                <span class="bubble-mini-btn is-disabled">最初に戻る</span>
+                            @endif
+                        </div>
                     </div>
-                </form>
-            </details>
+                @endif
 
-            <div class="bubble-stage-side bubble-stage-note">
-                <p>
-                    中央の玉が主役です。小さな玉をクリックすると、
-                    その記憶の詳細へ移動できます。各玉には年代と感情のタグ属性を持たせています。
-                </p>
+                <details class="bubble-stage-side bubble-stage-filter">
+                    <summary class="btn btn-secondary">年代別で表示</summary>
+                    <form method="get" action="{{ route('memories.bubbles') }}" class="bubble-filter-form">
+                        <label for="period" class="bubble-side-label">年代を選択</label>
+                        <select id="period" name="period" class="bubble-select">
+                            <option value="すべて" {{ $selectedPeriod === 'すべて' ? 'selected' : '' }}>すべて</option>
+                            @foreach ($periods as $period)
+                                <option value="{{ $period }}" {{ $selectedPeriod === $period ? 'selected' : '' }}>{{ $period }}</option>
+                            @endforeach
+                        </select>
+                        <div class="bubble-filter-actions">
+                            <button type="submit" class="btn btn-primary">表示する</button>
+                            @if ($selectedPeriod !== 'すべて')
+                                <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">解除</a>
+                            @endif
+                        </div>
+                    </form>
+                </details>
             </div>
 
             <div class="bubble-stage-shell">
@@ -89,6 +84,9 @@
                     <defs>
                         <filter id="shellGlow" x="-80%" y="-80%" width="260%" height="260%">
                             <feGaussianBlur stdDeviation="44"></feGaussianBlur>
+                        </filter>
+                        <filter id="stackShadow" x="-120%" y="-120%" width="340%" height="340%">
+                            <feGaussianBlur stdDeviation="24"></feGaussianBlur>
                         </filter>
                         <filter id="ballShadow" x="-70%" y="-70%" width="240%" height="240%">
                             <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#6f7a92" flood-opacity="0.18" />
@@ -110,17 +108,42 @@
                     @if ($layerCount > 1)
                         @foreach (range(min($layerCount - 1, 3), 1) as $stackIndex)
                             @php
-                                $stackOffsetX = 34 * $stackIndex;
-                                $stackOffsetY = -26 * $stackIndex;
-                                $stackRadius = 372 - (10 * $stackIndex);
-                                $stackOpacity = 0.09 + (0.025 * (min($layerCount - 1, 3) - $stackIndex));
+                                $stackOffsetX = 38 * $stackIndex;
+                                $stackOffsetY = -30 * $stackIndex;
+                                $stackRadius = 376 - (14 * $stackIndex);
+                                $stackOpacity = 0.1 + (0.03 * (min($layerCount - 1, 3) - $stackIndex));
                             @endphp
+                            <ellipse
+                                cx="{{ 714 + $stackOffsetX }}"
+                                cy="{{ 548 + $stackOffsetY }}"
+                                rx="{{ 176 - (12 * $stackIndex) }}"
+                                ry="{{ 52 - (4 * $stackIndex) }}"
+                                fill="rgba(20, 48, 86, 0.28)"
+                                filter="url(#stackShadow)"
+                                class="bubble-stack-shadow"
+                            ></ellipse>
                             <g filter="url(#shellGlow)" class="bubble-stack-layer">
                                 <circle
                                     cx="{{ 700 + $stackOffsetX }}"
                                     cy="{{ 470 + $stackOffsetY }}"
                                     r="{{ $stackRadius }}"
                                     fill="rgba(130, 194, 255, {{ $stackOpacity }})"
+                                ></circle>
+                                <ellipse
+                                    cx="{{ 624 + $stackOffsetX }}"
+                                    cy="{{ 374 + $stackOffsetY }}"
+                                    rx="{{ 108 - (8 * $stackIndex) }}"
+                                    ry="{{ 40 - (3 * $stackIndex) }}"
+                                    fill="rgba(255,255,255,0.10)"
+                                    transform="rotate(-18 {{ 624 + $stackOffsetX }} {{ 374 + $stackOffsetY }})"
+                                ></ellipse>
+                                <circle
+                                    cx="{{ 700 + $stackOffsetX }}"
+                                    cy="{{ 470 + $stackOffsetY }}"
+                                    r="{{ $stackRadius - 10 }}"
+                                    fill="none"
+                                    stroke="rgba(214, 236, 255, 0.14)"
+                                    stroke-width="2"
                                 ></circle>
                             </g>
                         @endforeach
@@ -174,10 +197,20 @@
             height: 100%;
         }
 
-        .bubble-stage-side {
+        .bubble-stage-rail {
             position: absolute;
+            top: 28px;
+            right: 24px;
             z-index: 3;
-            width: min(220px, 22vw);
+            display: grid;
+            gap: 14px;
+            width: min(280px, 28vw);
+        }
+
+        .bubble-stage-side {
+            position: relative;
+            z-index: 1;
+            width: 100%;
             padding: 16px 18px;
             border-radius: 20px;
             background: rgba(11, 18, 36, 0.62);
@@ -187,9 +220,7 @@
         }
 
         .bubble-stage-count {
-            top: 28px;
-            right: 24px;
-            width: min(200px, 20vw);
+            width: 100%;
             text-align: right;
             padding: 12px 16px;
         }
@@ -202,14 +233,11 @@
         }
 
         .bubble-stage-filter {
-            top: 238px;
-            right: 24px;
+            width: 100%;
         }
 
         .bubble-stage-nav {
-            top: 102px;
-            right: 24px;
-            width: min(270px, 28vw);
+            width: 100%;
         }
 
         .bubble-stage-nav strong {
@@ -287,18 +315,6 @@
             font-size: 12px;
             letter-spacing: 0.08em;
             text-transform: uppercase;
-        }
-
-        .bubble-stage-note {
-            right: 24px;
-            bottom: 26px;
-        }
-
-        .bubble-stage-note p {
-            margin: 0;
-            color: rgba(218, 231, 255, 0.78);
-            line-height: 1.75;
-            font-size: 14px;
         }
 
         .bubble-caption {
@@ -383,8 +399,8 @@
                 min-height: 760px;
             }
 
-            .bubble-stage-side {
-                width: 200px;
+            .bubble-stage-rail {
+                width: min(250px, 31vw);
             }
         }
 
@@ -395,13 +411,18 @@
             }
 
             .bubble-stage-copy,
-            .bubble-stage-count,
-            .bubble-stage-nav,
-            .bubble-stage-filter,
-            .bubble-stage-note {
+            .bubble-stage-rail {
                 position: static;
                 width: auto;
                 margin: 0 18px 14px;
+            }
+
+            .bubble-stage-side {
+                width: auto;
+            }
+
+            .bubble-stage-count {
+                justify-self: stretch;
                 text-align: left;
             }
 
