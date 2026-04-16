@@ -56,8 +56,11 @@
                         </section>
                     @endif
 
-                    <details class="bubble-rail-section bubble-stage-filter">
+                    <section class="bubble-rail-section">
                         <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶を追加</a>
+                    </section>
+
+                    <details class="bubble-rail-section bubble-stage-filter">
                         <summary class="btn btn-secondary">年代別で表示</summary>
                         <form method="get" action="{{ route('memories.bubbles') }}" class="bubble-filter-form">
                             <label for="period" class="bubble-side-label">年代を選択</label>
@@ -74,8 +77,11 @@
                                 @endif
                             </div>
                         </form>
-                        <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶と話す</a>
                     </details>
+
+                    <section class="bubble-rail-section">
+                        <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶と話す</a>
+                    </section>
                 </div>
             </div>
 
@@ -230,11 +236,11 @@
 
         .bubble-stage-rail {
             position: absolute;
-            top: 28px;
-            bottom: 26px;
+            top: 184px;
             right: 24px;
             z-index: 3;
             width: min(236px, 24vw);
+            height: min(430px, calc(100% - 240px));
         }
 
         .bubble-stage-side {
@@ -449,7 +455,9 @@
             }
 
             .bubble-stage-rail {
+                top: 170px;
                 width: min(220px, 27vw);
+                height: min(408px, calc(100% - 224px));
             }
         }
 
