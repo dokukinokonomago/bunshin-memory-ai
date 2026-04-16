@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', '記憶星雲 | 分身AI MVP')
+@section('title', 'あなたの記憶 | 分身AI MVP')
 
 @section('content')
     <section class="panel bubble-stage-panel">
@@ -20,7 +20,7 @@
             @endphp
             <div class="bubble-stage-copy">
                 <span class="eyebrow">Memory Bubble View</span>
-                <h1>記憶星雲</h1>
+                <h1>あなたの記憶</h1>
                 <div class="hero-actions">
                     <a class="btn btn-primary" href="{{ route('memories.index') }}">一覧へ戻る</a>
                     <a class="btn btn-secondary" href="{{ route('memories.create') }}">記憶を追加</a>
@@ -57,6 +57,7 @@
                     @endif
 
                     <details class="bubble-rail-section bubble-stage-filter">
+                        <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶を追加</a>
                         <summary class="btn btn-secondary">年代別で表示</summary>
                         <form method="get" action="{{ route('memories.bubbles') }}" class="bubble-filter-form">
                             <label for="period" class="bubble-side-label">年代を選択</label>
@@ -73,6 +74,7 @@
                                 @endif
                             </div>
                         </form>
+                        <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶と話す</a>
                     </details>
                 </div>
             </div>
@@ -82,7 +84,7 @@
                 @if ($selectedPeriod !== 'すべて')
                     <div class="bubble-period-banner">{{ $selectedPeriod }}</div>
                 @endif
-                <svg id="bubbleStage" viewBox="0 0 1400 920" xmlns="http://www.w3.org/2000/svg" aria-label="記憶星雲">
+                <svg id="bubbleStage" viewBox="0 0 1400 920" xmlns="http://www.w3.org/2000/svg" aria-label="あなたの記憶">
                     <defs>
                         <filter id="shellGlow" x="-80%" y="-80%" width="260%" height="260%">
                             <feGaussianBlur stdDeviation="44"></feGaussianBlur>
@@ -277,6 +279,10 @@
 
         .bubble-stage-filter {
             padding-bottom: 0;
+        }
+
+        .bubble-rail-btn {
+            width: 100%;
         }
 
         .bubble-stage-nav {
