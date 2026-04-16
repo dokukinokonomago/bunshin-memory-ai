@@ -22,7 +22,7 @@
                 <span class="eyebrow">PERSONAL MEMORY ARCHIVE</span>
                 <h1>YOUの記憶</h1>
                 <div class="hero-actions">
-                    <a class="btn btn-primary" href="{{ route('memories.index') }}">一覧へ戻る</a>
+                    <a class="btn btn-secondary" href="{{ route('memories.index') }}">一覧へ戻る</a>
                 </div>
             </div>
 
@@ -224,6 +224,9 @@
         .bubble-stage-panel .btn:hover,
         .bubble-stage-panel .bubble-mini-btn:hover {
             transform: translateY(-1px);
+            border-color: rgba(196, 224, 255, 0.34);
+            color: rgba(250, 252, 255, 0.98);
+            box-shadow: 0 14px 28px rgba(18, 36, 78, 0.32);
         }
 
         .bubble-stage-panel .btn-primary {
@@ -238,6 +241,12 @@
             border-color: rgba(166, 204, 255, 0.16);
             color: rgba(232, 241, 255, 0.92);
             box-shadow: 0 10px 24px rgba(6, 10, 24, 0.28);
+        }
+
+        .bubble-stage-panel .btn-primary:hover,
+        .bubble-stage-panel .btn-secondary:hover,
+        .bubble-stage-panel .bubble-mini-btn:hover {
+            background: linear-gradient(135deg, rgba(88, 150, 255, 0.42), rgba(53, 98, 213, 0.92));
         }
 
         .bubble-stage-shell {
