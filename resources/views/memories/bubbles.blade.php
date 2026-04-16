@@ -229,9 +229,10 @@
         .bubble-stage-rail {
             position: absolute;
             top: 28px;
+            bottom: 26px;
             right: 24px;
             z-index: 3;
-            width: min(280px, 28vw);
+            width: min(236px, 24vw);
         }
 
         .bubble-stage-side {
@@ -240,16 +241,18 @@
             width: 100%;
             padding: 16px 18px;
             border-radius: 20px;
-            background: rgba(11, 18, 36, 0.62);
-            border: 1px solid rgba(171, 205, 255, 0.18);
+            background: rgba(11, 18, 36, 0.48);
+            border: 1px solid rgba(171, 205, 255, 0.14);
             backdrop-filter: blur(14px);
-            box-shadow: 0 20px 40px rgba(3, 6, 18, 0.3);
+            box-shadow: 0 18px 36px rgba(3, 6, 18, 0.22);
         }
 
         .bubble-stage-rail-card {
             display: grid;
             gap: 0;
+            height: 100%;
             overflow: hidden;
+            align-content: start;
         }
 
         .bubble-rail-section {
@@ -440,7 +443,7 @@
             }
 
             .bubble-stage-rail {
-                width: min(250px, 31vw);
+                width: min(220px, 27vw);
             }
         }
 
