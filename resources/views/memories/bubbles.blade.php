@@ -81,6 +81,10 @@
                     <section class="bubble-rail-section">
                         <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶と話す</a>
                     </section>
+
+                    <section class="bubble-rail-section">
+                        <a class="btn btn-secondary bubble-rail-btn" href="{{ route('memories.index') }}">一覧を見る</a>
+                    </section>
                 </div>
             </div>
 

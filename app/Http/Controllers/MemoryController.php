@@ -24,28 +24,39 @@ class MemoryController extends Controller
 
     public function index(Request $request): View
     {
-        $selectedPeriod = $request->string('period')->toString();
-        $selectedPeriod = in_array($selectedPeriod, array_merge(['すべて'], self::PERIODS), true) ? $selectedPeriod : 'すべて';
+        $keyword = trim($request->string('q')->toString());
 
         $query = Memory::query()->latest();
 
-        if ($selectedPeriod !== 'すべて') {
-            $query->where('period', $selectedPeriod);
+        if ($keyword !== '') {
+            $query->where(function ($builder) use ($keyword): void {
+                $builder
+                    ->where('content', 'like', '%' . $keyword . '%')
+                    ->orWhere('period', 'like', '%' . $keyword . '%')
+                    ->orWhere('emotion', 'like', '%' . $keyword . '%');
+            });
         }
 
         return view('memories.index', [
             'memories' => $query->get(),
-            'recentMemories' => Memory::query()->latest()->take(3)->get(),
-            'selectedPeriod' => $selectedPeriod,
-            'periods' => self::PERIODS,
             'emotionToneMap' => $this->emotionToneMap(),
             'allCount' => Memory::query()->count(),
+            'searchQuery' => $keyword,
         ]);
     }
 
     public function create(): View
     {
         return view('memories.create', [
+            'periods' => self::PERIODS,
+            'emotionGroups' => self::EMOTION_GROUPS,
+        ]);
+    }
+
+    public function edit(Memory $memory): View
+    {
+        return view('memories.edit', [
+            'memory' => $memory,
             'periods' => self::PERIODS,
             'emotionGroups' => self::EMOTION_GROUPS,
         ]);
@@ -104,21 +115,20 @@ class MemoryController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'period' => ['required', Rule::in(self::PERIODS)],
-            'content' => ['required', 'string'],
-            'emotion' => ['required', Rule::in($this->allEmotions()->all())],
-        ], [
-            'period.required' => '年代を選択してください。',
-            'period.in' => '年代を正しく選択してください。',
-            'content.required' => '内容を入力してください。',
-            'emotion.required' => '感情を選択してください。',
-            'emotion.in' => '感情を正しく選択してください。',
-        ]);
+        $validated = $this->validateMemory($request);
 
         Memory::query()->create($validated);
 
         return redirect()->route('memories.index')->with('status', 'created');
+    }
+
+    public function update(Request $request, Memory $memory): RedirectResponse
+    {
+        $validated = $this->validateMemory($request);
+
+        $memory->update($validated);
+
+        return redirect()->route('memories.index')->with('status', 'updated');
     }
 
     public function show(Memory $memory): View
@@ -181,5 +191,20 @@ class MemoryController extends Controller
         }
 
         return Str::limit($memory->emotion, 6, '');
+    }
+
+    private function validateMemory(Request $request): array
+    {
+        return $request->validate([
+            'period' => ['required', Rule::in(self::PERIODS)],
+            'content' => ['required', 'string'],
+            'emotion' => ['required', Rule::in($this->allEmotions()->all())],
+        ], [
+            'period.required' => '年代を選択してください。',
+            'period.in' => '年代を正しく選択してください。',
+            'content.required' => '内容を入力してください。',
+            'emotion.required' => '感情を選択してください。',
+            'emotion.in' => '感情を正しく選択してください。',
+        ]);
     }
 }
