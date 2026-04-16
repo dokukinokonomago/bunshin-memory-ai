@@ -106,6 +106,25 @@
                     <circle cx="1048" cy="732" r="3.8" fill="rgba(255,255,255,0.74)"></circle>
                     <circle cx="248" cy="622" r="2.6" fill="rgba(218,234,255,0.7)"></circle>
 
+                    @if ($layerCount > 1)
+                        @foreach (range(min($layerCount - 1, 3), 1) as $stackIndex)
+                            @php
+                                $stackOffsetX = 34 * $stackIndex;
+                                $stackOffsetY = -26 * $stackIndex;
+                                $stackRadius = 372 - (10 * $stackIndex);
+                                $stackOpacity = 0.09 + (0.025 * (min($layerCount - 1, 3) - $stackIndex));
+                            @endphp
+                            <g filter="url(#shellGlow)" class="bubble-stack-layer">
+                                <circle
+                                    cx="{{ 700 + $stackOffsetX }}"
+                                    cy="{{ 470 + $stackOffsetY }}"
+                                    r="{{ $stackRadius }}"
+                                    fill="rgba(130, 194, 255, {{ $stackOpacity }})"
+                                ></circle>
+                            </g>
+                        @endforeach
+                    @endif
+
                     <g filter="url(#shellGlow)">
                         <circle cx="700" cy="470" r="372" fill="rgba(124, 187, 255, 0.22)"></circle>
                     </g>
