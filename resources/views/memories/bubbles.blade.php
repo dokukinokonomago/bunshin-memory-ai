@@ -68,12 +68,6 @@
                 </form>
             </details>
 
-            <div class="bubble-stage-side bubble-stage-count">
-                <span class="bubble-side-label">現在の記憶数</span>
-                <strong>{{ $matchingCount }}</strong>
-                <small>この層に表示中 {{ $displayCount }} / 10</small>
-            </div>
-
             <div class="bubble-stage-side bubble-stage-note">
                 <p>
                     中央の玉が主役です。小さな玉をクリックすると、
@@ -83,6 +77,10 @@
 
             <div class="bubble-stage-shell">
                 <div class="bubble-caption">MEMORY BUBBLE / CLICK A MEMORY</div>
+                <div class="bubble-stage-count-inline">
+                    <span>記憶 {{ $matchingCount }}</span>
+                    <small>表示 {{ $displayCount }} / 10</small>
+                </div>
                 @if ($selectedPeriod !== 'すべて')
                     <div class="bubble-period-banner">{{ $selectedPeriod }}</div>
                 @endif
@@ -168,14 +166,8 @@
             box-shadow: 0 20px 40px rgba(3, 6, 18, 0.3);
         }
 
-        .bubble-stage-count {
-            top: 118px;
-            right: 24px;
-            text-align: right;
-        }
-
         .bubble-stage-filter {
-            top: 236px;
+            top: 118px;
             right: 24px;
         }
 
@@ -183,6 +175,35 @@
             top: 28px;
             right: 24px;
             width: min(270px, 28vw);
+        }
+
+        .bubble-stage-count-inline {
+            position: absolute;
+            top: 142px;
+            left: 50%;
+            z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(-50%);
+            padding: 7px 14px;
+            border-radius: 999px;
+            background: rgba(10, 18, 39, 0.5);
+            border: 1px solid rgba(178, 210, 255, 0.14);
+            color: rgba(228, 239, 255, 0.86);
+            font-size: 12px;
+            letter-spacing: 0.04em;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 12px 28px rgba(4, 8, 20, 0.22);
+        }
+
+        .bubble-stage-count-inline span {
+            font-weight: 700;
+        }
+
+        .bubble-stage-count-inline small {
+            color: rgba(188, 214, 255, 0.72);
+            font-size: 11px;
         }
 
         .bubble-stage-nav strong {
@@ -260,19 +281,6 @@
             font-size: 12px;
             letter-spacing: 0.08em;
             text-transform: uppercase;
-        }
-
-        .bubble-stage-count strong {
-            font-size: clamp(32px, 3vw, 44px);
-            line-height: 1;
-            color: rgba(245, 249, 255, 0.98);
-        }
-
-        .bubble-stage-count small {
-            display: block;
-            margin-top: 8px;
-            color: rgba(188, 214, 255, 0.72);
-            font-size: 12px;
         }
 
         .bubble-stage-note {
@@ -383,7 +391,6 @@
             .bubble-stage-copy,
             .bubble-stage-nav,
             .bubble-stage-filter,
-            .bubble-stage-count,
             .bubble-stage-note {
                 position: static;
                 width: auto;
@@ -412,6 +419,11 @@
                 top: 18px;
                 max-width: calc(100% - 136px);
                 text-align: center;
+            }
+
+            .bubble-stage-count-inline {
+                top: 62px;
+                max-width: calc(100% - 110px);
             }
         }
     </style>
