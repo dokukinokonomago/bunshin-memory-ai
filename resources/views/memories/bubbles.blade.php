@@ -313,6 +313,7 @@
             color: rgba(245, 249, 255, 0.98);
             font-size: 17px;
             margin-bottom: 10px;
+            text-align: left;
         }
 
         .bubble-nav-actions {
