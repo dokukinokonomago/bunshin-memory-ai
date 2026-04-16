@@ -281,34 +281,41 @@
         }
 
         .memory-chip-emotion {
-            border-color: color-mix(in srgb, var(--emotion-end) 22%, rgba(240, 247, 255, 0.12));
+            border-color: color-mix(in srgb, var(--emotion-end) 26%, rgba(227, 239, 255, 0.08));
             background:
-                radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 0.42), transparent 22%),
-                linear-gradient(135deg, color-mix(in srgb, var(--emotion-start) 92%, white 8%), color-mix(in srgb, var(--emotion-end) 92%, black 8%));
-            color: rgba(20, 22, 34, 0.9);
-            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
+                radial-gradient(circle at 26% 22%, rgba(255, 255, 255, 0.16), transparent 24%),
+                linear-gradient(
+                    145deg,
+                    color-mix(in srgb, var(--emotion-start) 30%, rgba(16, 24, 43, 0.94)),
+                    color-mix(in srgb, var(--emotion-end) 58%, rgba(7, 13, 27, 0.98))
+                );
+            color: rgba(240, 246, 255, 0.94);
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.24);
+            box-shadow:
+                0 12px 24px rgba(4, 8, 20, 0.24),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
         }
 
         .memory-chip-emotion:hover {
-            filter: saturate(1.08) brightness(1.06);
+            filter: saturate(1.14) brightness(1.08);
             box-shadow:
-                0 18px 34px color-mix(in srgb, var(--emotion-end) 24%, rgba(9, 15, 31, 0.76)),
-                0 0 0 1px color-mix(in srgb, var(--emotion-start) 44%, rgba(255, 255, 255, 0.1));
-            color: rgba(14, 18, 28, 0.96);
+                0 20px 38px color-mix(in srgb, var(--emotion-end) 26%, rgba(7, 13, 27, 0.8)),
+                0 0 0 1px color-mix(in srgb, var(--emotion-start) 38%, rgba(255, 255, 255, 0.1));
+            color: rgba(248, 251, 255, 0.98);
         }
 
         .memory-chip-option input:checked + .memory-chip-emotion {
-            filter: saturate(1.02) brightness(1.01);
+            filter: saturate(1.06) brightness(1.02);
             box-shadow:
-                0 14px 28px color-mix(in srgb, var(--emotion-end) 18%, rgba(9, 15, 31, 0.72)),
-                0 0 0 1px color-mix(in srgb, var(--emotion-start) 34%, rgba(255, 255, 255, 0.08));
+                0 16px 30px color-mix(in srgb, var(--emotion-end) 20%, rgba(7, 13, 27, 0.76)),
+                0 0 0 1px color-mix(in srgb, var(--emotion-start) 30%, rgba(255, 255, 255, 0.08));
         }
 
         .memory-chip-option input:checked + .memory-chip-emotion:hover {
-            filter: saturate(1.1) brightness(1.08);
+            filter: saturate(1.16) brightness(1.1);
             box-shadow:
-                0 20px 38px color-mix(in srgb, var(--emotion-end) 28%, rgba(9, 15, 31, 0.8)),
-                0 0 0 1px color-mix(in srgb, var(--emotion-start) 46%, rgba(255, 255, 255, 0.12));
+                0 22px 40px color-mix(in srgb, var(--emotion-end) 30%, rgba(7, 13, 27, 0.84)),
+                0 0 0 1px color-mix(in srgb, var(--emotion-start) 42%, rgba(255, 255, 255, 0.12));
         }
 
         .emotion-groups {
