@@ -248,21 +248,36 @@
             pointer-events: none;
         }
 
-        .memory-chip:hover,
-        .memory-chip-option input:checked + .memory-chip {
+        .memory-chip:hover {
             transform: translateY(-2px) scale(1.02);
             border-color: rgba(217, 232, 255, 0.34);
             box-shadow: 0 18px 34px rgba(14, 34, 82, 0.26);
             color: rgba(250, 252, 255, 0.98);
         }
 
+        .memory-chip-option input:checked + .memory-chip {
+            border-color: rgba(178, 206, 255, 0.28);
+            box-shadow: 0 14px 28px rgba(10, 22, 52, 0.24);
+            color: rgba(246, 250, 255, 0.98);
+        }
+
         .memory-chip-dark {
             background: linear-gradient(135deg, rgba(16, 26, 50, 0.96), rgba(7, 14, 29, 0.98));
         }
 
-        .memory-chip-dark:hover,
-        .memory-chip-option input:checked + .memory-chip-dark {
+        .memory-chip-dark:hover {
             background: linear-gradient(135deg, rgba(83, 145, 255, 0.38), rgba(40, 72, 160, 0.92));
+        }
+
+        .memory-chip-option input:checked + .memory-chip-dark {
+            background: linear-gradient(135deg, rgba(41, 69, 126, 0.96), rgba(17, 31, 68, 0.98));
+        }
+
+        .memory-chip-option input:checked + .memory-chip-dark:hover {
+            transform: translateY(-2px) scale(1.02);
+            border-color: rgba(221, 235, 255, 0.4);
+            background: linear-gradient(135deg, rgba(102, 168, 255, 0.52), rgba(48, 84, 188, 0.96));
+            box-shadow: 0 20px 38px rgba(18, 42, 92, 0.34);
         }
 
         .memory-chip-emotion {
@@ -274,13 +289,26 @@
             text-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
-        .memory-chip-emotion:hover,
-        .memory-chip-option input:checked + .memory-chip-emotion {
+        .memory-chip-emotion:hover {
             filter: saturate(1.08) brightness(1.06);
             box-shadow:
                 0 18px 34px color-mix(in srgb, var(--emotion-end) 24%, rgba(9, 15, 31, 0.76)),
                 0 0 0 1px color-mix(in srgb, var(--emotion-start) 44%, rgba(255, 255, 255, 0.1));
             color: rgba(14, 18, 28, 0.96);
+        }
+
+        .memory-chip-option input:checked + .memory-chip-emotion {
+            filter: saturate(1.02) brightness(1.01);
+            box-shadow:
+                0 14px 28px color-mix(in srgb, var(--emotion-end) 18%, rgba(9, 15, 31, 0.72)),
+                0 0 0 1px color-mix(in srgb, var(--emotion-start) 34%, rgba(255, 255, 255, 0.08));
+        }
+
+        .memory-chip-option input:checked + .memory-chip-emotion:hover {
+            filter: saturate(1.1) brightness(1.08);
+            box-shadow:
+                0 20px 38px color-mix(in srgb, var(--emotion-end) 28%, rgba(9, 15, 31, 0.8)),
+                0 0 0 1px color-mix(in srgb, var(--emotion-start) 46%, rgba(255, 255, 255, 0.12));
         }
 
         .emotion-groups {
