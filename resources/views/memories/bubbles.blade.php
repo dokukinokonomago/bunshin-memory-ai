@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'あなたの記憶 | 分身AI MVP')
+@section('title', 'YOUの記憶 | 分身AI MVP')
 
 @section('content')
     <section class="panel bubble-stage-panel">
@@ -20,10 +20,9 @@
             @endphp
             <div class="bubble-stage-copy">
                 <span class="eyebrow">Memory Bubble View</span>
-                <h1>あなたの記憶</h1>
+                <h1>YOUの記憶</h1>
                 <div class="hero-actions">
                     <a class="btn btn-primary" href="{{ route('memories.index') }}">一覧へ戻る</a>
-                    <a class="btn btn-secondary" href="{{ route('memories.create') }}">記憶を追加</a>
                 </div>
             </div>
 
@@ -90,7 +89,7 @@
                 @if ($selectedPeriod !== 'すべて')
                     <div class="bubble-period-banner">{{ $selectedPeriod }}</div>
                 @endif
-                <svg id="bubbleStage" viewBox="0 0 1400 920" xmlns="http://www.w3.org/2000/svg" aria-label="あなたの記憶">
+                <svg id="bubbleStage" viewBox="0 0 1400 920" xmlns="http://www.w3.org/2000/svg" aria-label="YOUの記憶">
                     <defs>
                         <filter id="shellGlow" x="-80%" y="-80%" width="260%" height="260%">
                             <feGaussianBlur stdDeviation="44"></feGaussianBlur>
@@ -293,6 +292,7 @@
 
         .bubble-stage-nav {
             padding-bottom: 2px;
+            text-align: left;
         }
 
         .bubble-stage-nav strong {
@@ -304,21 +304,21 @@
 
         .bubble-nav-actions {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-            gap: 8px;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
+            gap: 6px;
         }
 
         .bubble-mini-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-height: 32px;
-            padding: 0 12px;
+            min-height: 26px;
+            padding: 0 8px;
             border: 1px solid rgba(178, 210, 255, 0.22);
             background: linear-gradient(135deg, rgba(19, 30, 57, 0.96), rgba(10, 17, 35, 0.96));
             color: rgba(240, 246, 255, 0.92);
-            font-size: 12px;
+            font-size: 10px;
             text-decoration: none;
             white-space: nowrap;
             box-shadow: 0 10px 22px rgba(6, 10, 24, 0.22);
@@ -332,6 +332,26 @@
         .bubble-stage-filter summary {
             list-style: none;
             width: 100%;
+        }
+
+        .bubble-stage-rail .btn {
+            padding: 9px 12px;
+            font-size: 11px;
+            border-radius: 11px;
+        }
+
+        .bubble-stage-rail .bubble-side-label {
+            font-size: 11px;
+            margin-bottom: 5px;
+        }
+
+        .bubble-stage-rail .bubble-select {
+            padding: 10px 12px;
+            font-size: 12px;
+        }
+
+        .bubble-stage-rail .bubble-filter-actions {
+            gap: 8px;
         }
 
         .bubble-stage-filter summary::-webkit-details-marker {
@@ -412,7 +432,10 @@
             transform-box: fill-box;
             transform-origin: center;
             will-change: transform, filter;
-            animation: bubblePulse var(--bubble-duration, 6.8s) ease-in-out var(--bubble-delay, 0s) infinite;
+            opacity: 0;
+            animation:
+                bubbleReveal 0.72s ease var(--bubble-appear-delay, 0s) forwards,
+                bubblePulse var(--bubble-duration, 6.8s) ease-in-out var(--bubble-delay, 0s) infinite;
             transition: transform 0.42s cubic-bezier(0.2, 0.7, 0.2, 1), filter 0.42s cubic-bezier(0.2, 0.7, 0.2, 1);
         }
 
@@ -433,6 +456,18 @@
 
             100% {
                 transform: scale(var(--bubble-rest-scale, 0.96));
+            }
+        }
+
+        @keyframes bubbleReveal {
+            0% {
+                opacity: 0;
+                filter: blur(8px);
+            }
+
+            100% {
+                opacity: 1;
+                filter: blur(0);
             }
         }
 
@@ -599,7 +634,8 @@
                         `--bubble-rest-scale:${(0.93 + (index % 4) * 0.02).toFixed(2)}`,
                         `--bubble-rise-scale:${(1.02 + (index % 5) * 0.025).toFixed(2)}`,
                         `--bubble-duration:${(5.2 + (index % 5) * 0.55).toFixed(2)}s`,
-                        `--bubble-delay:${(-index * 0.45).toFixed(2)}s`
+                        `--bubble-delay:${(-index * 0.45).toFixed(2)}s`,
+                        `--bubble-appear-delay:${(0.06 * index).toFixed(2)}s`
                     ].join(";")
                 });
 
