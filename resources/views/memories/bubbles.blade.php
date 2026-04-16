@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', '記憶の玉 | 分身AI MVP')
+@section('title', '記憶星雲 | 分身AI MVP')
 
 @section('content')
     <section class="panel bubble-stage-panel">
@@ -20,7 +20,7 @@
             @endphp
             <div class="bubble-stage-copy">
                 <span class="eyebrow">Memory Bubble View</span>
-                <h1>記憶の玉</h1>
+                <h1>記憶星雲</h1>
                 <div class="hero-actions">
                     <a class="btn btn-primary" href="{{ route('memories.index') }}">一覧へ戻る</a>
                     <a class="btn btn-secondary" href="{{ route('memories.create') }}">記憶を追加</a>
@@ -82,7 +82,7 @@
                 @if ($selectedPeriod !== 'すべて')
                     <div class="bubble-period-banner">{{ $selectedPeriod }}</div>
                 @endif
-                <svg id="bubbleStage" viewBox="0 0 1400 920" xmlns="http://www.w3.org/2000/svg" aria-label="記憶の玉">
+                <svg id="bubbleStage" viewBox="0 0 1400 920" xmlns="http://www.w3.org/2000/svg" aria-label="記憶星雲">
                     <defs>
                         <filter id="shellGlow" x="-80%" y="-80%" width="260%" height="260%">
                             <feGaussianBlur stdDeviation="44"></feGaussianBlur>
@@ -191,6 +191,33 @@
             margin: 16px 0 16px;
             font-size: clamp(34px, 4vw, 58px);
             color: rgba(245, 249, 255, 0.96);
+            letter-spacing: 0.03em;
+        }
+
+        .bubble-stage-panel .btn,
+        .bubble-stage-panel .bubble-mini-btn {
+            border-radius: 14px;
+            border-width: 1px;
+            transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .bubble-stage-panel .btn:hover,
+        .bubble-stage-panel .bubble-mini-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .bubble-stage-panel .btn-primary {
+            background: linear-gradient(135deg, rgba(142, 204, 255, 0.28), rgba(87, 132, 255, 0.78));
+            border-color: rgba(180, 218, 255, 0.24);
+            color: rgba(245, 249, 255, 0.96);
+            box-shadow: 0 14px 28px rgba(40, 82, 168, 0.26);
+        }
+
+        .bubble-stage-panel .btn-secondary {
+            background: linear-gradient(135deg, rgba(20, 29, 54, 0.92), rgba(11, 19, 38, 0.96));
+            border-color: rgba(166, 204, 255, 0.16);
+            color: rgba(232, 241, 255, 0.92);
+            box-shadow: 0 10px 24px rgba(6, 10, 24, 0.28);
         }
 
         .bubble-stage-shell {
@@ -273,13 +300,13 @@
             justify-content: center;
             min-height: 32px;
             padding: 0 12px;
-            border-radius: 999px;
             border: 1px solid rgba(178, 210, 255, 0.22);
-            background: rgba(16, 26, 51, 0.9);
+            background: linear-gradient(135deg, rgba(19, 30, 57, 0.96), rgba(10, 17, 35, 0.96));
             color: rgba(240, 246, 255, 0.92);
             font-size: 12px;
             text-decoration: none;
             white-space: nowrap;
+            box-shadow: 0 10px 22px rgba(6, 10, 24, 0.22);
         }
 
         .bubble-mini-btn.is-disabled {
