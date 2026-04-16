@@ -13,7 +13,7 @@ use Illuminate\View\View;
 class MemoryController extends Controller
 {
     private const BUBBLE_LAYER_SIZE = 10;
-    private const PERIODS = ['幼少期', '小学生', '中学生', '高校生', '大学生', '成人期'];
+    private const PERIODS = ['幼少期', '小学生', '中学生', '高校生', '大学生', '成人期', '不明'];
 
     private const EMOTION_GROUPS = [
         'ポジティブ' => ['嬉しい', '楽しい', '安心', 'ホッとした', '幸せ', '満足', 'ワクワク', '感謝', '誇らしい', '自信がある'],
