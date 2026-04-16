@@ -4,41 +4,129 @@ namespace Database\Seeders;
 
 use App\Models\Memory;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 
 class MemorySeeder extends Seeder
 {
     public function run(): void
     {
-        $memories = [
-            ['period' => '幼少期', 'emotion' => '安心', 'content' => '祖母の家の縁側で、風鈴の音を聞きながら昼寝した。'],
-            ['period' => '幼少期', 'emotion' => '楽しい', 'content' => '雨上がりの公園で長靴のまま水たまりを跳ね回った。'],
-            ['period' => '小学生', 'emotion' => '誇らしい', 'content' => '学芸会で大きな声を出せて、家族に褒められた。'],
-            ['period' => '小学生', 'emotion' => 'モヤモヤ', 'content' => '仲の良い友達と少しすれ違って、帰り道に考え込んだ。'],
-            ['period' => '中学生', 'emotion' => 'ワクワク', 'content' => '文化祭の準備で遅くまで残り、教室の空気が特別に感じた。'],
-            ['period' => '中学生', 'emotion' => '少し不安', 'content' => '初めての定期テスト前夜、机に向かいながら落ち着かなかった。'],
-            ['period' => '高校生', 'emotion' => '嬉しい', 'content' => '部活の大会で自己ベストが出て、仲間とハイタッチした。'],
-            ['period' => '高校生', 'emotion' => '悲しい', 'content' => '卒業が近づいて、いつもの教室が急に遠く感じた。'],
-            ['period' => '大学生', 'emotion' => '感謝', 'content' => 'ゼミ発表のあと、友人が遅くまでフィードバックをくれた。'],
-            ['period' => '成人期', 'emotion' => '落ち着いている', 'content' => '仕事終わりに静かなカフェでノートを開き、次の目標を整理した。'],
-            ['period' => '幼少期', 'emotion' => '幸せ', 'content' => '夜空を見上げながら、父と一緒に流れ星を探した。'],
-            ['period' => '幼少期', 'emotion' => 'ホッとした', 'content' => '熱を出した日に、母がりんごをすりおろしてくれた。'],
-            ['period' => '小学生', 'emotion' => '楽しい', 'content' => '放課後の校庭で、日が暮れるまで鬼ごっこを続けた。'],
-            ['period' => '小学生', 'emotion' => '感謝', 'content' => '忘れ物をした朝、隣の席の友達がノートを見せてくれた。'],
-            ['period' => '小学生', 'emotion' => '気まずい', 'content' => '発表で言葉につまり、教室が静かになって顔が熱くなった。'],
-            ['period' => '中学生', 'emotion' => '誇らしい', 'content' => '合唱コンクールで伴奏を任され、無事に弾き切れた。'],
-            ['period' => '中学生', 'emotion' => 'なんとなく', 'content' => '夕方の部室で、先輩たちの雑談をぼんやり聞いていた。'],
-            ['period' => '高校生', 'emotion' => 'ワクワク', 'content' => '修学旅行の前夜、しおりを何度も見返して眠れなかった。'],
-            ['period' => '高校生', 'emotion' => '少し不安', 'content' => '進路面談の前、廊下の窓に映る自分を見て深呼吸した。'],
-            ['period' => '高校生', 'emotion' => '安心', 'content' => '雨の日の図書室で、好きな作家の新刊を見つけて落ち着いた。'],
-            ['period' => '大学生', 'emotion' => '満足', 'content' => '徹夜で仕上げた企画書が通り、研究室で静かに拳を握った。'],
-            ['period' => '大学生', 'emotion' => '迷い', 'content' => '就活サイトを閉じたあと、本当にやりたいことを考え込んだ。'],
-            ['period' => '大学生', 'emotion' => '嬉しい', 'content' => '初めて一人旅に出て、知らない街の朝日を見た。'],
-            ['period' => '成人期', 'emotion' => '自信がある', 'content' => '任された案件をやり切り、会議後に背筋が自然と伸びた。'],
-            ['period' => '成人期', 'emotion' => '疲れた', 'content' => '終電近いホームで缶コーヒーを飲みながら一日を反芻した。'],
+        $periods = ['幼少期', '小学生', '中学生', '高校生', '大学生', '成人期', '不明'];
+
+        $emotionPools = [
+            'ポジティブ' => ['嬉しい', '楽しい', '安心', 'ホッとした', '幸せ', '満足', 'ワクワク', '感謝', '誇らしい', '自信がある'],
+            'ニュートラル' => ['普通', 'なんとなく', '落ち着いている', 'ぼーっとした', '考え中'],
+            'ネガティブ（軽め）' => ['モヤモヤ', '少し不安', '疲れた', '迷い', '気まずい', '引っかかる'],
+            'ネガティブ（強め）' => ['不安', '悲しい', 'イライラ', '怒り', '落ち込み', '孤独', '無力感', '自信がない'],
         ];
 
-        foreach ($memories as $memory) {
-            Memory::query()->firstOrCreate($memory);
+        $moments = [
+            '夕方の帰り道で',
+            '静かな教室の隅で',
+            '雨上がりの公園で',
+            '夏の終わりのベランダで',
+            '放課後の廊下で',
+            'にぎやかな食卓で',
+            '知らない街の駅前で',
+            '薄暗い図書室で',
+            '部屋の明かりを落としたあとで',
+            '朝の電車を待ちながら',
+            '文化祭の準備中に',
+            '旅先のホテルの窓辺で',
+        ];
+
+        $actions = [
+            'ふと深呼吸した',
+            '誰かの言葉を思い出した',
+            '胸の奥が少しざわついた',
+            '肩の力が抜けた',
+            '景色をしばらく見つめていた',
+            '自分の本音に気づいた',
+            '何気ない一言がずっと残った',
+            '足を止めて空を見上げた',
+            '心の中でそっと決意した',
+            'その場の空気を強く覚えた',
+            '言葉にできない感情を抱えた',
+            '静かにうれしさを噛みしめた',
+        ];
+
+        $details = [
+            '冷たい風の匂いまで鮮明だった。',
+            '今でもその時の光の色を思い出せる。',
+            'あとから考えると大きな分岐点だった気がする。',
+            'その瞬間だけ時間がゆっくり流れた。',
+            '何でもない出来事なのに妙に心に残っている。',
+            'うまく説明できないけれど確かに忘れられない。',
+            '自分でも意外なくらい印象に残った。',
+            '言葉より先に感情が動いた気がした。',
+            'しばらくその余韻から抜けられなかった。',
+            '後になって何度も思い返した場面だった。',
+        ];
+
+        $unknownOpeners = [
+            'いつ頃だったか曖昧だけれど',
+            '年齢は思い出せないのに',
+            '前後の記憶はぼやけているのに',
+            '季節も場所も定かではないが',
+            '断片的にしか残っていないのに',
+        ];
+
+        mt_srand(20260417);
+
+        Memory::query()->truncate();
+
+        $entries = [];
+        $baseTime = Carbon::create(2026, 4, 17, 9, 0, 0, 'Asia/Tokyo')->subDays(400);
+
+        foreach ($periods as $period) {
+            $emotion = $this->pickEmotion($emotionPools);
+            $entries[] = $this->buildMemoryEntry($period, $emotion, $moments, $actions, $details, $unknownOpeners, $baseTime->copy());
+            $baseTime->addHours(13);
         }
+
+        while (count($entries) < 50) {
+            $period = $periods[array_rand($periods)];
+            $emotion = $this->pickEmotion($emotionPools);
+            $entries[] = $this->buildMemoryEntry($period, $emotion, $moments, $actions, $details, $unknownOpeners, $baseTime->copy());
+            $baseTime->addHours(mt_rand(7, 19));
+        }
+
+        Memory::query()->insert($entries);
+    }
+
+    private function pickEmotion(array $emotionPools): string
+    {
+        $group = array_rand($emotionPools);
+        $emotions = $emotionPools[$group];
+
+        return $emotions[array_rand($emotions)];
+    }
+
+    private function buildMemoryEntry(
+        string $period,
+        string $emotion,
+        array $moments,
+        array $actions,
+        array $details,
+        array $unknownOpeners,
+        Carbon $timestamp
+    ): array {
+        $prefix = $period === '不明'
+            ? $unknownOpeners[array_rand($unknownOpeners)] . '、'
+            : $period . 'の頃、';
+
+        $content = $prefix
+            . $moments[array_rand($moments)]
+            . ' '
+            . $actions[array_rand($actions)]
+            . '。'
+            . $details[array_rand($details)];
+
+        return [
+            'period' => $period,
+            'emotion' => $emotion,
+            'content' => $content,
+            'created_at' => $timestamp->copy()->utc(),
+            'updated_at' => $timestamp->copy()->utc(),
+        ];
     }
 }
