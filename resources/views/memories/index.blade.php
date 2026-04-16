@@ -49,12 +49,11 @@
             @endif
 
             <div class="memory-toolbar">
-                <div class="memory-filter-strip">
+                <div class="memory-toolbar-main">
                     <form method="get" action="{{ route('memories.index') }}" class="memory-search-form">
                         @if ($selectedPeriod !== 'すべて')
                             <input type="hidden" name="period" value="{{ $selectedPeriod }}">
                         @endif
-                        <label for="q" class="detail-label">検索</label>
                         <input id="q" type="search" name="q" value="{{ $searchQuery }}" placeholder="キーワード">
                         <button class="btn btn-secondary" type="submit">検索</button>
                         @if ($searchQuery !== '' || $selectedPeriod !== 'すべて')
@@ -62,27 +61,27 @@
                         @endif
                     </form>
 
-                    <div class="memory-period-filter" aria-label="年代で検索">
-                        @php
-                            $periodBaseParams = $searchQuery !== '' ? ['q' => $searchQuery] : [];
-                        @endphp
-                        <a class="memory-period-btn {{ $selectedPeriod === 'すべて' ? 'is-active' : '' }}" href="{{ route('memories.index', $periodBaseParams) }}">すべて</a>
-                        @foreach ($periods as $period)
-                            <a
-                                class="memory-period-btn {{ $selectedPeriod === $period ? 'is-active' : '' }}"
-                                href="{{ route('memories.index', array_merge($periodBaseParams, ['period' => $period])) }}"
-                            >{{ $period }}</a>
-                        @endforeach
+                    <div class="memory-toolbar-actions">
+                        <a id="editMemoryButton" class="btn btn-secondary is-disabled" href="#" aria-disabled="true">修正</a>
+                        <form id="deleteMemoryForm" method="post" action="#" onsubmit="return confirm('この記憶を削除しますか？');">
+                            @csrf
+                            @method('DELETE')
+                            <button id="deleteMemoryButton" class="btn btn-secondary btn-danger" type="submit" disabled>削除</button>
+                        </form>
                     </div>
                 </div>
 
-                <div class="memory-toolbar-actions">
-                    <a id="editMemoryButton" class="btn btn-secondary is-disabled" href="#" aria-disabled="true">修正</a>
-                    <form id="deleteMemoryForm" method="post" action="#" onsubmit="return confirm('この記憶を削除しますか？');">
-                        @csrf
-                        @method('DELETE')
-                        <button id="deleteMemoryButton" class="btn btn-secondary btn-danger" type="submit" disabled>削除</button>
-                    </form>
+                <div class="memory-period-filter" aria-label="年代で検索">
+                    @php
+                        $periodBaseParams = $searchQuery !== '' ? ['q' => $searchQuery] : [];
+                    @endphp
+                    <a class="memory-period-btn {{ $selectedPeriod === 'すべて' ? 'is-active' : '' }}" href="{{ route('memories.index', $periodBaseParams) }}">すべて</a>
+                    @foreach ($periods as $period)
+                        <a
+                            class="memory-period-btn {{ $selectedPeriod === $period ? 'is-active' : '' }}"
+                            href="{{ route('memories.index', array_merge($periodBaseParams, ['period' => $period])) }}"
+                        >{{ $period }}</a>
+                    @endforeach
                 </div>
             </div>
 
@@ -226,48 +225,49 @@
 
         .memory-toolbar {
             display: flex;
-            flex-wrap: wrap;
-            align-items: end;
+            align-items: center;
             justify-content: space-between;
             gap: 16px;
         }
 
-        .memory-filter-strip {
-            display: grid;
-            gap: 12px;
-            flex: 1 1 720px;
+        .memory-toolbar-main {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1 1 auto;
             min-width: 0;
         }
 
         .memory-search-form {
             display: flex;
-            flex-wrap: wrap;
-            align-items: end;
-            gap: 12px;
+            align-items: center;
+            gap: 8px;
             flex: 0 1 auto;
-        }
-
-        .memory-search-form label {
-            margin: 0;
+            min-width: 0;
         }
 
         .memory-search-form input {
-            width: clamp(160px, 18vw, 220px);
+            width: clamp(150px, 14vw, 190px);
             min-width: 0;
-            padding: 10px 12px;
-            border-radius: 14px;
+            padding: 8px 11px;
+            border-radius: 12px;
             border: 1px solid rgba(171, 205, 255, 0.2);
             background: rgba(14, 22, 43, 0.88);
             color: rgba(239, 245, 255, 0.94);
+            font-size: 13px;
+            line-height: 1.2;
         }
 
         .memory-period-filter {
             display: flex;
             flex-wrap: nowrap;
+            justify-content: flex-end;
             gap: 8px;
+            flex: 0 1 auto;
             min-width: 0;
             overflow-x: auto;
             padding-bottom: 4px;
+            margin-left: auto;
         }
 
         .memory-period-filter::-webkit-scrollbar {
@@ -283,8 +283,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-height: 34px;
-            padding: 0 12px;
+            min-height: 32px;
+            padding: 0 10px;
             border-radius: 10px;
             border: 1px solid rgba(166, 204, 255, 0.14);
             background: linear-gradient(135deg, rgba(16, 26, 50, 0.9), rgba(9, 17, 34, 0.94));
@@ -312,12 +312,21 @@
 
         .memory-toolbar-actions {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
         }
 
         .memory-toolbar-actions form {
             margin: 0;
+        }
+
+        .memory-search-form .btn,
+        .memory-toolbar-actions .btn,
+        .memory-toolbar-actions button {
+            min-height: 32px;
+            padding: 8px 11px;
+            font-size: 13px;
+            line-height: 1;
         }
 
         .memory-toolbar-actions .is-disabled {
@@ -383,18 +392,20 @@
                 border-radius: 24px;
             }
 
-            .memory-toolbar,
-            .memory-search-form,
-            .memory-toolbar-actions {
+            .memory-toolbar {
+                flex-wrap: wrap;
                 align-items: stretch;
             }
 
-            .memory-filter-strip {
-                flex-basis: 100%;
+            .memory-toolbar-main {
+                width: 100%;
+                flex-wrap: wrap;
             }
 
             .memory-search-form {
                 width: 100%;
+                flex-wrap: wrap;
+                align-items: stretch;
             }
 
             .memory-search-form input {
@@ -403,6 +414,7 @@
 
             .memory-toolbar-actions {
                 width: 100%;
+                align-items: stretch;
             }
 
             .memory-toolbar-actions .btn,
@@ -412,6 +424,12 @@
 
             .memory-toolbar-actions form button {
                 width: 100%;
+            }
+
+            .memory-period-filter {
+                width: 100%;
+                justify-content: flex-start;
+                margin-left: 0;
             }
 
             .memory-row {
