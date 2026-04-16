@@ -495,17 +495,19 @@
             animation-duration: var(--shell-duration, 7.6s);
         }
 
-        .memory-ball {
-            cursor: pointer;
+        .memory-ball-wrap {
             transform-box: fill-box;
             transform-origin: center;
-            will-change: opacity, transform, filter;
+            will-change: opacity;
             opacity: 0;
             animation: bubbleReveal 0.72s ease var(--bubble-appear-delay, 0s) forwards;
-            transition: transform 0.42s cubic-bezier(0.2, 0.7, 0.2, 1), filter 0.42s cubic-bezier(0.2, 0.7, 0.2, 1);
         }
 
-        .memory-ball:hover {
+        .memory-ball {
+            cursor: pointer;
+        }
+
+        .memory-ball.is-hovered .memory-ball-body {
             transform: scale(3);
             filter: brightness(1.12) saturate(1.12) drop-shadow(0 26px 34px rgba(108, 127, 169, 0.2));
         }
@@ -513,8 +515,9 @@
         .memory-ball-body {
             transform-box: fill-box;
             transform-origin: center;
-            will-change: transform;
+            will-change: transform, filter;
             animation: bubblePulse var(--bubble-duration, 6.8s) ease-in-out var(--bubble-delay, 0s) infinite;
+            transition: transform 0.42s cubic-bezier(0.2, 0.7, 0.2, 1), filter 0.42s cubic-bezier(0.2, 0.7, 0.2, 1);
         }
 
         @keyframes bubblePulse {
@@ -712,6 +715,13 @@
                 const position = getPosition(index, memories.length, radius);
                 const gradientId = addGradient(index + 1, memory.colors);
 
+                const wrapper = createSvg("g", {
+                    class: "memory-ball-wrap",
+                    style: [
+                        `--bubble-appear-delay:${(0.06 * index).toFixed(2)}s`
+                    ].join(";")
+                });
+
                 const group = createSvg("a", {
                     href: `/memories/${memory.id}`,
                     class: "memory-ball",
@@ -723,13 +733,20 @@
                         `--bubble-rest-scale:${(0.93 + (index % 4) * 0.02).toFixed(2)}`,
                         `--bubble-rise-scale:${(1.02 + (index % 5) * 0.025).toFixed(2)}`,
                         `--bubble-duration:${(5.2 + (index % 5) * 0.55).toFixed(2)}s`,
-                        `--bubble-delay:${(-index * 0.45).toFixed(2)}s`,
-                        `--bubble-appear-delay:${(0.06 * index).toFixed(2)}s`
+                        `--bubble-delay:${(-index * 0.45).toFixed(2)}s`
                     ].join(";")
                 });
 
                 const body = createSvg("g", {
                     class: "memory-ball-body"
+                });
+
+                const hitArea = createSvg("circle", {
+                    cx: position.x,
+                    cy: position.y,
+                    r: radius + 18,
+                    fill: "rgba(255,255,255,0.001)",
+                    "pointer-events": "all"
                 });
 
                 const aura = createSvg("circle", {
@@ -781,6 +798,7 @@
                     fill: toRgba(memory.colors[0], 0.12)
                 });
 
+                group.appendChild(hitArea);
                 body.appendChild(aura);
                 body.appendChild(glow);
                 body.appendChild(circle);
@@ -791,8 +809,15 @@
                 group.appendChild(body);
                 group.appendChild(createSvg("title", {})).textContent = `${memory.period} / ${memory.emotion}\n${memory.content}`;
 
-                group.addEventListener("mouseenter", () => bubbleLayer.appendChild(group));
-                bubbleLayer.appendChild(group);
+                wrapper.appendChild(group);
+                wrapper.addEventListener("mouseenter", () => {
+                    group.classList.add("is-hovered");
+                    bubbleLayer.appendChild(wrapper);
+                });
+                wrapper.addEventListener("mouseleave", () => {
+                    group.classList.remove("is-hovered");
+                });
+                bubbleLayer.appendChild(wrapper);
             });
         </script>
     @endif
