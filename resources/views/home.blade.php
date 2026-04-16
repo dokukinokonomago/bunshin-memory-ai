@@ -13,7 +13,7 @@
         </div>
 
         <div class="home-actions">
-            <a class="home-action-btn is-primary" href="{{ route('memories.create') }}">記憶を追加する</a>
+            <a class="home-action-btn" href="{{ route('memories.create') }}">記憶を追加する</a>
             <a class="home-action-btn" href="{{ route('memories.index') }}">記憶を見る</a>
             <span class="home-action-btn is-disabled" aria-disabled="true">記憶と話す（ダミー）</span>
             <span class="home-action-btn is-disabled" aria-disabled="true">友だちと共有する（ダミー）</span>
@@ -129,13 +129,6 @@
             background: linear-gradient(135deg, rgba(88, 150, 255, 0.42), rgba(53, 98, 213, 0.92));
             color: rgba(250, 252, 255, 0.98);
             box-shadow: 0 14px 28px rgba(18, 36, 78, 0.32);
-        }
-
-        .home-action-btn.is-primary {
-            background: linear-gradient(135deg, rgba(142, 204, 255, 0.28), rgba(87, 132, 255, 0.78));
-            border-color: rgba(180, 218, 255, 0.24);
-            color: rgba(245, 249, 255, 0.96);
-            box-shadow: 0 14px 28px rgba(40, 82, 168, 0.26);
         }
 
         .home-action-btn.is-disabled {
