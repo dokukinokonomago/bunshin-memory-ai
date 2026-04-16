@@ -25,8 +25,14 @@ class MemoryController extends Controller
     public function index(Request $request): View
     {
         $keyword = trim($request->string('q')->toString());
+        $selectedPeriod = $request->string('period')->toString();
+        $selectedPeriod = in_array($selectedPeriod, array_merge(['すべて'], self::PERIODS), true) ? $selectedPeriod : 'すべて';
 
         $query = Memory::query()->latest();
+
+        if ($selectedPeriod !== 'すべて') {
+            $query->where('period', $selectedPeriod);
+        }
 
         if ($keyword !== '') {
             $query->where(function ($builder) use ($keyword): void {
@@ -42,6 +48,8 @@ class MemoryController extends Controller
             'emotionToneMap' => $this->emotionToneMap(),
             'allCount' => Memory::query()->count(),
             'searchQuery' => $keyword,
+            'periods' => self::PERIODS,
+            'selectedPeriod' => $selectedPeriod,
         ]);
     }
 

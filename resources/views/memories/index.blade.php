@@ -49,14 +49,32 @@
             @endif
 
             <div class="memory-toolbar">
-                <form method="get" action="{{ route('memories.index') }}" class="memory-search-form">
-                    <label for="q" class="detail-label">検索</label>
-                    <input id="q" type="search" name="q" value="{{ $searchQuery }}" placeholder="キーワードで検索">
-                    <button class="btn btn-secondary" type="submit">検索</button>
-                    @if ($searchQuery !== '')
-                        <a class="btn btn-secondary" href="{{ route('memories.index') }}">解除</a>
-                    @endif
-                </form>
+                <div class="memory-filter-strip">
+                    <form method="get" action="{{ route('memories.index') }}" class="memory-search-form">
+                        @if ($selectedPeriod !== 'すべて')
+                            <input type="hidden" name="period" value="{{ $selectedPeriod }}">
+                        @endif
+                        <label for="q" class="detail-label">検索</label>
+                        <input id="q" type="search" name="q" value="{{ $searchQuery }}" placeholder="キーワード">
+                        <button class="btn btn-secondary" type="submit">検索</button>
+                        @if ($searchQuery !== '' || $selectedPeriod !== 'すべて')
+                            <a class="btn btn-secondary" href="{{ route('memories.index') }}">解除</a>
+                        @endif
+                    </form>
+
+                    <div class="memory-period-filter" aria-label="年代で検索">
+                        @php
+                            $periodBaseParams = $searchQuery !== '' ? ['q' => $searchQuery] : [];
+                        @endphp
+                        <a class="memory-period-btn {{ $selectedPeriod === 'すべて' ? 'is-active' : '' }}" href="{{ route('memories.index', $periodBaseParams) }}">すべて</a>
+                        @foreach ($periods as $period)
+                            <a
+                                class="memory-period-btn {{ $selectedPeriod === $period ? 'is-active' : '' }}"
+                                href="{{ route('memories.index', array_merge($periodBaseParams, ['period' => $period])) }}"
+                            >{{ $period }}</a>
+                        @endforeach
+                    </div>
+                </div>
 
                 <div class="memory-toolbar-actions">
                     <a id="editMemoryButton" class="btn btn-secondary is-disabled" href="#" aria-disabled="true">修正</a>
@@ -214,12 +232,19 @@
             gap: 16px;
         }
 
+        .memory-filter-strip {
+            display: grid;
+            gap: 12px;
+            flex: 1 1 720px;
+            min-width: 0;
+        }
+
         .memory-search-form {
             display: flex;
             flex-wrap: wrap;
             align-items: end;
             gap: 12px;
-            flex: 1 1 520px;
+            flex: 0 1 auto;
         }
 
         .memory-search-form label {
@@ -227,13 +252,62 @@
         }
 
         .memory-search-form input {
-            flex: 1 1 280px;
-            min-width: 240px;
-            padding: 12px 14px;
+            width: clamp(160px, 18vw, 220px);
+            min-width: 0;
+            padding: 10px 12px;
             border-radius: 14px;
             border: 1px solid rgba(171, 205, 255, 0.2);
             background: rgba(14, 22, 43, 0.88);
             color: rgba(239, 245, 255, 0.94);
+        }
+
+        .memory-period-filter {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 8px;
+            min-width: 0;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .memory-period-filter::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .memory-period-filter::-webkit-scrollbar-thumb {
+            border-radius: 999px;
+            background: rgba(148, 194, 255, 0.24);
+        }
+
+        .memory-period-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(166, 204, 255, 0.14);
+            background: linear-gradient(135deg, rgba(16, 26, 50, 0.9), rgba(9, 17, 34, 0.94));
+            color: rgba(224, 237, 255, 0.78);
+            font-size: 12px;
+            line-height: 1;
+            white-space: nowrap;
+            box-shadow: 0 10px 24px rgba(6, 10, 24, 0.22);
+            transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+        }
+
+        .memory-period-btn:hover {
+            transform: translateY(-1px);
+            border-color: rgba(196, 224, 255, 0.28);
+            background: linear-gradient(135deg, rgba(88, 150, 255, 0.3), rgba(34, 73, 171, 0.82));
+            color: rgba(248, 251, 255, 0.96);
+        }
+
+        .memory-period-btn.is-active {
+            border-color: rgba(196, 224, 255, 0.28);
+            background: linear-gradient(135deg, rgba(88, 150, 255, 0.42), rgba(53, 98, 213, 0.92));
+            color: rgba(250, 252, 255, 0.98);
+            box-shadow: 0 14px 28px rgba(18, 36, 78, 0.3);
         }
 
         .memory-toolbar-actions {
@@ -313,6 +387,18 @@
             .memory-search-form,
             .memory-toolbar-actions {
                 align-items: stretch;
+            }
+
+            .memory-filter-strip {
+                flex-basis: 100%;
+            }
+
+            .memory-search-form {
+                width: 100%;
+            }
+
+            .memory-search-form input {
+                width: 100%;
             }
 
             .memory-toolbar-actions {
