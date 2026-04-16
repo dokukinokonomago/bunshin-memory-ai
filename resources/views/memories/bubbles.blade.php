@@ -28,51 +28,53 @@
             </div>
 
             <div class="bubble-stage-rail">
-                <div class="bubble-stage-side bubble-stage-count">
-                    <span class="bubble-side-label">全記憶数</span>
-                    <strong>{{ $matchingCount }}</strong>
+                <div class="bubble-stage-side bubble-stage-rail-card">
+                    <section class="bubble-rail-section bubble-stage-count">
+                        <span class="bubble-side-label">全記憶数</span>
+                        <strong>{{ $matchingCount }}</strong>
+                    </section>
+
+                    @if ($layerCount > 1)
+                        <section class="bubble-rail-section bubble-stage-nav">
+                            <span class="bubble-side-label">表示階層</span>
+                            <strong>第{{ $currentLayer }}層 / 全{{ $layerCount }}層</strong>
+                            <div class="bubble-nav-actions">
+                                @if ($hasNextLayer)
+                                    <a class="bubble-mini-btn" href="{{ route('memories.bubbles', array_merge($bubbleBaseParams, ['layer' => $currentLayer + 1])) }}">もっと見る</a>
+                                @else
+                                    <span class="bubble-mini-btn is-disabled">もっと見る</span>
+                                @endif
+
+                                @if ($hasPreviousLayer)
+                                    <a class="bubble-mini-btn" href="{{ route('memories.bubbles', array_merge($bubbleBaseParams, ['layer' => $currentLayer - 1])) }}">1つ戻る</a>
+                                    <a class="bubble-mini-btn" href="{{ route('memories.bubbles', $bubbleBaseParams) }}">最初に戻る</a>
+                                @else
+                                    <span class="bubble-mini-btn is-disabled">1つ戻る</span>
+                                    <span class="bubble-mini-btn is-disabled">最初に戻る</span>
+                                @endif
+                            </div>
+                        </section>
+                    @endif
+
+                    <details class="bubble-rail-section bubble-stage-filter">
+                        <summary class="btn btn-secondary">年代別で表示</summary>
+                        <form method="get" action="{{ route('memories.bubbles') }}" class="bubble-filter-form">
+                            <label for="period" class="bubble-side-label">年代を選択</label>
+                            <select id="period" name="period" class="bubble-select">
+                                <option value="すべて" {{ $selectedPeriod === 'すべて' ? 'selected' : '' }}>すべて</option>
+                                @foreach ($periods as $period)
+                                    <option value="{{ $period }}" {{ $selectedPeriod === $period ? 'selected' : '' }}>{{ $period }}</option>
+                                @endforeach
+                            </select>
+                            <div class="bubble-filter-actions">
+                                <button type="submit" class="btn btn-primary">表示する</button>
+                                @if ($selectedPeriod !== 'すべて')
+                                    <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">解除</a>
+                                @endif
+                            </div>
+                        </form>
+                    </details>
                 </div>
-
-                @if ($layerCount > 1)
-                    <div class="bubble-stage-side bubble-stage-nav">
-                        <span class="bubble-side-label">表示階層</span>
-                        <strong>第{{ $currentLayer }}層 / 全{{ $layerCount }}層</strong>
-                        <div class="bubble-nav-actions">
-                            @if ($hasNextLayer)
-                                <a class="bubble-mini-btn" href="{{ route('memories.bubbles', array_merge($bubbleBaseParams, ['layer' => $currentLayer + 1])) }}">もっと見る</a>
-                            @else
-                                <span class="bubble-mini-btn is-disabled">もっと見る</span>
-                            @endif
-
-                            @if ($hasPreviousLayer)
-                                <a class="bubble-mini-btn" href="{{ route('memories.bubbles', array_merge($bubbleBaseParams, ['layer' => $currentLayer - 1])) }}">1つ戻る</a>
-                                <a class="bubble-mini-btn" href="{{ route('memories.bubbles', $bubbleBaseParams) }}">最初に戻る</a>
-                            @else
-                                <span class="bubble-mini-btn is-disabled">1つ戻る</span>
-                                <span class="bubble-mini-btn is-disabled">最初に戻る</span>
-                            @endif
-                        </div>
-                    </div>
-                @endif
-
-                <details class="bubble-stage-side bubble-stage-filter">
-                    <summary class="btn btn-secondary">年代別で表示</summary>
-                    <form method="get" action="{{ route('memories.bubbles') }}" class="bubble-filter-form">
-                        <label for="period" class="bubble-side-label">年代を選択</label>
-                        <select id="period" name="period" class="bubble-select">
-                            <option value="すべて" {{ $selectedPeriod === 'すべて' ? 'selected' : '' }}>すべて</option>
-                            @foreach ($periods as $period)
-                                <option value="{{ $period }}" {{ $selectedPeriod === $period ? 'selected' : '' }}>{{ $period }}</option>
-                            @endforeach
-                        </select>
-                        <div class="bubble-filter-actions">
-                            <button type="submit" class="btn btn-primary">表示する</button>
-                            @if ($selectedPeriod !== 'すべて')
-                                <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">解除</a>
-                            @endif
-                        </div>
-                    </form>
-                </details>
             </div>
 
             <div class="bubble-stage-shell">
@@ -202,8 +204,6 @@
             top: 28px;
             right: 24px;
             z-index: 3;
-            display: grid;
-            gap: 14px;
             width: min(280px, 28vw);
         }
 
@@ -219,10 +219,23 @@
             box-shadow: 0 20px 40px rgba(3, 6, 18, 0.3);
         }
 
+        .bubble-stage-rail-card {
+            display: grid;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        .bubble-rail-section {
+            padding: 14px 0;
+        }
+
+        .bubble-rail-section + .bubble-rail-section {
+            border-top: 1px solid rgba(171, 205, 255, 0.12);
+        }
+
         .bubble-stage-count {
-            width: 100%;
             text-align: right;
-            padding: 12px 16px;
+            padding-top: 0;
         }
 
         .bubble-stage-count strong {
@@ -233,11 +246,11 @@
         }
 
         .bubble-stage-filter {
-            width: 100%;
+            padding-bottom: 0;
         }
 
         .bubble-stage-nav {
-            width: 100%;
+            padding-bottom: 2px;
         }
 
         .bubble-stage-nav strong {
@@ -284,7 +297,7 @@
         }
 
         .bubble-stage-filter[open] {
-            width: min(280px, 26vw);
+            width: 100%;
         }
 
         .bubble-filter-form {
@@ -422,7 +435,6 @@
             }
 
             .bubble-stage-count {
-                justify-self: stretch;
                 text-align: left;
             }
 
