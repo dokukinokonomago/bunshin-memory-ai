@@ -129,9 +129,14 @@
                                 ry="{{ 52 - (4 * $stackIndex) }}"
                                 fill="rgba(20, 48, 86, 0.28)"
                                 filter="url(#stackShadow)"
-                                class="bubble-stack-shadow"
+                                class="bubble-stack-shadow bubble-shell-breath"
+                                style="--shell-duration: {{ 8.4 + ($stackIndex * 0.7) }}s; --shell-delay: -{{ 0.85 * $stackIndex }}s;"
                             ></ellipse>
-                            <g filter="url(#shellGlow)" class="bubble-stack-layer">
+                            <g
+                                filter="url(#shellGlow)"
+                                class="bubble-stack-layer bubble-shell-breath"
+                                style="--shell-duration: {{ 8.4 + ($stackIndex * 0.7) }}s; --shell-delay: -{{ 0.85 * $stackIndex }}s;"
+                            >
                                 <circle
                                     cx="{{ 700 + $stackOffsetX }}"
                                     cy="{{ 470 + $stackOffsetY }}"
@@ -158,14 +163,39 @@
                         @endforeach
                     @endif
 
-                    <g filter="url(#shellGlow)">
+                    <g filter="url(#shellGlow)" class="bubble-shell-breath bubble-shell-main" style="--shell-duration: 7.6s; --shell-delay: -0.4s;">
                         <circle cx="700" cy="470" r="372" fill="rgba(124, 187, 255, 0.22)"></circle>
                     </g>
 
-                    <ellipse cx="578" cy="340" rx="120" ry="58" fill="rgba(255,255,255,0.16)" transform="rotate(-20 578 340)"></ellipse>
-                    <ellipse cx="820" cy="585" rx="38" ry="18" fill="rgba(255,255,255,0.10)" transform="rotate(14 820 585)"></ellipse>
+                    <ellipse
+                        cx="578"
+                        cy="340"
+                        rx="120"
+                        ry="58"
+                        fill="rgba(255,255,255,0.16)"
+                        transform="rotate(-20 578 340)"
+                        class="bubble-shell-breath"
+                        style="--shell-duration: 7.6s; --shell-delay: -0.4s;"
+                    ></ellipse>
+                    <ellipse
+                        cx="820"
+                        cy="585"
+                        rx="38"
+                        ry="18"
+                        fill="rgba(255,255,255,0.10)"
+                        transform="rotate(14 820 585)"
+                        class="bubble-shell-breath"
+                        style="--shell-duration: 7.6s; --shell-delay: -0.4s;"
+                    ></ellipse>
 
-                    <circle cx="700" cy="470" r="324" fill="rgba(202,228,255,0.04)"></circle>
+                    <circle
+                        cx="700"
+                        cy="470"
+                        r="324"
+                        fill="rgba(202,228,255,0.04)"
+                        class="bubble-shell-breath"
+                        style="--shell-duration: 7.6s; --shell-delay: -0.4s;"
+                    ></circle>
                     <g id="bubbleLayer"></g>
                 </svg>
             </div>
@@ -450,6 +480,17 @@
             display: block;
         }
 
+        .bubble-shell-breath {
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: shellPulse var(--shell-duration, 7.8s) ease-in-out var(--shell-delay, 0s) infinite;
+            will-change: transform, opacity;
+        }
+
+        .bubble-shell-main {
+            animation-duration: var(--shell-duration, 7.6s);
+        }
+
         .memory-ball {
             cursor: pointer;
             transform-box: fill-box;
@@ -495,6 +536,23 @@
             100% {
                 opacity: 1;
                 filter: blur(0);
+            }
+        }
+
+        @keyframes shellPulse {
+            0% {
+                transform: scale(0.985);
+                opacity: 0.92;
+            }
+
+            50% {
+                transform: scale(1.015);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(0.985);
+                opacity: 0.92;
             }
         }
 
