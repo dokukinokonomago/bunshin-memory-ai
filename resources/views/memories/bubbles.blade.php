@@ -19,7 +19,7 @@
                 $bubbleBaseParams = $selectedPeriod !== 'すべて' ? ['period' => $selectedPeriod] : [];
             @endphp
             <div class="bubble-stage-copy">
-                <span class="eyebrow">Memory Bubble View</span>
+                <span class="eyebrow">PERSONAL MEMORY ARCHIVE</span>
                 <h1>YOUの記憶</h1>
                 <div class="hero-actions">
                     <a class="btn btn-primary" href="{{ route('memories.index') }}">一覧へ戻る</a>
@@ -199,6 +199,18 @@
             font-size: clamp(34px, 4vw, 58px);
             color: rgba(245, 249, 255, 0.96);
             letter-spacing: 0.03em;
+        }
+
+        .bubble-stage-copy .eyebrow {
+            padding: 8px 14px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(12, 21, 44, 0.92), rgba(27, 47, 88, 0.78));
+            border: 1px solid rgba(166, 205, 255, 0.18);
+            color: rgba(216, 234, 255, 0.92);
+            letter-spacing: 0.16em;
+            font-size: 11px;
+            box-shadow: 0 10px 26px rgba(8, 14, 30, 0.28);
+            backdrop-filter: blur(12px);
         }
 
         .bubble-stage-panel .btn,
