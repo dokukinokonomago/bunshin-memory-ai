@@ -3,7 +3,8 @@
 use App\Http\Controllers\MemoryController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [MemoryController::class, 'index'])->name('memories.index');
+Route::get('/', [MemoryController::class, 'home'])->name('home');
+Route::get('/memories', [MemoryController::class, 'index'])->name('memories.index');
 Route::get('/memories/bubbles', [MemoryController::class, 'bubbles'])->name('memories.bubbles');
 Route::get('/memories/create', [MemoryController::class, 'create'])->name('memories.create');
 Route::post('/memories', [MemoryController::class, 'store'])->name('memories.store');

@@ -22,6 +22,11 @@ class MemoryController extends Controller
         'ネガティブ（強め）' => ['不安', '悲しい', 'イライラ', '怒り', '落ち込み', '孤独', '無力感', '自信がない'],
     ];
 
+    public function home(): View
+    {
+        return view('home');
+    }
+
     public function index(Request $request): View
     {
         $keyword = trim($request->string('q')->toString());
