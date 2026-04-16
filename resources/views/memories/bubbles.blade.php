@@ -196,9 +196,10 @@
 
         .bubble-stage-copy h1 {
             margin: 16px 0 16px;
-            font-size: clamp(34px, 4vw, 58px);
+            font-size: clamp(30px, 3.4vw, 50px);
             color: rgba(245, 249, 255, 0.96);
             letter-spacing: 0.03em;
+            white-space: nowrap;
         }
 
         .bubble-stage-copy .eyebrow {
@@ -443,18 +444,22 @@
             cursor: pointer;
             transform-box: fill-box;
             transform-origin: center;
-            will-change: transform, filter;
+            will-change: opacity, transform, filter;
             opacity: 0;
-            animation:
-                bubbleReveal 0.72s ease var(--bubble-appear-delay, 0s) forwards,
-                bubblePulse var(--bubble-duration, 6.8s) ease-in-out var(--bubble-delay, 0s) infinite;
+            animation: bubbleReveal 0.72s ease var(--bubble-appear-delay, 0s) forwards;
             transition: transform 0.42s cubic-bezier(0.2, 0.7, 0.2, 1), filter 0.42s cubic-bezier(0.2, 0.7, 0.2, 1);
         }
 
         .memory-ball:hover {
-            animation-play-state: paused;
             transform: scale(3);
             filter: brightness(1.12) saturate(1.12) drop-shadow(0 26px 34px rgba(108, 127, 169, 0.2));
+        }
+
+        .memory-ball-body {
+            transform-box: fill-box;
+            transform-origin: center;
+            will-change: transform;
+            animation: bubblePulse var(--bubble-duration, 6.8s) ease-in-out var(--bubble-delay, 0s) infinite;
         }
 
         @keyframes bubblePulse {
@@ -651,6 +656,10 @@
                     ].join(";")
                 });
 
+                const body = createSvg("g", {
+                    class: "memory-ball-body"
+                });
+
                 const aura = createSvg("circle", {
                     cx: position.x,
                     cy: position.y,
@@ -700,13 +709,14 @@
                     fill: toRgba(memory.colors[0], 0.12)
                 });
 
-                group.appendChild(aura);
-                group.appendChild(glow);
-                group.appendChild(circle);
-                group.appendChild(core);
-                group.appendChild(inner);
-                group.appendChild(rim);
-                group.appendChild(createLabel(position.x, position.y, memory.label, radius));
+                body.appendChild(aura);
+                body.appendChild(glow);
+                body.appendChild(circle);
+                body.appendChild(core);
+                body.appendChild(inner);
+                body.appendChild(rim);
+                body.appendChild(createLabel(position.x, position.y, memory.label, radius));
+                group.appendChild(body);
                 group.appendChild(createSvg("title", {})).textContent = `${memory.period} / ${memory.emotion}\n${memory.content}`;
 
                 group.addEventListener("mouseenter", () => bubbleLayer.appendChild(group));
