@@ -133,9 +133,15 @@ class MemoryController extends Controller
 
     public function show(Memory $memory): View
     {
+        $emotionToneMap = $this->emotionToneMap();
+        $tone = $emotionToneMap[$memory->emotion] ?? 'ニュートラル';
+
         return view('memories.show', [
             'memory' => $memory,
-            'emotionToneMap' => $this->emotionToneMap(),
+            'emotionToneMap' => $emotionToneMap,
+            'tone' => $tone,
+            'colors' => $this->toneColors($tone),
+            'theme' => $this->memoryTheme($memory),
         ]);
     }
 
@@ -191,6 +197,27 @@ class MemoryController extends Controller
         }
 
         return Str::limit($memory->emotion, 6, '');
+    }
+
+    private function memoryTheme(Memory $memory): string
+    {
+        $content = trim(preg_replace('/\s+/u', ' ', $memory->content) ?? '');
+
+        if ($content === '') {
+            return $memory->emotion;
+        }
+
+        $segments = preg_split('/[。.!?\n]+/u', $content) ?: [];
+
+        foreach ($segments as $segment) {
+            $theme = trim($segment, " \t\n\r\0\x0B、。");
+
+            if ($theme !== '') {
+                return Str::limit($theme, 20, '…');
+            }
+        }
+
+        return Str::limit($content, 20, '…');
     }
 
     private function validateMemory(Request $request): array
