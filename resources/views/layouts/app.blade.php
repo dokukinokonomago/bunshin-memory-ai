@@ -25,10 +25,10 @@
             min-height: 100vh;
             color: var(--ink);
             background:
-                radial-gradient(circle at top left, rgba(248, 205, 162, 0.44), transparent 24%),
-                radial-gradient(circle at 88% 10%, rgba(198, 223, 255, 0.48), transparent 22%),
-                radial-gradient(circle at 70% 100%, rgba(224, 211, 255, 0.42), transparent 24%),
-                linear-gradient(160deg, #fffaf5 0%, #f7f7fb 55%, #eef3f8 100%);
+                radial-gradient(circle at 12% 12%, rgba(86, 132, 255, 0.2), transparent 22%),
+                radial-gradient(circle at 88% 10%, rgba(126, 209, 255, 0.16), transparent 20%),
+                radial-gradient(circle at 70% 100%, rgba(88, 108, 255, 0.14), transparent 24%),
+                linear-gradient(160deg, #02040b 0%, #050916 48%, #0a1124 100%);
             font-family: "Avenir Next", "Hiragino Sans", "Yu Gothic", sans-serif;
         }
 
