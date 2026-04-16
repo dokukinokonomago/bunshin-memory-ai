@@ -15,6 +15,9 @@
                 @endif
             </div>
         @else
+            @php
+                $bubbleBaseParams = $selectedPeriod !== 'すべて' ? ['period' => $selectedPeriod] : [];
+            @endphp
             <div class="bubble-stage-copy">
                 <span class="eyebrow">Memory Bubble View</span>
                 <h1>記憶の玉</h1>
@@ -23,6 +26,28 @@
                     <a class="btn btn-secondary" href="{{ route('memories.create') }}">記憶を追加</a>
                 </div>
             </div>
+
+            @if ($layerCount > 1)
+                <div class="bubble-stage-side bubble-stage-nav">
+                    <span class="bubble-side-label">表示階層</span>
+                    <strong>第{{ $currentLayer }}層 / 全{{ $layerCount }}層</strong>
+                    <div class="bubble-nav-actions">
+                        @if ($hasNextLayer)
+                            <a class="bubble-mini-btn" href="{{ route('memories.bubbles', array_merge($bubbleBaseParams, ['layer' => $currentLayer + 1])) }}">もっと見る</a>
+                        @else
+                            <span class="bubble-mini-btn is-disabled">もっと見る</span>
+                        @endif
+
+                        @if ($hasPreviousLayer)
+                            <a class="bubble-mini-btn" href="{{ route('memories.bubbles', array_merge($bubbleBaseParams, ['layer' => $currentLayer - 1])) }}">1つ戻る</a>
+                            <a class="bubble-mini-btn" href="{{ route('memories.bubbles', $bubbleBaseParams) }}">最初に戻る</a>
+                        @else
+                            <span class="bubble-mini-btn is-disabled">1つ戻る</span>
+                            <span class="bubble-mini-btn is-disabled">最初に戻る</span>
+                        @endif
+                    </div>
+                </div>
+            @endif
 
             <details class="bubble-stage-side bubble-stage-filter">
                 <summary class="btn btn-secondary">年代別で表示</summary>
@@ -45,7 +70,8 @@
 
             <div class="bubble-stage-side bubble-stage-count">
                 <span class="bubble-side-label">現在の記憶数</span>
-                <strong>{{ $displayCount }}</strong>
+                <strong>{{ $matchingCount }}</strong>
+                <small>この層に表示中 {{ $displayCount }} / 10</small>
             </div>
 
             <div class="bubble-stage-side bubble-stage-note">
@@ -143,14 +169,54 @@
         }
 
         .bubble-stage-count {
-            top: 28px;
+            top: 118px;
             right: 24px;
             text-align: right;
         }
 
         .bubble-stage-filter {
-            top: 132px;
+            top: 236px;
             right: 24px;
+        }
+
+        .bubble-stage-nav {
+            top: 28px;
+            right: 24px;
+            width: min(270px, 28vw);
+        }
+
+        .bubble-stage-nav strong {
+            display: block;
+            color: rgba(245, 249, 255, 0.98);
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .bubble-nav-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .bubble-mini-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 32px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(178, 210, 255, 0.22);
+            background: rgba(16, 26, 51, 0.9);
+            color: rgba(240, 246, 255, 0.92);
+            font-size: 12px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .bubble-mini-btn.is-disabled {
+            opacity: 0.34;
+            pointer-events: none;
         }
 
         .bubble-stage-filter summary {
@@ -200,6 +266,13 @@
             font-size: clamp(32px, 3vw, 44px);
             line-height: 1;
             color: rgba(245, 249, 255, 0.98);
+        }
+
+        .bubble-stage-count small {
+            display: block;
+            margin-top: 8px;
+            color: rgba(188, 214, 255, 0.72);
+            font-size: 12px;
         }
 
         .bubble-stage-note {
@@ -254,12 +327,28 @@
             transform-box: fill-box;
             transform-origin: center;
             will-change: transform, filter;
+            animation: bubblePulse var(--bubble-duration, 6.8s) ease-in-out var(--bubble-delay, 0s) infinite;
             transition: transform 0.42s cubic-bezier(0.2, 0.7, 0.2, 1), filter 0.42s cubic-bezier(0.2, 0.7, 0.2, 1);
         }
 
         .memory-ball:hover {
+            animation-play-state: paused;
             transform: scale(3);
             filter: brightness(1.12) saturate(1.12) drop-shadow(0 26px 34px rgba(108, 127, 169, 0.2));
+        }
+
+        @keyframes bubblePulse {
+            0% {
+                transform: scale(var(--bubble-rest-scale, 0.96));
+            }
+
+            50% {
+                transform: scale(var(--bubble-rise-scale, 1.06));
+            }
+
+            100% {
+                transform: scale(var(--bubble-rest-scale, 0.96));
+            }
         }
 
         .memory-label {
@@ -292,6 +381,7 @@
             }
 
             .bubble-stage-copy,
+            .bubble-stage-nav,
             .bubble-stage-filter,
             .bubble-stage-count,
             .bubble-stage-note {
@@ -413,7 +503,13 @@
                     "data-period": memory.period,
                     "data-emotion": memory.emotion,
                     "data-tags": memory.tags.join(","),
-                    "aria-label": `${memory.period}の記憶`
+                    "aria-label": `${memory.period}の記憶`,
+                    style: [
+                        `--bubble-rest-scale:${(0.93 + (index % 4) * 0.02).toFixed(2)}`,
+                        `--bubble-rise-scale:${(1.02 + (index % 5) * 0.025).toFixed(2)}`,
+                        `--bubble-duration:${(5.2 + (index % 5) * 0.55).toFixed(2)}s`,
+                        `--bubble-delay:${(-index * 0.45).toFixed(2)}s`
+                    ].join(";")
                 });
 
                 const aura = createSvg("circle", {

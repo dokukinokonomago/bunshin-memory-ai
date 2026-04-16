@@ -12,6 +12,7 @@ use Illuminate\View\View;
 
 class MemoryController extends Controller
 {
+    private const BUBBLE_LAYER_SIZE = 10;
     private const PERIODS = ['幼少期', '小学生', '中学生', '高校生', '大学生', '成人期'];
 
     private const EMOTION_GROUPS = [
@@ -54,6 +55,7 @@ class MemoryController extends Controller
     {
         $selectedPeriod = $request->string('period')->toString();
         $selectedPeriod = in_array($selectedPeriod, array_merge(['すべて'], self::PERIODS), true) ? $selectedPeriod : 'すべて';
+        $requestedLayer = max(1, $request->integer('layer', 1));
 
         $query = Memory::query()->latest();
 
@@ -62,8 +64,14 @@ class MemoryController extends Controller
         }
 
         $emotionToneMap = $this->emotionToneMap();
-
-        $memories = $query->take(18)->get();
+        $matchingCount = (clone $query)->count();
+        $layerCount = max(1, (int) ceil($matchingCount / self::BUBBLE_LAYER_SIZE));
+        $currentLayer = min($requestedLayer, $layerCount);
+        $offset = ($currentLayer - 1) * self::BUBBLE_LAYER_SIZE;
+        $memories = (clone $query)
+            ->skip($offset)
+            ->take(self::BUBBLE_LAYER_SIZE)
+            ->get();
 
         $bubbleMemories = $memories->values()->map(function (Memory $memory) use ($emotionToneMap): array {
             $tone = $emotionToneMap[$memory->emotion] ?? 'ニュートラル';
@@ -84,8 +92,13 @@ class MemoryController extends Controller
             'bubbleMemories' => $bubbleMemories,
             'allCount' => Memory::query()->count(),
             'displayCount' => $bubbleMemories->count(),
+            'matchingCount' => $matchingCount,
             'periods' => self::PERIODS,
             'selectedPeriod' => $selectedPeriod,
+            'currentLayer' => $currentLayer,
+            'layerCount' => $layerCount,
+            'hasPreviousLayer' => $currentLayer > 1,
+            'hasNextLayer' => $currentLayer < $layerCount,
         ]);
     }
 
