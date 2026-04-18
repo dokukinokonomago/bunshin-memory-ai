@@ -10,10 +10,12 @@
     <section class="memory-status-panel">
         <div class="memory-status-copy">
             <span class="eyebrow">MEMORY STATUS VIEW</span>
-            <h1>記憶ステータス</h1>
-            <div class="memory-status-actions">
-                <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">記憶玉へ戻る</a>
-                <a class="btn btn-secondary" href="{{ route('memories.index') }}">一覧を見る</a>
+            <div class="memory-status-topline">
+                <h1>記憶ステータス</h1>
+                <div class="memory-status-actions">
+                    <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">記憶玉へ戻る</a>
+                    <a class="btn btn-secondary" href="{{ route('memories.index') }}">一覧を見る</a>
+                </div>
             </div>
         </div>
 
@@ -30,48 +32,48 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <aside class="memory-status-sidebar">
-            <div class="memory-status-card">
-                <div class="memory-status-head">
-                    <span class="memory-status-label">ステータス詳細</span>
-                    <strong>{{ $memory->created_at->timezone('Asia/Tokyo')->format('Y.m.d') }}</strong>
-                </div>
-
-                <section class="memory-status-block">
+            <div class="memory-status-info-strip">
+                <article class="memory-status-card memory-status-card-wide">
                     <span class="memory-status-label">テーマ</span>
                     <h2>{{ $theme }}</h2>
-                </section>
+                </article>
 
-                <section class="memory-status-block">
+                <article class="memory-status-card memory-status-card-wide">
                     <span class="memory-status-label">内容</span>
                     <p>{{ $memory->content }}</p>
-                </section>
+                </article>
 
-                <section class="memory-status-block">
+                <article class="memory-status-card">
                     <span class="memory-status-label">ライフステージ</span>
                     <div class="memory-status-chip">{{ $memory->period }}</div>
-                </section>
+                </article>
 
-                <section class="memory-status-block">
+                <article class="memory-status-card">
                     <span class="memory-status-label">感情</span>
                     <div class="memory-status-emotion">
                         <span class="badge {{ $badgeClass }}">{{ $memory->emotion }}</span>
                         <small>{{ $tone }}</small>
                     </div>
-                </section>
-
-                <div class="memory-status-footer">
-                    <a class="btn btn-secondary" href="{{ route('memories.edit', $memory) }}">修正する</a>
-                    <form method="post" action="{{ route('memories.destroy', $memory) }}" onsubmit="return confirm('この記憶を削除しますか？');">
-                        @csrf
-                        @method('DELETE')
-                        <button class="btn btn-secondary btn-danger" type="submit">削除する</button>
-                    </form>
-                </div>
+                </article>
             </div>
-        </aside>
+        </div>
+
+        <div class="memory-status-footer">
+            <div class="memory-status-meta">
+                <span class="memory-status-label">保存日</span>
+                <strong>{{ $memory->created_at->timezone('Asia/Tokyo')->format('Y.m.d') }}</strong>
+            </div>
+
+            <div class="memory-status-footer-actions">
+                <a class="btn btn-secondary" href="{{ route('memories.edit', $memory) }}">修正する</a>
+                <form method="post" action="{{ route('memories.destroy', $memory) }}" onsubmit="return confirm('この記憶を削除しますか？');">
+                    @csrf
+                    @method('DELETE')
+                    <button class="btn btn-secondary btn-danger" type="submit">削除する</button>
+                </form>
+            </div>
+        </div>
     </section>
 
     <style>
@@ -79,8 +81,8 @@
             position: relative;
             min-height: min(920px, calc(100vh - 72px));
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 320px;
-            gap: 24px;
+            grid-template-rows: auto 1fr auto;
+            gap: 18px;
             padding: 28px;
             overflow: hidden;
             border-radius: 30px;
@@ -112,17 +114,24 @@
         .memory-status-panel::after {
             width: 340px;
             height: 340px;
-            right: 180px;
+            right: -40px;
             bottom: -140px;
             background: radial-gradient(circle, rgba(120, 214, 255, 0.14), transparent 70%);
         }
 
-        .memory-status-copy {
-            position: absolute;
-            top: 28px;
-            left: 28px;
-            z-index: 2;
-            max-width: 360px;
+        .memory-status-copy,
+        .memory-status-stage,
+        .memory-status-footer {
+            position: relative;
+            z-index: 1;
+        }
+
+        .memory-status-topline {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 18px;
+            flex-wrap: wrap;
         }
 
         .memory-status-copy .eyebrow {
@@ -138,13 +147,14 @@
         }
 
         .memory-status-copy h1 {
-            margin: 16px 0 14px;
-            font-size: clamp(30px, 3.6vw, 52px);
+            margin: 16px 0 0;
+            font-size: clamp(30px, 3.4vw, 50px);
             letter-spacing: 0.04em;
             color: rgba(247, 250, 255, 0.96);
         }
 
-        .memory-status-actions {
+        .memory-status-actions,
+        .memory-status-footer-actions {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
@@ -168,16 +178,16 @@
         }
 
         .memory-status-stage {
-            position: relative;
             display: grid;
-            place-items: center;
-            min-height: 760px;
-            padding-top: 120px;
+            align-content: center;
+            justify-items: center;
+            gap: 20px;
+            min-height: 0;
         }
 
         .memory-focus-shell {
             position: relative;
-            width: min(72vw, 840px);
+            width: min(46vw, 460px);
             aspect-ratio: 1 / 1;
             display: grid;
             place-items: center;
@@ -185,28 +195,28 @@
 
         .memory-focus-orbit {
             position: absolute;
-            inset: 8%;
+            inset: 7%;
             border-radius: 50%;
             background: rgba(143, 201, 255, 0.08);
-            filter: blur(34px);
+            filter: blur(30px);
             animation: focusShellPulse 8.4s ease-in-out infinite;
         }
 
         .memory-focus-orbit-back {
-            transform: translate(34px, -24px) scale(0.9);
-            opacity: 0.48;
+            transform: translate(28px, -18px) scale(0.9);
+            opacity: 0.44;
         }
 
         .memory-focus-orbit-front {
-            transform: translate(-20px, 24px) scale(0.82);
-            opacity: 0.28;
+            transform: translate(-16px, 18px) scale(0.82);
+            opacity: 0.24;
             animation-duration: 9.2s;
             animation-delay: -1.6s;
         }
 
         .memory-focus-bubble {
             position: relative;
-            width: min(54vw, 560px);
+            width: min(34vw, 350px);
             aspect-ratio: 1 / 1;
             display: grid;
             place-items: center;
@@ -258,63 +268,42 @@
             position: relative;
             z-index: 1;
             display: grid;
-            gap: 10px;
-            width: min(72%, 360px);
+            gap: 8px;
+            width: min(76%, 260px);
             text-align: center;
         }
 
         .memory-focus-period,
         .memory-focus-emotion {
             color: rgba(242, 247, 255, 0.82);
-            font-size: clamp(14px, 1.5vw, 18px);
+            font-size: clamp(12px, 1.2vw, 16px);
             letter-spacing: 0.16em;
             text-transform: uppercase;
         }
 
         .memory-focus-core strong {
-            font-size: clamp(34px, 4vw, 52px);
+            font-size: clamp(28px, 3vw, 42px);
             line-height: 1.14;
             color: rgba(250, 252, 255, 0.98);
             text-shadow: 0 12px 34px rgba(6, 10, 24, 0.32);
         }
 
-        .memory-status-sidebar {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            justify-content: flex-end;
+        .memory-status-info-strip {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1.15fr 1.45fr 0.75fr 0.75fr;
+            gap: 14px;
             align-items: stretch;
-            padding-top: 92px;
         }
 
         .memory-status-card {
-            width: 100%;
             min-height: 100%;
-            padding: 22px 20px;
-            border-radius: 26px;
-            background: linear-gradient(180deg, rgba(10, 18, 34, 0.94), rgba(7, 13, 27, 0.96));
+            padding: 18px 18px 16px;
+            border-radius: 24px;
+            background: linear-gradient(180deg, rgba(10, 18, 34, 0.92), rgba(7, 13, 27, 0.94));
             border: 1px solid rgba(155, 198, 255, 0.12);
-            box-shadow: 0 24px 60px rgba(2, 4, 12, 0.4);
+            box-shadow: 0 18px 44px rgba(2, 4, 12, 0.34);
             backdrop-filter: blur(14px);
-        }
-
-        .memory-status-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            gap: 12px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid rgba(174, 209, 255, 0.12);
-        }
-
-        .memory-status-head strong {
-            font-size: 15px;
-            color: rgba(236, 242, 255, 0.88);
-        }
-
-        .memory-status-block {
-            padding: 18px 0;
-            border-bottom: 1px solid rgba(174, 209, 255, 0.1);
         }
 
         .memory-status-label {
@@ -326,19 +315,19 @@
             text-transform: uppercase;
         }
 
-        .memory-status-block h2 {
+        .memory-status-card h2 {
             margin: 0;
-            font-size: 34px;
-            line-height: 1.2;
+            font-size: 24px;
+            line-height: 1.28;
             color: rgba(248, 251, 255, 0.98);
         }
 
-        .memory-status-block p {
+        .memory-status-card p {
             margin: 0;
             color: rgba(212, 223, 244, 0.82);
-            line-height: 1.9;
-            white-space: pre-wrap;
-            word-break: break-word;
+            line-height: 1.8;
+            max-height: 7.2em;
+            overflow: auto;
         }
 
         .memory-status-chip {
@@ -365,17 +354,24 @@
             color: #111827;
         }
 
-        .memory-status-emotion small {
-            color: rgba(188, 214, 255, 0.68);
-            font-size: 12px;
+        .memory-status-emotion small,
+        .memory-status-meta strong {
+            color: rgba(188, 214, 255, 0.78);
+            font-size: 13px;
             letter-spacing: 0.08em;
         }
 
         .memory-status-footer {
             display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            align-items: center;
             flex-wrap: wrap;
-            gap: 10px;
-            padding-top: 20px;
+        }
+
+        .memory-status-meta {
+            display: grid;
+            gap: 6px;
         }
 
         .memory-status-footer form {
@@ -383,90 +379,55 @@
         }
 
         @keyframes focusBubblePulse {
-            0% {
-                transform: scale(0.98);
-            }
-
-            50% {
-                transform: scale(1.02);
-            }
-
-            100% {
-                transform: scale(0.98);
-            }
+            0% { transform: scale(0.98); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(0.98); }
         }
 
         @keyframes focusShellPulse {
-            0% {
-                transform: scale(0.98);
-                opacity: 0.72;
-            }
-
-            50% {
-                transform: scale(1.02);
-                opacity: 1;
-            }
-
-            100% {
-                transform: scale(0.98);
-                opacity: 0.72;
-            }
+            0% { transform: scale(0.98); opacity: 0.72; }
+            50% { transform: scale(1.02); opacity: 1; }
+            100% { transform: scale(0.98); opacity: 0.72; }
         }
 
-        @media (max-width: 1100px) {
+        @media (max-width: 980px) {
             .memory-status-panel {
-                grid-template-columns: 1fr;
-                padding-top: 168px;
+                min-height: auto;
             }
 
-            .memory-status-sidebar {
-                padding-top: 0;
+            .memory-status-info-strip {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
             .memory-focus-shell {
-                width: min(88vw, 760px);
+                width: min(58vw, 420px);
             }
 
             .memory-focus-bubble {
-                width: min(74vw, 520px);
+                width: min(42vw, 320px);
             }
         }
 
         @media (max-width: 760px) {
             .memory-status-panel {
                 padding: 18px;
-                padding-top: 148px;
                 border-radius: 24px;
-            }
-
-            .memory-status-copy {
-                top: 18px;
-                left: 18px;
-                right: 18px;
-                max-width: none;
             }
 
             .memory-status-copy h1 {
                 font-size: 34px;
             }
 
-            .memory-status-stage {
-                min-height: 520px;
-                padding-top: 0;
+            .memory-status-info-strip {
+                grid-template-columns: 1fr;
             }
 
-            .memory-focus-shell,
+            .memory-focus-shell {
+                width: min(82vw, 360px);
+            }
+
             .memory-focus-bubble {
-                width: min(92vw, 460px);
-            }
-
-            .memory-status-card {
-                padding: 18px 16px;
-                border-radius: 22px;
-            }
-
-            .memory-status-block h2 {
-                font-size: 26px;
+                width: min(62vw, 280px);
             }
         }
     </style>
