@@ -4,6 +4,16 @@
 @section('body_class', 'body-memory-create-v2')
 @section('page_class', 'page-memory-create-v2')
 
+@php
+    $createComposerConfig = [
+        'groupMeta' => $createComposerGroupMeta,
+        'emotionToGroup' => $createComposerEmotionToGroup,
+        'initialGroup' => $createComposerInitialState['group'],
+        'hasErrors' => $errors->any(),
+        'storageKey' => 'memory-create-v2-draft',
+    ];
+@endphp
+
 @push('head')
     <link rel="stylesheet" href="{{ asset('css/pages/memories-create-v2.css') }}">
 @endpush
@@ -16,13 +26,7 @@
             data-filled-level="{{ $createComposerInitialState['filledLevel'] }}"
         >
             <script type="application/json" class="memory-create-v2__config">
-                @json([
-                    'groupMeta' => $createComposerGroupMeta,
-                    'emotionToGroup' => $createComposerEmotionToGroup,
-                    'initialGroup' => $createComposerInitialState['group'],
-                    'hasErrors' => $errors->any(),
-                    'storageKey' => 'memory-create-v2-draft',
-                ])
+                @json($createComposerConfig)
             </script>
 
             <div class="memory-create-v2__ambient" aria-hidden="true">
