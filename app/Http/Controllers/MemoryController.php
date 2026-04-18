@@ -14,6 +14,35 @@ class MemoryController extends Controller
 {
     private const BUBBLE_LAYER_SIZE = 10;
     private const PERIODS = ['幼少期', '小学生', '中学生', '高校生', '大学生', '成人期', '不明'];
+    private const CREATE_COMPOSER_GROUP_META = [
+        'warm' => [
+            'label' => 'あたたかい',
+            'previewLabel' => 'やわらかな光',
+            'tone' => 'やさしく、あたたかく残る記憶',
+        ],
+        'calm' => [
+            'label' => '静かな',
+            'previewLabel' => '静かな余韻',
+            'tone' => '落ち着いた空気をまとった記憶',
+        ],
+        'sway' => [
+            'label' => '揺れている',
+            'previewLabel' => 'ゆらぐ光',
+            'tone' => '気持ちが少し揺れている記憶',
+        ],
+        'heavy' => [
+            'label' => '重たい',
+            'previewLabel' => '深い残響',
+            'tone' => '重く深く沈むような記憶',
+        ],
+    ];
+    private const CREATE_COMPOSER_EMOTION_OPTIONS = [
+        'warm' => ['嬉しい', '楽しい', 'ホッとした', '幸せ', '満足', '感動', '誇らしい'],
+        'calm' => ['普通', 'なんとなく', '落ち着いている', 'ぼーっとした', '考え中'],
+        'sway' => ['モヤモヤ', '少し不安', '疲れた', '迷い', '気まずい', '引っかかる'],
+        'heavy' => ['悲しい', '不安', '落ち込み', '孤独', '無力感', '自信がない', '怒り'],
+    ];
+    private const CREATE_COMPOSER_BUBBLE_SIZE_CLASSES = ['lg', 'md', 'sm', 'md', 'lg', 'sm', 'md'];
 
     private const EMOTION_GROUPS = [
         'ポジティブ' => ['嬉しい', '楽しい', '安心', 'ホッとした', '幸せ', '満足', 'ワクワク', '感謝', '誇らしい', '自信がある'],
@@ -58,12 +87,17 @@ class MemoryController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        return view('memories.create', [
+        return view('memories.create', array_merge([
             'periods' => self::PERIODS,
             'emotionGroups' => self::EMOTION_GROUPS,
-        ]);
+        ], $this->createComposerViewData($request)));
+    }
+
+    public function createPreview(Request $request): View
+    {
+        return view('memories.create_v2', $this->createComposerViewData($request));
     }
 
     public function edit(Memory $memory): View
@@ -246,5 +280,65 @@ class MemoryController extends Controller
             'emotion.required' => '感情を選択してください。',
             'emotion.in' => '感情を正しく選択してください。',
         ]);
+    }
+
+    private function createComposerViewData(Request $request): array
+    {
+        $emotionToGroup = [];
+
+        foreach (self::CREATE_COMPOSER_EMOTION_OPTIONS as $groupKey => $emotions) {
+            foreach ($emotions as $emotion) {
+                $emotionToGroup[$emotion] = $groupKey;
+            }
+        }
+
+        $defaultPeriod = self::PERIODS[2] ?? self::PERIODS[0];
+        $defaultEmotion = self::CREATE_COMPOSER_EMOTION_OPTIONS['warm'][2] ?? self::CREATE_COMPOSER_EMOTION_OPTIONS['warm'][0];
+        $initialPeriod = $request->old('period', $defaultPeriod);
+        $initialContent = (string) $request->old('content', '');
+        $initialEmotion = (string) $request->old('emotion', $defaultEmotion);
+
+        if (!in_array($initialPeriod, self::PERIODS, true)) {
+            $initialPeriod = $defaultPeriod;
+        }
+
+        if (!array_key_exists($initialEmotion, $emotionToGroup)) {
+            $initialEmotion = $defaultEmotion;
+        }
+
+        $contentLength = mb_strlen(trim($initialContent));
+
+        return [
+            'eras' => self::PERIODS,
+            'createComposerGroupMeta' => self::CREATE_COMPOSER_GROUP_META,
+            'createComposerEmotionOptions' => self::CREATE_COMPOSER_EMOTION_OPTIONS,
+            'createComposerBubbleSizeClasses' => self::CREATE_COMPOSER_BUBBLE_SIZE_CLASSES,
+            'createComposerEmotionToGroup' => $emotionToGroup,
+            'createComposerInitialState' => [
+                'period' => $initialPeriod,
+                'content' => $initialContent,
+                'emotion' => $initialEmotion,
+                'group' => $emotionToGroup[$initialEmotion] ?? 'warm',
+                'contentLength' => $contentLength,
+                'filledLevel' => $this->createComposerFilledLevel($contentLength),
+            ],
+        ];
+    }
+
+    private function createComposerFilledLevel(int $contentLength): string
+    {
+        if ($contentLength === 0) {
+            return 'empty';
+        }
+
+        if ($contentLength < 60) {
+            return 'soft';
+        }
+
+        if ($contentLength < 140) {
+            return 'medium';
+        }
+
+        return 'dense';
     }
 }

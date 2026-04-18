@@ -41,6 +41,12 @@
             padding: 28px 0 40px;
         }
 
+        .page.page-home {
+            width: 100%;
+            max-width: none;
+            padding: 0;
+        }
+
         .hero {
             display: grid;
             grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.95fr);
@@ -282,10 +288,12 @@
             h1 { font-size: 30px; }
         }
     </style>
+    @stack('head')
 </head>
-<body>
-    <div class="page">
+<body class="@yield('body_class')">
+    <div class="page @yield('page_class')">
         @yield('content')
     </div>
+    @stack('scripts')
 </body>
 </html>

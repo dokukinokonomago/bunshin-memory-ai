@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [MemoryController::class, 'home'])->name('home');
 Route::get('/memories', [MemoryController::class, 'index'])->name('memories.index');
 Route::get('/memories/bubbles', [MemoryController::class, 'bubbles'])->name('memories.bubbles');
+Route::get('/memories/create-preview', [MemoryController::class, 'createPreview'])->name('memories.create.preview');
 Route::get('/memories/create', [MemoryController::class, 'create'])->name('memories.create');
 Route::post('/memories', [MemoryController::class, 'store'])->name('memories.store');
 Route::get('/memories/{memory}/edit', [MemoryController::class, 'edit'])->name('memories.edit');
