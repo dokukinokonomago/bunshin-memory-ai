@@ -12,7 +12,9 @@ use Illuminate\View\View;
 
 class MemoryController extends Controller
 {
-    private const BUBBLE_LAYER_SIZE = 10;
+    private const BUBBLE_LAYER_SIZE = 100;
+    private const ACTIVE_CREATE_VIEW = 'memories.create';
+    private const PREVIEW_CREATE_VIEW = 'memories.create_v2';
     private const PERIODS = ['幼少期', '小学生', '中学生', '高校生', '大学生', '成人期', '不明'];
     private const CREATE_COMPOSER_GROUP_META = [
         'warm' => [
@@ -43,6 +45,28 @@ class MemoryController extends Controller
         'heavy' => ['悲しい', '不安', '落ち込み', '孤独', '無力感', '自信がない', '怒り'],
     ];
     private const CREATE_COMPOSER_BUBBLE_SIZE_CLASSES = ['lg', 'md', 'sm', 'md', 'lg', 'sm', 'md'];
+    private const CREATE_COMPOSER_FILLED_STATE_META = [
+        'empty' => [
+            'label' => 'EMPTY',
+            'summary' => '輪郭待ち',
+            'description' => 'まだ輪郭は淡く、書き始めを待っています。',
+        ],
+        'soft' => [
+            'label' => 'SOFT',
+            'summary' => 'やわらかい輪郭',
+            'description' => '記憶のはじまりが静かに浮かび上がっています。',
+        ],
+        'medium' => [
+            'label' => 'MEDIUM',
+            'summary' => '輪郭が整う',
+            'description' => '情景と感情が結びつき、記憶の像が見えてきました。',
+        ],
+        'dense' => [
+            'label' => 'DENSE',
+            'summary' => '深く定着',
+            'description' => '記憶の密度が高まり、保存できる状態に近づいています。',
+        ],
+    ];
 
     private const EMOTION_GROUPS = [
         'ポジティブ' => ['嬉しい', '楽しい', '安心', 'ホッとした', '幸せ', '満足', 'ワクワク', '感謝', '誇らしい', '自信がある'],
@@ -89,15 +113,12 @@ class MemoryController extends Controller
 
     public function create(Request $request): View
     {
-        return view('memories.create', array_merge([
-            'periods' => self::PERIODS,
-            'emotionGroups' => self::EMOTION_GROUPS,
-        ], $this->createComposerViewData($request)));
+        return $this->renderCreateView($request, self::ACTIVE_CREATE_VIEW);
     }
 
     public function createPreview(Request $request): View
     {
-        return view('memories.create_v2', $this->createComposerViewData($request));
+        return $this->renderCreateView($request, self::PREVIEW_CREATE_VIEW);
     }
 
     public function edit(Memory $memory): View
@@ -201,12 +222,42 @@ class MemoryController extends Controller
 
     private function allEmotions(): Collection
     {
-        return collect(self::EMOTION_GROUPS)->flatten();
+        return collect(self::EMOTION_GROUPS)
+            ->flatten()
+            ->merge(collect(self::CREATE_COMPOSER_EMOTION_OPTIONS)->flatten())
+            ->unique()
+            ->values();
     }
 
     private function emotionToneMap(): array
     {
-        $map = [];
+        $map = [
+            '嬉しい' => 'ポジティブ',
+            '楽しい' => 'ポジティブ',
+            'ホッとした' => 'ポジティブ',
+            '幸せ' => 'ポジティブ',
+            '満足' => 'ポジティブ',
+            '感動' => 'ポジティブ',
+            '誇らしい' => 'ポジティブ',
+            '普通' => 'ニュートラル',
+            'なんとなく' => 'ニュートラル',
+            '落ち着いている' => 'ニュートラル',
+            'ぼーっとした' => 'ニュートラル',
+            '考え中' => 'ニュートラル',
+            'モヤモヤ' => 'ネガティブ（軽め）',
+            '少し不安' => 'ネガティブ（軽め）',
+            '疲れた' => 'ネガティブ（軽め）',
+            '迷い' => 'ネガティブ（軽め）',
+            '気まずい' => 'ネガティブ（軽め）',
+            '引っかかる' => 'ネガティブ（軽め）',
+            '悲しい' => 'ネガティブ（強め）',
+            '不安' => 'ネガティブ（強め）',
+            '落ち込み' => 'ネガティブ（強め）',
+            '孤独' => 'ネガティブ（強め）',
+            '無力感' => 'ネガティブ（強め）',
+            '自信がない' => 'ネガティブ（強め）',
+            '怒り' => 'ネガティブ（強め）',
+        ];
 
         foreach (self::EMOTION_GROUPS as $group => $emotions) {
             foreach ($emotions as $emotion) {
@@ -269,17 +320,23 @@ class MemoryController extends Controller
 
     private function validateMemory(Request $request): array
     {
-        return $request->validate([
+        $validated = $request->validate([
             'period' => ['required', Rule::in(self::PERIODS)],
             'content' => ['required', 'string'],
-            'emotion' => ['required', Rule::in($this->allEmotions()->all())],
+            'emotion' => ['required', 'string', 'max:20'],
         ], [
             'period.required' => '年代を選択してください。',
             'period.in' => '年代を正しく選択してください。',
             'content.required' => '内容を入力してください。',
             'emotion.required' => '感情を選択してください。',
-            'emotion.in' => '感情を正しく選択してください。',
+            'emotion.max' => '感情は20文字以内で入力してください。',
         ]);
+
+        return [
+            'period' => $validated['period'],
+            'content' => trim($validated['content']),
+            'emotion' => trim($validated['emotion']),
+        ];
     }
 
     private function createComposerViewData(Request $request): array
@@ -307,12 +364,14 @@ class MemoryController extends Controller
         }
 
         $contentLength = mb_strlen(trim($initialContent));
+        $filledLevel = $this->createComposerFilledLevel($contentLength);
 
         return [
             'eras' => self::PERIODS,
             'createComposerGroupMeta' => self::CREATE_COMPOSER_GROUP_META,
             'createComposerEmotionOptions' => self::CREATE_COMPOSER_EMOTION_OPTIONS,
             'createComposerBubbleSizeClasses' => self::CREATE_COMPOSER_BUBBLE_SIZE_CLASSES,
+            'createComposerFilledStateMeta' => self::CREATE_COMPOSER_FILLED_STATE_META,
             'createComposerEmotionToGroup' => $emotionToGroup,
             'createComposerInitialState' => [
                 'period' => $initialPeriod,
@@ -320,9 +379,18 @@ class MemoryController extends Controller
                 'emotion' => $initialEmotion,
                 'group' => $emotionToGroup[$initialEmotion] ?? 'warm',
                 'contentLength' => $contentLength,
-                'filledLevel' => $this->createComposerFilledLevel($contentLength),
+                'filledLevel' => $filledLevel,
+                'filledState' => self::CREATE_COMPOSER_FILLED_STATE_META[$filledLevel],
             ],
         ];
+    }
+
+    private function renderCreateView(Request $request, string $view): View
+    {
+        return view($view, array_merge([
+            'periods' => self::PERIODS,
+            'emotionGroups' => self::EMOTION_GROUPS,
+        ], $this->createComposerViewData($request)));
     }
 
     private function createComposerFilledLevel(int $contentLength): string

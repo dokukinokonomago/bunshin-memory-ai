@@ -20,6 +20,16 @@
 
         * { box-sizing: border-box; }
 
+        html {
+            min-height: 100%;
+            background:
+                radial-gradient(circle at 12% 12%, rgba(86, 132, 255, 0.2), transparent 22%),
+                radial-gradient(circle at 88% 10%, rgba(126, 209, 255, 0.16), transparent 20%),
+                radial-gradient(circle at 70% 100%, rgba(88, 108, 255, 0.14), transparent 24%),
+                linear-gradient(160deg, #02040b 0%, #050916 48%, #0a1124 100%);
+            background-color: #02040b;
+        }
+
         body {
             margin: 0;
             min-height: 100vh;
@@ -29,6 +39,8 @@
                 radial-gradient(circle at 88% 10%, rgba(126, 209, 255, 0.16), transparent 20%),
                 radial-gradient(circle at 70% 100%, rgba(88, 108, 255, 0.14), transparent 24%),
                 linear-gradient(160deg, #02040b 0%, #050916 48%, #0a1124 100%);
+            background-color: #02040b;
+            background-attachment: fixed;
             font-family: "Avenir Next", "Hiragino Sans", "Yu Gothic", sans-serif;
         }
 
@@ -289,6 +301,7 @@
         }
     </style>
     @stack('head')
+    @stack('styles')
 </head>
 <body class="@yield('body_class')">
     <div class="page @yield('page_class')">

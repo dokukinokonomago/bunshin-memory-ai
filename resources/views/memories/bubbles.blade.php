@@ -508,7 +508,8 @@
         }
 
         .memory-ball.is-hovered .memory-ball-body {
-            transform: scale(3);
+            animation: none;
+            transform: scale(var(--bubble-hover-scale, 1.16));
             filter: brightness(1.12) saturate(1.12) drop-shadow(0 26px 34px rgba(108, 127, 169, 0.2));
         }
 
@@ -709,9 +710,13 @@
                 return node;
             }
 
+            function getRadius(index) {
+                const pattern = [108, 96, 92, 112, 86, 98, 90, 104, 88, 100, 91, 95];
+                return pattern[index % pattern.length];
+            }
+
             memories.forEach((memory, index) => {
-                const radiusPattern = [108, 96, 92, 112, 86, 98, 90, 104, 88, 100, 91, 95];
-                const radius = radiusPattern[index % radiusPattern.length];
+                const radius = getRadius(index);
                 const position = getPosition(index, memories.length, radius);
                 const gradientId = addGradient(index + 1, memory.colors);
 
@@ -732,6 +737,7 @@
                     style: [
                         `--bubble-rest-scale:${(0.93 + (index % 4) * 0.02).toFixed(2)}`,
                         `--bubble-rise-scale:${(1.02 + (index % 5) * 0.025).toFixed(2)}`,
+                        `--bubble-hover-scale:${(1.12 + (index % 4) * 0.025).toFixed(2)}`,
                         `--bubble-duration:${(5.2 + (index % 5) * 0.55).toFixed(2)}s`,
                         `--bubble-delay:${(-index * 0.45).toFixed(2)}s`
                     ].join(";")
@@ -812,7 +818,6 @@
                 wrapper.appendChild(group);
                 wrapper.addEventListener("mouseenter", () => {
                     group.classList.add("is-hovered");
-                    bubbleLayer.appendChild(wrapper);
                 });
                 wrapper.addEventListener("mouseleave", () => {
                     group.classList.remove("is-hovered");

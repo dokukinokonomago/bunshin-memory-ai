@@ -13,6 +13,7 @@
                 </p>
                 <div class="hero-actions">
                     <a class="btn btn-primary" href="{{ route('memories.create') }}">新しい記憶を追加</a>
+                    <a class="btn btn-secondary" href="{{ route('memories.create.preview') }}">新UI Preview</a>
                     <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">記憶の玉へ戻る</a>
                 </div>
             </div>
