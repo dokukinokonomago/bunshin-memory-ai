@@ -15,9 +15,6 @@
                 @endif
             </div>
         @else
-            @php
-                $bubbleBaseParams = $selectedPeriod !== 'すべて' ? ['period' => $selectedPeriod] : [];
-            @endphp
             <div class="bubble-stage-copy">
                 <span class="eyebrow">PERSONAL MEMORY ARCHIVE</span>
                 <h1>YOUの記憶</h1>
@@ -33,30 +30,23 @@
                         <strong>{{ $matchingCount }}</strong>
                     </section>
 
-                    @if ($layerCount > 1)
-                        <section class="bubble-rail-section bubble-stage-nav">
-                            <span class="bubble-side-label">表示階層</span>
-                            <strong>第{{ $currentLayer }}層 / 全{{ $layerCount }}層</strong>
-                            <div class="bubble-nav-actions">
-                                @if ($hasNextLayer)
-                                    <a class="bubble-mini-btn" href="{{ route('memories.bubbles', array_merge($bubbleBaseParams, ['layer' => $currentLayer + 1])) }}">もっと見る</a>
-                                @else
-                                    <span class="bubble-mini-btn is-disabled">もっと見る</span>
-                                @endif
-
-                                @if ($hasPreviousLayer)
-                                    <a class="bubble-mini-btn" href="{{ route('memories.bubbles', array_merge($bubbleBaseParams, ['layer' => $currentLayer - 1])) }}">1つ戻る</a>
-                                    <a class="bubble-mini-btn" href="{{ route('memories.bubbles', $bubbleBaseParams) }}">最初に戻る</a>
-                                @else
-                                    <span class="bubble-mini-btn is-disabled">1つ戻る</span>
-                                    <span class="bubble-mini-btn is-disabled">最初に戻る</span>
-                                @endif
+                    <section class="bubble-rail-section bubble-stage-nav">
+                        <span class="bubble-side-label">記憶玉の階層</span>
+                        <strong data-current-layer-order>1個目 / 全{{ $layerCount }}個</strong>
+                        <div class="bubble-nav-meta">
+                            <div>
+                                <span>表示中の記憶</span>
+                                <b data-current-range>{{ $currentRangeStart }}-{{ $currentRangeEnd }}件目</b>
                             </div>
-                        </section>
-                    @endif
-
-                    <section class="bubble-rail-section">
-                        <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶を追加</a>
+                            <div>
+                                <span>この階層の件数</span>
+                                <b data-current-count>{{ $displayCount }}件</b>
+                            </div>
+                        </div>
+                        <div class="bubble-nav-actions">
+                            <button class="bubble-mini-btn" type="button" data-layer-action="back" @disabled(! $hasPreviousLayer)>手前へ戻る</button>
+                            <button class="bubble-mini-btn" type="button" data-layer-action="next" @disabled(! $hasNextLayer)>奥をひらく</button>
+                        </div>
                     </section>
 
                     <details class="bubble-rail-section bubble-stage-filter">
@@ -78,8 +68,13 @@
                         </form>
                     </details>
 
+                    <section class="bubble-rail-section bubble-stage-status">
+                        <span class="bubble-side-label">操作の状態</span>
+                        <p data-gesture-status>いちばん手前の記憶玉を表示しています。</p>
+                    </section>
+
                     <section class="bubble-rail-section">
-                        <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶と話す</a>
+                        <a class="btn btn-secondary bubble-rail-btn" href="{{ route('memories.create.preview') }}">記憶を追加</a>
                     </section>
 
                     <section class="bubble-rail-section">
@@ -89,12 +84,12 @@
             </div>
 
             <div class="bubble-stage-shell">
-                <div class="bubble-caption">MEMORY BUBBLE / CLICK A MEMORY</div>
+                <div class="bubble-caption">MEMORY BUBBLE / TAP TO OPEN A MEMORY</div>
                 @if ($selectedPeriod !== 'すべて')
                     <div class="bubble-period-banner">{{ $selectedPeriod }}</div>
                 @endif
-                <svg id="bubbleStage" viewBox="0 0 1400 920" xmlns="http://www.w3.org/2000/svg" aria-label="YOUの記憶">
-                    <defs>
+                <svg id="bubbleStage" viewBox="0 0 1400 980" xmlns="http://www.w3.org/2000/svg" aria-label="YOUの記憶">
+                    <defs id="bubbleDefs">
                         <filter id="shellGlow" x="-80%" y="-80%" width="260%" height="260%">
                             <feGaussianBlur stdDeviation="44"></feGaussianBlur>
                         </filter>
@@ -118,54 +113,7 @@
                     <circle cx="1048" cy="732" r="3.8" fill="rgba(255,255,255,0.74)"></circle>
                     <circle cx="248" cy="622" r="2.6" fill="rgba(218,234,255,0.7)"></circle>
 
-                    @if ($layerCount > 1)
-                        @foreach (range(min($layerCount - 1, 3), 1) as $stackIndex)
-                            @php
-                                $stackOffsetX = 38 * $stackIndex;
-                                $stackOffsetY = -30 * $stackIndex;
-                                $stackRadius = 376 - (14 * $stackIndex);
-                                $stackOpacity = 0.1 + (0.03 * (min($layerCount - 1, 3) - $stackIndex));
-                            @endphp
-                            <ellipse
-                                cx="{{ 714 + $stackOffsetX }}"
-                                cy="{{ 548 + $stackOffsetY }}"
-                                rx="{{ 176 - (12 * $stackIndex) }}"
-                                ry="{{ 52 - (4 * $stackIndex) }}"
-                                fill="rgba(20, 48, 86, 0.28)"
-                                filter="url(#stackShadow)"
-                                class="bubble-stack-shadow bubble-shell-breath"
-                                style="--shell-duration: {{ 8.4 + ($stackIndex * 0.7) }}s; --shell-delay: -{{ 0.85 * $stackIndex }}s;"
-                            ></ellipse>
-                            <g
-                                filter="url(#shellGlow)"
-                                class="bubble-stack-layer bubble-shell-breath"
-                                style="--shell-duration: {{ 8.4 + ($stackIndex * 0.7) }}s; --shell-delay: -{{ 0.85 * $stackIndex }}s;"
-                            >
-                                <circle
-                                    cx="{{ 700 + $stackOffsetX }}"
-                                    cy="{{ 470 + $stackOffsetY }}"
-                                    r="{{ $stackRadius }}"
-                                    fill="rgba(130, 194, 255, {{ $stackOpacity }})"
-                                ></circle>
-                                <ellipse
-                                    cx="{{ 624 + $stackOffsetX }}"
-                                    cy="{{ 374 + $stackOffsetY }}"
-                                    rx="{{ 108 - (8 * $stackIndex) }}"
-                                    ry="{{ 40 - (3 * $stackIndex) }}"
-                                    fill="rgba(255,255,255,0.10)"
-                                    transform="rotate(-18 {{ 624 + $stackOffsetX }} {{ 374 + $stackOffsetY }})"
-                                ></ellipse>
-                                <circle
-                                    cx="{{ 700 + $stackOffsetX }}"
-                                    cy="{{ 470 + $stackOffsetY }}"
-                                    r="{{ $stackRadius - 10 }}"
-                                    fill="none"
-                                    stroke="rgba(214, 236, 255, 0.14)"
-                                    stroke-width="2"
-                                ></circle>
-                            </g>
-                        @endforeach
-                    @endif
+                    <g id="bubbleStackLayers"></g>
 
                     <g filter="url(#shellGlow)" class="bubble-shell-breath bubble-shell-main" style="--shell-duration: 7.6s; --shell-delay: -0.4s;">
                         <circle cx="700" cy="470" r="372" fill="rgba(124, 187, 255, 0.22)"></circle>
@@ -202,6 +150,17 @@
                     ></circle>
                     <g id="bubbleLayer"></g>
                 </svg>
+
+                <div class="bubble-gesture-guide">
+                    <span class="bubble-gesture-pill">
+                        <i></i>
+                        2本指でひろげると奥の記憶玉へ
+                    </span>
+                    <span class="bubble-gesture-pill">
+                        <i></i>
+                        つまむ / ホイール下で手前へ戻る
+                    </span>
+                </div>
             </div>
         @endif
     </section>
@@ -209,7 +168,7 @@
     <style>
         .bubble-stage-panel {
             position: relative;
-            min-height: min(920px, calc(100vh - 72px));
+            min-height: min(980px, calc(100vh - 72px));
             padding: 0;
             overflow: hidden;
             background:
@@ -256,7 +215,7 @@
         }
 
         .bubble-stage-panel .btn:hover,
-        .bubble-stage-panel .bubble-mini-btn:hover {
+        .bubble-stage-panel .bubble-mini-btn:hover:not(:disabled) {
             transform: translateY(-1px);
             border-color: rgba(196, 224, 255, 0.34);
             color: rgba(250, 252, 255, 0.98);
@@ -270,7 +229,8 @@
             box-shadow: 0 14px 28px rgba(40, 82, 168, 0.26);
         }
 
-        .bubble-stage-panel .btn-secondary {
+        .bubble-stage-panel .btn-secondary,
+        .bubble-mini-btn {
             background: linear-gradient(135deg, rgba(20, 29, 54, 0.92), rgba(11, 19, 38, 0.96));
             border-color: rgba(166, 204, 255, 0.16);
             color: rgba(232, 241, 255, 0.92);
@@ -279,14 +239,21 @@
 
         .bubble-stage-panel .btn-primary:hover,
         .bubble-stage-panel .btn-secondary:hover,
-        .bubble-stage-panel .bubble-mini-btn:hover {
+        .bubble-stage-panel .bubble-mini-btn:hover:not(:disabled) {
             background: linear-gradient(135deg, rgba(88, 150, 255, 0.42), rgba(53, 98, 213, 0.92));
+        }
+
+        .bubble-mini-btn:disabled {
+            opacity: 0.34;
+            cursor: default;
+            pointer-events: none;
         }
 
         .bubble-stage-shell {
             position: relative;
             width: 100%;
             height: 100%;
+            padding-bottom: 84px;
         }
 
         .bubble-stage-rail {
@@ -294,8 +261,7 @@
             top: 184px;
             right: 24px;
             z-index: 3;
-            width: min(236px, 24vw);
-            height: min(430px, calc(100% - 240px));
+            width: min(248px, 25vw);
         }
 
         .bubble-stage-side {
@@ -305,16 +271,11 @@
             padding: 16px 18px;
             border-radius: 20px;
             background: transparent;
-            border: 1px solid transparent;
-            backdrop-filter: none;
-            box-shadow: none;
         }
 
         .bubble-stage-rail-card {
             display: grid;
             gap: 0;
-            height: 100%;
-            overflow: hidden;
             align-content: start;
         }
 
@@ -338,52 +299,55 @@
             line-height: 1.05;
         }
 
-        .bubble-stage-filter {
-            padding-bottom: 0;
-        }
-
-        .bubble-rail-btn {
-            width: 100%;
-        }
-
-        .bubble-stage-nav {
-            padding-bottom: 2px;
-            text-align: left;
-        }
-
         .bubble-stage-nav strong {
             display: block;
             color: rgba(245, 249, 255, 0.98);
             font-size: 17px;
-            margin-bottom: 10px;
-            text-align: left;
+            margin-bottom: 12px;
+        }
+
+        .bubble-nav-meta {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .bubble-nav-meta div {
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(12, 20, 40, 0.52);
+            border: 1px solid rgba(166, 204, 255, 0.08);
+        }
+
+        .bubble-nav-meta span {
+            display: block;
+            margin-bottom: 4px;
+            color: rgba(188, 214, 255, 0.62);
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .bubble-nav-meta b {
+            color: rgba(245, 249, 255, 0.96);
+            font-size: 14px;
         }
 
         .bubble-nav-actions {
             display: flex;
-            flex-wrap: nowrap;
-            justify-content: flex-start;
-            gap: 6px;
+            gap: 8px;
         }
 
         .bubble-mini-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-height: 26px;
-            padding: 0 8px;
-            border: 1px solid rgba(178, 210, 255, 0.22);
-            background: linear-gradient(135deg, rgba(19, 30, 57, 0.96), rgba(10, 17, 35, 0.96));
-            color: rgba(240, 246, 255, 0.92);
-            font-size: 10px;
+            min-height: 30px;
+            padding: 0 10px;
+            font-size: 11px;
             text-decoration: none;
             white-space: nowrap;
-            box-shadow: 0 10px 22px rgba(6, 10, 24, 0.22);
-        }
-
-        .bubble-mini-btn.is-disabled {
-            opacity: 0.34;
-            pointer-events: none;
+            border: 1px solid rgba(178, 210, 255, 0.22);
         }
 
         .bubble-stage-filter summary {
@@ -392,6 +356,7 @@
         }
 
         .bubble-stage-rail .btn {
+            width: 100%;
             padding: 9px 12px;
             font-size: 11px;
             border-radius: 11px;
@@ -407,16 +372,8 @@
             font-size: 12px;
         }
 
-        .bubble-stage-rail .bubble-filter-actions {
-            gap: 8px;
-        }
-
         .bubble-stage-filter summary::-webkit-details-marker {
             display: none;
-        }
-
-        .bubble-stage-filter[open] {
-            width: 100%;
         }
 
         .bubble-filter-form {
@@ -449,10 +406,17 @@
             text-transform: uppercase;
         }
 
+        .bubble-stage-status p {
+            margin: 0;
+            color: rgba(225, 236, 255, 0.78);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
         .bubble-caption {
             position: absolute;
             left: 28px;
-            bottom: 22px;
+            bottom: 56px;
             z-index: 2;
             color: rgba(176, 202, 245, 0.58);
             font-size: 12px;
@@ -482,6 +446,7 @@
             height: auto;
             max-height: min(920px, calc(100vh - 72px));
             display: block;
+            touch-action: none;
         }
 
         .bubble-shell-breath {
@@ -491,16 +456,12 @@
             will-change: transform, opacity;
         }
 
-        .bubble-shell-main {
-            animation-duration: var(--shell-duration, 7.6s);
-        }
-
         .memory-ball-wrap {
             transform-box: fill-box;
             transform-origin: center;
             will-change: opacity;
             opacity: 0;
-            animation: bubbleReveal 0.72s ease var(--bubble-appear-delay, 0s) forwards;
+            animation: bubbleReveal 0.68s ease var(--bubble-appear-delay, 0s) forwards;
         }
 
         .memory-ball {
@@ -509,7 +470,7 @@
 
         .memory-ball.is-hovered .memory-ball-body {
             animation: none;
-            transform: scale(var(--bubble-hover-scale, 1.16));
+            transform: scale(var(--bubble-hover-scale, 1.15));
             filter: brightness(1.12) saturate(1.12) drop-shadow(0 26px 34px rgba(108, 127, 169, 0.2));
         }
 
@@ -521,18 +482,65 @@
             transition: transform 0.42s cubic-bezier(0.2, 0.7, 0.2, 1), filter 0.42s cubic-bezier(0.2, 0.7, 0.2, 1);
         }
 
+        .memory-label {
+            fill: white;
+            font-weight: 700;
+            font-size: 12px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            paint-order: stroke;
+            stroke: rgba(0, 0, 0, 0.12);
+            stroke-width: 2px;
+            stroke-linejoin: round;
+            pointer-events: none;
+        }
+
+        .bubble-depth-label {
+            fill: rgba(236, 244, 255, 0.86);
+            font-size: 12px;
+            font-weight: 700;
+            text-anchor: middle;
+        }
+
+        .bubble-gesture-guide {
+            position: absolute;
+            left: 50%;
+            bottom: 14px;
+            z-index: 2;
+            transform: translateX(-50%);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            width: min(760px, calc(100% - 64px));
+        }
+
+        .bubble-gesture-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(11, 18, 38, 0.74);
+            border: 1px solid rgba(177, 212, 255, 0.14);
+            color: rgba(228, 238, 255, 0.88);
+            font-size: 11px;
+            box-shadow: 0 10px 22px rgba(5, 9, 22, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .bubble-gesture-pill i {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(170, 222, 255, 1), rgba(255, 193, 214, 0.94));
+            box-shadow: 0 0 12px rgba(167, 216, 255, 0.44);
+        }
+
         @keyframes bubblePulse {
-            0% {
-                transform: scale(var(--bubble-rest-scale, 0.96));
-            }
-
-            50% {
-                transform: scale(var(--bubble-rise-scale, 1.06));
-            }
-
-            100% {
-                transform: scale(var(--bubble-rest-scale, 0.96));
-            }
+            0% { transform: scale(var(--bubble-rest-scale, 0.96)); }
+            50% { transform: scale(var(--bubble-rise-scale, 1.06)); }
+            100% { transform: scale(var(--bubble-rest-scale, 0.96)); }
         }
 
         @keyframes bubbleReveal {
@@ -564,28 +572,14 @@
             }
         }
 
-        .memory-label {
-            fill: white;
-            font-weight: 700;
-            font-size: 12px;
-            text-anchor: middle;
-            dominant-baseline: middle;
-            paint-order: stroke;
-            stroke: rgba(0, 0, 0, 0.12);
-            stroke-width: 2px;
-            stroke-linejoin: round;
-            pointer-events: none;
-        }
-
         @media (max-width: 980px) {
             .bubble-stage-panel {
-                min-height: 760px;
+                min-height: 820px;
             }
 
             .bubble-stage-rail {
                 top: 170px;
-                width: min(220px, 27vw);
-                height: min(408px, calc(100% - 224px));
+                width: min(224px, 28vw);
             }
         }
 
@@ -602,20 +596,12 @@
                 margin: 0 18px 14px;
             }
 
-            .bubble-stage-side {
-                width: auto;
+            .bubble-stage-shell {
+                padding-bottom: 112px;
             }
 
             .bubble-stage-count {
                 text-align: left;
-            }
-
-            .bubble-stage-filter[open] {
-                width: auto;
-            }
-
-            .bubble-stage-shell {
-                padding-bottom: 16px;
             }
 
             #bubbleStage {
@@ -624,7 +610,7 @@
 
             .bubble-caption {
                 left: 18px;
-                bottom: 18px;
+                bottom: 82px;
             }
 
             .bubble-period-banner {
@@ -632,42 +618,36 @@
                 max-width: calc(100% - 136px);
                 text-align: center;
             }
+
+            .bubble-gesture-guide {
+                width: calc(100% - 24px);
+                bottom: 16px;
+            }
         }
     </style>
 
     @if ($bubbleMemories->isNotEmpty())
         <script>
-            const memories = @json($bubbleMemories);
+            const bubbleLayers = @json($bubbleLayers);
             const svgNS = "http://www.w3.org/2000/svg";
-            const bubbleLayer = document.getElementById("bubbleLayer");
-            const stage = {
-                x: 700,
-                y: 470,
-                r: 362
-            };
+            const bubbleLayerNode = document.getElementById("bubbleLayer");
+            const bubbleStackNode = document.getElementById("bubbleStackLayers");
+            const defsNode = document.getElementById("bubbleDefs");
+            const stageNode = document.getElementById("bubbleStage");
+            const layerOrderNode = document.querySelector("[data-current-layer-order]");
+            const currentRangeNode = document.querySelector("[data-current-range]");
+            const currentCountNode = document.querySelector("[data-current-count]");
+            const gestureStatusNode = document.querySelector("[data-gesture-status]");
+            const layerButtons = document.querySelectorAll("[data-layer-action]");
+            const stage = { x: 700, y: 470, r: 362 };
+            let currentLayerIndex = 0;
+            let wheelTravel = 0;
+            let pinchDistance = null;
 
             function createSvg(tag, attrs = {}) {
                 const element = document.createElementNS(svgNS, tag);
                 Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
                 return element;
-            }
-
-            function addGradient(index, colors) {
-                const defs = document.querySelector("#bubbleStage defs");
-                const id = `memGrad${index}`;
-                const gradient = createSvg("radialGradient", {
-                    id,
-                    cx: "30%",
-                    cy: "28%",
-                    r: "70%"
-                });
-
-                gradient.appendChild(createSvg("stop", { offset: "0%", "stop-color": toRgba(colors[0], 0.96) }));
-                gradient.appendChild(createSvg("stop", { offset: "55%", "stop-color": toRgba(colors[0], 0.54) }));
-                gradient.appendChild(createSvg("stop", { offset: "100%", "stop-color": toRgba(colors[1], 0.74) }));
-                defs.appendChild(gradient);
-
-                return id;
             }
 
             function toRgba(color, alpha) {
@@ -685,11 +665,43 @@
                 return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
             }
 
+            function addGradient(index, colors) {
+                const gradient = createSvg("radialGradient", {
+                    id: `memGrad${currentLayerIndex + 1}_${index}`,
+                    cx: "30%",
+                    cy: "28%",
+                    r: "70%",
+                    "data-memory-gradient": "true"
+                });
+
+                gradient.appendChild(createSvg("stop", { offset: "0%", "stop-color": toRgba(colors[0], 0.96) }));
+                gradient.appendChild(createSvg("stop", { offset: "55%", "stop-color": toRgba(colors[0], 0.54) }));
+                gradient.appendChild(createSvg("stop", { offset: "100%", "stop-color": toRgba(colors[1], 0.74) }));
+                defsNode.appendChild(gradient);
+
+                return gradient.getAttribute("id");
+            }
+
+            function clearLayerGraphics() {
+                bubbleLayerNode.replaceChildren();
+                bubbleStackNode.replaceChildren();
+                defsNode.querySelectorAll('[data-memory-gradient="true"]').forEach((node) => node.remove());
+            }
+
+            function getRadius(index) {
+                const pattern = [110, 98, 92, 104, 88, 96, 90, 102, 94, 100];
+                return pattern[index % pattern.length];
+            }
+
             function getPosition(index, total, radius) {
+                if (total === 1) {
+                    return { x: stage.x, y: stage.y };
+                }
+
                 const goldenAngle = Math.PI * (3 - Math.sqrt(5));
                 const t = (index + 0.5) / total;
-                const spread = stage.r - radius - 16;
-                const radial = Math.sqrt(t) * spread * 0.99;
+                const spread = stage.r - radius - 20;
+                const radial = Math.sqrt(t) * spread * 0.98;
                 const angle = index * goldenAngle - Math.PI / 2;
 
                 return {
@@ -710,120 +722,286 @@
                 return node;
             }
 
-            function getRadius(index) {
-                const pattern = [108, 96, 92, 112, 86, 98, 90, 104, 88, 100, 91, 95];
-                return pattern[index % pattern.length];
+            function renderStackLayers() {
+                const hiddenLayerCount = Math.max(0, bubbleLayers.length - currentLayerIndex - 1);
+                const previewCount = Math.min(hiddenLayerCount, 4);
+
+                for (let previewIndex = previewCount; previewIndex >= 1; previewIndex -= 1) {
+                    const stackOffsetX = 28 * previewIndex;
+                    const stackOffsetY = -22 * previewIndex;
+                    const stackRadius = 372 - (14 * previewIndex);
+                    const stackOpacity = 0.12 + (0.025 * (previewCount - previewIndex));
+                    const depthLabel = createSvg("text", {
+                        x: 700 + stackOffsetX,
+                        y: 470 + stackOffsetY + 6,
+                        class: "bubble-depth-label"
+                    });
+
+                    depthLabel.textContent = `+${hiddenLayerCount - previewIndex + 1}`;
+
+                    bubbleStackNode.appendChild(createSvg("ellipse", {
+                        cx: 714 + stackOffsetX,
+                        cy: 548 + stackOffsetY,
+                        rx: 176 - (12 * previewIndex),
+                        ry: 52 - (4 * previewIndex),
+                        fill: "rgba(20, 48, 86, 0.28)",
+                        filter: "url(#stackShadow)",
+                        class: "bubble-shell-breath",
+                        style: `--shell-duration:${8.2 + (previewIndex * 0.6)}s;--shell-delay:-${0.6 * previewIndex}s;`
+                    }));
+
+                    const group = createSvg("g", {
+                        filter: "url(#shellGlow)",
+                        class: "bubble-shell-breath",
+                        style: `--shell-duration:${8.2 + (previewIndex * 0.6)}s;--shell-delay:-${0.6 * previewIndex}s;`
+                    });
+
+                    group.appendChild(createSvg("circle", {
+                        cx: 700 + stackOffsetX,
+                        cy: 470 + stackOffsetY,
+                        r: stackRadius,
+                        fill: `rgba(130, 194, 255, ${stackOpacity})`
+                    }));
+                    group.appendChild(createSvg("ellipse", {
+                        cx: 624 + stackOffsetX,
+                        cy: 374 + stackOffsetY,
+                        rx: 108 - (8 * previewIndex),
+                        ry: 40 - (3 * previewIndex),
+                        fill: "rgba(255,255,255,0.10)",
+                        transform: `rotate(-18 ${624 + stackOffsetX} ${374 + stackOffsetY})`
+                    }));
+                    group.appendChild(createSvg("circle", {
+                        cx: 700 + stackOffsetX,
+                        cy: 470 + stackOffsetY,
+                        r: stackRadius - 10,
+                        fill: "none",
+                        stroke: "rgba(214, 236, 255, 0.14)",
+                        "stroke-width": "2"
+                    }));
+                    group.appendChild(depthLabel);
+
+                    bubbleStackNode.appendChild(group);
+                }
             }
 
-            memories.forEach((memory, index) => {
-                const radius = getRadius(index);
-                const position = getPosition(index, memories.length, radius);
-                const gradientId = addGradient(index + 1, memory.colors);
+            function renderVisibleLayer() {
+                clearLayerGraphics();
+                renderStackLayers();
 
-                const wrapper = createSvg("g", {
-                    class: "memory-ball-wrap",
-                    style: [
-                        `--bubble-appear-delay:${(0.06 * index).toFixed(2)}s`
-                    ].join(";")
+                const layer = bubbleLayers[currentLayerIndex] || bubbleLayers[0];
+
+                layer.memories.forEach((memory, index) => {
+                    const radius = getRadius(index);
+                    const position = getPosition(index, layer.memories.length, radius);
+                    const gradientId = addGradient(index + 1, memory.colors);
+                    const wrapper = createSvg("g", {
+                        class: "memory-ball-wrap",
+                        style: `--bubble-appear-delay:${(0.05 * index).toFixed(2)}s`
+                    });
+                    const group = createSvg("a", {
+                        href: `/memories/${memory.id}`,
+                        class: "memory-ball",
+                        "data-sequence": memory.sequence,
+                        "aria-label": `${memory.sequence}個目の記憶`,
+                        style: [
+                            `--bubble-rest-scale:${(0.94 + (index % 3) * 0.02).toFixed(2)}`,
+                            `--bubble-rise-scale:${(1.03 + (index % 4) * 0.02).toFixed(2)}`,
+                            `--bubble-hover-scale:${(1.11 + (index % 4) * 0.02).toFixed(2)}`,
+                            `--bubble-duration:${(5.4 + (index % 4) * 0.5).toFixed(2)}s`,
+                            `--bubble-delay:${(-index * 0.4).toFixed(2)}s`
+                        ].join(";")
+                    });
+                    const body = createSvg("g", { class: "memory-ball-body" });
+
+                    body.appendChild(createSvg("circle", {
+                        cx: position.x,
+                        cy: position.y,
+                        r: radius + 20,
+                        fill: toRgba(memory.colors[1], 0.2),
+                        filter: "url(#ballAura)"
+                    }));
+                    body.appendChild(createSvg("circle", {
+                        cx: position.x,
+                        cy: position.y,
+                        r: radius + 11,
+                        fill: "rgba(255,255,255,0.1)",
+                        filter: "url(#ballAura)"
+                    }));
+                    body.appendChild(createSvg("circle", {
+                        cx: position.x,
+                        cy: position.y,
+                        r: radius,
+                        fill: `url(#${gradientId})`,
+                        filter: "url(#ballShadow)",
+                        opacity: "0.88"
+                    }));
+                    body.appendChild(createSvg("circle", {
+                        cx: position.x - radius * 0.25,
+                        cy: position.y - radius * 0.28,
+                        r: Math.max(10, radius * 0.26),
+                        fill: "rgba(255,255,255,0.30)"
+                    }));
+                    body.appendChild(createSvg("circle", {
+                        cx: position.x + radius * 0.2,
+                        cy: position.y + radius * 0.14,
+                        r: Math.max(10, radius * 0.42),
+                        fill: toRgba(memory.colors[0], 0.12)
+                    }));
+                    body.appendChild(createSvg("circle", {
+                        cx: position.x,
+                        cy: position.y,
+                        r: radius - 1,
+                        fill: "none",
+                        stroke: "rgba(255,255,255,0.1)",
+                        "stroke-width": "0.9",
+                        filter: "url(#ballAura)"
+                    }));
+                    body.appendChild(createLabel(position.x, position.y, memory.label, radius));
+
+                    group.appendChild(createSvg("circle", {
+                        cx: position.x,
+                        cy: position.y,
+                        r: radius + 18,
+                        fill: "rgba(255,255,255,0.001)",
+                        "pointer-events": "all"
+                    }));
+                    group.appendChild(body);
+                    group.appendChild(createSvg("title")).textContent = `${memory.sequence}個目 / ${memory.period} / ${memory.emotion}\n${memory.content}`;
+                    wrapper.appendChild(group);
+
+                    wrapper.addEventListener("mouseenter", () => group.classList.add("is-hovered"));
+                    wrapper.addEventListener("mouseleave", () => group.classList.remove("is-hovered"));
+                    bubbleLayerNode.appendChild(wrapper);
                 });
 
-                const group = createSvg("a", {
-                    href: `/memories/${memory.id}`,
-                    class: "memory-ball",
-                    "data-period": memory.period,
-                    "data-emotion": memory.emotion,
-                    "data-tags": memory.tags.join(","),
-                    "aria-label": `${memory.period}の記憶`,
-                    style: [
-                        `--bubble-rest-scale:${(0.93 + (index % 4) * 0.02).toFixed(2)}`,
-                        `--bubble-rise-scale:${(1.02 + (index % 5) * 0.025).toFixed(2)}`,
-                        `--bubble-hover-scale:${(1.12 + (index % 4) * 0.025).toFixed(2)}`,
-                        `--bubble-duration:${(5.2 + (index % 5) * 0.55).toFixed(2)}s`,
-                        `--bubble-delay:${(-index * 0.45).toFixed(2)}s`
-                    ].join(";")
-                });
+                updateRailStatus();
+            }
 
-                const body = createSvg("g", {
-                    class: "memory-ball-body"
-                });
+            function updateRailStatus() {
+                const layer = bubbleLayers[currentLayerIndex] || bubbleLayers[0];
+                const isFirst = currentLayerIndex === 0;
+                const isLast = currentLayerIndex === bubbleLayers.length - 1;
 
-                const hitArea = createSvg("circle", {
-                    cx: position.x,
-                    cy: position.y,
-                    r: radius + 18,
-                    fill: "rgba(255,255,255,0.001)",
-                    "pointer-events": "all"
-                });
+                if (layerOrderNode) {
+                    layerOrderNode.textContent = `${layer.number}個目 / 全${bubbleLayers.length}個`;
+                }
 
-                const aura = createSvg("circle", {
-                    cx: position.x,
-                    cy: position.y,
-                    r: radius + 20,
-                    fill: toRgba(memory.colors[1], 0.2),
-                    filter: "url(#ballAura)"
-                });
+                if (currentRangeNode) {
+                    currentRangeNode.textContent = `${layer.startIndex}-${layer.endIndex}件目`;
+                }
 
-                const glow = createSvg("circle", {
-                    cx: position.x,
-                    cy: position.y,
-                    r: radius + 11,
-                    fill: "rgba(255,255,255,0.1)",
-                    filter: "url(#ballAura)"
-                });
+                if (currentCountNode) {
+                    currentCountNode.textContent = `${layer.memories.length}件`;
+                }
 
-                const circle = createSvg("circle", {
-                    cx: position.x,
-                    cy: position.y,
-                    r: radius,
-                    fill: `url(#${gradientId})`,
-                    filter: "url(#ballShadow)",
-                    opacity: "0.88"
-                });
+                if (gestureStatusNode) {
+                    if (isFirst && isLast) {
+                        gestureStatusNode.textContent = "この記憶玉だけで全件を表示しています。";
+                    } else if (isFirst) {
+                        gestureStatusNode.textContent = "いちばん手前の記憶玉です。ひろげると奥の階層が見えます。";
+                    } else if (isLast) {
+                        gestureStatusNode.textContent = "いちばん奥まで到達しました。つまむと手前へ戻れます。";
+                    } else {
+                        gestureStatusNode.textContent = `奥から ${bubbleLayers.length - layer.number} 個ぶん残っています。`;
+                    }
+                }
 
-                const inner = createSvg("circle", {
-                    cx: position.x - radius * 0.25,
-                    cy: position.y - radius * 0.28,
-                    r: Math.max(10, radius * 0.26),
-                    fill: "rgba(255,255,255,0.30)"
-                });
+                layerButtons.forEach((button) => {
+                    if (!(button instanceof HTMLButtonElement)) {
+                        return;
+                    }
 
-                const rim = createSvg("circle", {
-                    cx: position.x,
-                    cy: position.y,
-                    r: radius - 1,
-                    fill: "none",
-                    stroke: "rgba(255,255,255,0.1)",
-                    "stroke-width": "0.9",
-                    filter: "url(#ballAura)"
-                });
+                    if (button.dataset.layerAction === "back") {
+                        button.disabled = isFirst;
+                    }
 
-                const core = createSvg("circle", {
-                    cx: position.x + radius * 0.2,
-                    cy: position.y + radius * 0.14,
-                    r: Math.max(10, radius * 0.42),
-                    fill: toRgba(memory.colors[0], 0.12)
+                    if (button.dataset.layerAction === "next") {
+                        button.disabled = isLast;
+                    }
                 });
+            }
 
-                group.appendChild(hitArea);
-                body.appendChild(aura);
-                body.appendChild(glow);
-                body.appendChild(circle);
-                body.appendChild(core);
-                body.appendChild(inner);
-                body.appendChild(rim);
-                body.appendChild(createLabel(position.x, position.y, memory.label, radius));
-                group.appendChild(body);
-                group.appendChild(createSvg("title", {})).textContent = `${memory.period} / ${memory.emotion}\n${memory.content}`;
+            function changeLayer(direction) {
+                const nextIndex = Math.max(0, Math.min(bubbleLayers.length - 1, currentLayerIndex + direction));
 
-                wrapper.appendChild(group);
-                wrapper.addEventListener("mouseenter", () => {
-                    group.classList.add("is-hovered");
-                });
-                wrapper.addEventListener("mouseleave", () => {
-                    group.classList.remove("is-hovered");
-                });
-                bubbleLayer.appendChild(wrapper);
+                if (nextIndex === currentLayerIndex) {
+                    return;
+                }
+
+                currentLayerIndex = nextIndex;
+                renderVisibleLayer();
+            }
+
+            function handleWheel(event) {
+                event.preventDefault();
+
+                if ((wheelTravel > 0 && event.deltaY < 0) || (wheelTravel < 0 && event.deltaY > 0)) {
+                    wheelTravel = 0;
+                }
+
+                wheelTravel += event.deltaY;
+
+                if (wheelTravel <= -140) {
+                    changeLayer(1);
+                    wheelTravel = 0;
+                }
+
+                if (wheelTravel >= 140) {
+                    changeLayer(-1);
+                    wheelTravel = 0;
+                }
+            }
+
+            function getTouchDistance(touches) {
+                const dx = touches[0].clientX - touches[1].clientX;
+                const dy = touches[0].clientY - touches[1].clientY;
+                return Math.hypot(dx, dy);
+            }
+
+            stageNode.addEventListener("wheel", handleWheel, { passive: false });
+
+            stageNode.addEventListener("touchstart", (event) => {
+                if (event.touches.length === 2) {
+                    pinchDistance = getTouchDistance(event.touches);
+                }
+            }, { passive: true });
+
+            stageNode.addEventListener("touchmove", (event) => {
+                if (event.touches.length !== 2 || pinchDistance === null) {
+                    return;
+                }
+
+                const nextDistance = getTouchDistance(event.touches);
+                const delta = nextDistance - pinchDistance;
+
+                if (delta > 26) {
+                    changeLayer(1);
+                    pinchDistance = nextDistance;
+                }
+
+                if (delta < -26) {
+                    changeLayer(-1);
+                    pinchDistance = nextDistance;
+                }
+            }, { passive: true });
+
+            stageNode.addEventListener("touchend", () => {
+                pinchDistance = null;
             });
+
+            layerButtons.forEach((button) => {
+                button.addEventListener("click", () => {
+                    if (button.dataset.layerAction === "next") {
+                        changeLayer(1);
+                    }
+
+                    if (button.dataset.layerAction === "back") {
+                        changeLayer(-1);
+                    }
+                });
+            });
+
+            renderVisibleLayer();
         </script>
     @endif
 @endsection

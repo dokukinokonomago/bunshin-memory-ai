@@ -10,9 +10,9 @@ class MemoryBubblesTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_bubbles_page_shows_up_to_100_memories_in_one_layer(): void
+    public function test_bubbles_page_shows_up_to_10_memories_in_one_layer(): void
     {
-        foreach (range(1, 100) as $index) {
+        foreach (range(1, 10) as $index) {
             Memory::query()->create([
                 'period' => '高校生',
                 'content' => "記憶 {$index}",
@@ -24,12 +24,13 @@ class MemoryBubblesTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('全記憶数');
-        $response->assertDontSee('第1層 / 全2層');
+        $response->assertSee('1個目 / 全1個');
+        $response->assertSee('1-10件目');
     }
 
-    public function test_bubbles_page_moves_to_second_layer_after_100_memories(): void
+    public function test_bubbles_page_creates_second_depth_after_10_memories(): void
     {
-        foreach (range(1, 101) as $index) {
+        foreach (range(1, 11) as $index) {
             Memory::query()->create([
                 'period' => '高校生',
                 'content' => "記憶 {$index}",
@@ -40,6 +41,8 @@ class MemoryBubblesTest extends TestCase
         $response = $this->get(route('memories.bubbles'));
 
         $response->assertOk();
-        $response->assertSee('第1層 / 全2層');
+        $response->assertSee('1個目 / 全2個');
+        $response->assertSee('1-10件目');
+        $response->assertSee('2本指でひろげると奥の記憶玉へ');
     }
 }

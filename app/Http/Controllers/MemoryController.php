@@ -12,7 +12,7 @@ use Illuminate\View\View;
 
 class MemoryController extends Controller
 {
-    private const BUBBLE_LAYER_SIZE = 100;
+    private const BUBBLE_LAYER_SIZE = 10;
     private const ACTIVE_CREATE_VIEW = 'memories.create';
     private const PREVIEW_CREATE_VIEW = 'memories.create_v2';
     private const PERIODS = ['幼少期', '小学生', '中学生', '高校生', '大学生', '成人期', '不明'];
@@ -134,7 +134,6 @@ class MemoryController extends Controller
     {
         $selectedPeriod = $request->string('period')->toString();
         $selectedPeriod = in_array($selectedPeriod, array_merge(['すべて'], self::PERIODS), true) ? $selectedPeriod : 'すべて';
-        $requestedLayer = max(1, $request->integer('layer', 1));
 
         $query = Memory::query()->latest();
 
@@ -143,41 +142,57 @@ class MemoryController extends Controller
         }
 
         $emotionToneMap = $this->emotionToneMap();
-        $matchingCount = (clone $query)->count();
-        $layerCount = max(1, (int) ceil($matchingCount / self::BUBBLE_LAYER_SIZE));
-        $currentLayer = min($requestedLayer, $layerCount);
-        $offset = ($currentLayer - 1) * self::BUBBLE_LAYER_SIZE;
-        $memories = (clone $query)
-            ->skip($offset)
-            ->take(self::BUBBLE_LAYER_SIZE)
-            ->get();
+        $memories = (clone $query)->get()->values();
+        $matchingCount = $memories->count();
+        $bubbleLayers = $memories
+            ->chunk(self::BUBBLE_LAYER_SIZE)
+            ->values()
+            ->map(function (Collection $layerMemories, int $layerIndex) use ($emotionToneMap): array {
+                $startIndex = ($layerIndex * self::BUBBLE_LAYER_SIZE) + 1;
 
-        $bubbleMemories = $memories->values()->map(function (Memory $memory) use ($emotionToneMap): array {
-            $tone = $emotionToneMap[$memory->emotion] ?? 'ニュートラル';
+                return [
+                    'number' => $layerIndex + 1,
+                    'startIndex' => $startIndex,
+                    'endIndex' => $startIndex + $layerMemories->count() - 1,
+                    'memories' => $layerMemories->values()->map(function (Memory $memory, int $memoryIndex) use ($emotionToneMap, $startIndex): array {
+                        $tone = $emotionToneMap[$memory->emotion] ?? 'ニュートラル';
 
-            return [
-                'id' => $memory->id,
-                'period' => $memory->period,
-                'emotion' => $memory->emotion,
-                'content' => $memory->content,
-                'label' => $this->bubbleKeyword($memory),
-                'tone' => $tone,
-                'colors' => $this->toneColors($tone),
-                'tags' => [$memory->period, $memory->emotion],
-            ];
-        });
+                        return [
+                            'id' => $memory->id,
+                            'period' => $memory->period,
+                            'emotion' => $memory->emotion,
+                            'content' => $memory->content,
+                            'label' => $this->bubbleKeyword($memory),
+                            'tone' => $tone,
+                            'colors' => $this->toneColors($tone),
+                            'tags' => [$memory->period, $memory->emotion],
+                            'sequence' => $startIndex + $memoryIndex,
+                        ];
+                    })->all(),
+                ];
+            });
+        $layerCount = max(1, $bubbleLayers->count());
+        $initialLayer = $bubbleLayers->first() ?? [
+            'number' => 1,
+            'startIndex' => 0,
+            'endIndex' => 0,
+            'memories' => [],
+        ];
 
         return view('memories.bubbles', [
-            'bubbleMemories' => $bubbleMemories,
+            'bubbleLayers' => $bubbleLayers,
+            'bubbleMemories' => collect($initialLayer['memories']),
             'allCount' => Memory::query()->count(),
-            'displayCount' => $bubbleMemories->count(),
+            'displayCount' => count($initialLayer['memories']),
             'matchingCount' => $matchingCount,
             'periods' => self::PERIODS,
             'selectedPeriod' => $selectedPeriod,
-            'currentLayer' => $currentLayer,
+            'currentLayer' => $initialLayer['number'],
             'layerCount' => $layerCount,
-            'hasPreviousLayer' => $currentLayer > 1,
-            'hasNextLayer' => $currentLayer < $layerCount,
+            'currentRangeStart' => $initialLayer['startIndex'],
+            'currentRangeEnd' => $initialLayer['endIndex'],
+            'hasPreviousLayer' => false,
+            'hasNextLayer' => $layerCount > 1,
         ]);
     }
 
