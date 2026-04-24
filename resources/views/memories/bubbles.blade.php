@@ -593,8 +593,8 @@
         }
 
         .bubble-island-shape {
-            fill: rgba(110, 152, 96, 0.24);
-            stroke: rgba(198, 231, 183, 0.16);
+            fill: rgba(110, 152, 96, 0.28);
+            stroke: rgba(198, 231, 183, 0.2);
             stroke-width: 1.6;
         }
 
@@ -611,8 +611,8 @@
         }
 
         .bubble-period-halo {
-            fill: rgba(167, 213, 255, 0.045);
-            stroke: rgba(175, 212, 255, 0.1);
+            fill: rgba(167, 213, 255, 0.06);
+            stroke: rgba(175, 212, 255, 0.14);
             stroke-width: 1.2;
         }
 
@@ -962,7 +962,7 @@
             }
 
             function radiusFor(index) {
-                const pattern = [108, 96, 92, 112, 86, 98, 90, 104, 88, 100, 91, 95];
+                const pattern = [132, 120, 116, 136, 110, 124, 114, 128, 112, 126, 118, 122];
                 return pattern[index % pattern.length];
             }
 
@@ -997,13 +997,13 @@
                         count: items.length,
                         x: anchor.x,
                         y: anchor.y,
-                        radius: Math.max(150, 158 + (items.length * 6)),
+                        radius: Math.max(180, 196 + (items.length * 7)),
                     });
 
                     items.forEach((memory, index) => {
                         const goldenAngle = Math.PI * (3 - Math.sqrt(5));
                         const bubbleRadius = radiusFor(index);
-                        const spread = 98 + Math.sqrt(items.length + 2) * 48;
+                        const spread = 120 + Math.sqrt(items.length + 2) * 56;
                         const orbit = items.length <= 1
                             ? 0
                             : Math.sqrt((index + 0.5) / items.length) * spread;
