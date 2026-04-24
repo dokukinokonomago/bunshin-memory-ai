@@ -55,36 +55,30 @@
                         </section>
                     @endif
 
-                    <section class="bubble-rail-section">
-                        <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶を追加</a>
-                    </section>
+                    <details class="bubble-rail-section bubble-stage-actions">
+                        <summary class="btn btn-secondary bubble-stage-actions-trigger">今日は何する？</summary>
+                        <div class="bubble-stage-actions-menu">
+                            <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶を追加</a>
+                            <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶と話す</a>
+                            <a class="btn btn-secondary bubble-rail-btn" href="{{ route('memories.index') }}">一覧を見る</a>
 
-                    <details class="bubble-rail-section bubble-stage-filter">
-                        <summary class="btn btn-secondary">年代別で表示</summary>
-                        <form method="get" action="{{ route('memories.bubbles') }}" class="bubble-filter-form">
-                            <label for="period" class="bubble-side-label">年代を選択</label>
-                            <select id="period" name="period" class="bubble-select">
-                                <option value="すべて" {{ $selectedPeriod === 'すべて' ? 'selected' : '' }}>すべて</option>
-                                @foreach ($periods as $period)
-                                    <option value="{{ $period }}" {{ $selectedPeriod === $period ? 'selected' : '' }}>{{ $period }}</option>
-                                @endforeach
-                            </select>
-                            <div class="bubble-filter-actions">
-                                <button type="submit" class="btn btn-primary">表示する</button>
-                                @if ($selectedPeriod !== 'すべて')
-                                    <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">解除</a>
-                                @endif
-                            </div>
-                        </form>
+                            <form method="get" action="{{ route('memories.bubbles') }}" class="bubble-filter-form">
+                                <label for="period" class="bubble-side-label">年代別で表示</label>
+                                <select id="period" name="period" class="bubble-select">
+                                    <option value="すべて" {{ $selectedPeriod === 'すべて' ? 'selected' : '' }}>すべて</option>
+                                    @foreach ($periods as $period)
+                                        <option value="{{ $period }}" {{ $selectedPeriod === $period ? 'selected' : '' }}>{{ $period }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="bubble-filter-actions">
+                                    <button type="submit" class="btn btn-primary">表示する</button>
+                                    @if ($selectedPeriod !== 'すべて')
+                                        <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">解除</a>
+                                    @endif
+                                </div>
+                            </form>
+                        </div>
                     </details>
-
-                    <section class="bubble-rail-section">
-                        <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶と話す</a>
-                    </section>
-
-                    <section class="bubble-rail-section">
-                        <a class="btn btn-secondary bubble-rail-btn" href="{{ route('memories.index') }}">一覧を見る</a>
-                    </section>
                 </div>
             </div>
 
@@ -355,7 +349,7 @@
             line-height: 1.05;
         }
 
-        .bubble-stage-filter {
+        .bubble-stage-actions {
             padding-bottom: 0;
         }
 
@@ -403,7 +397,7 @@
             pointer-events: none;
         }
 
-        .bubble-stage-filter summary {
+        .bubble-stage-actions summary {
             list-style: none;
             width: 100%;
         }
@@ -428,18 +422,49 @@
             gap: 8px;
         }
 
-        .bubble-stage-filter summary::-webkit-details-marker {
+        .bubble-stage-actions summary::-webkit-details-marker {
             display: none;
         }
 
-        .bubble-stage-filter[open] {
-            width: 100%;
+        .bubble-stage-actions-menu {
+            display: grid;
+            gap: 10px;
+            margin-top: 14px;
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(10, 18, 37, 0.52);
+            border: 1px solid rgba(171, 205, 255, 0.1);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+
+        .bubble-stage-actions-trigger {
+            position: relative;
+            justify-content: flex-start;
+            padding-right: 34px;
+        }
+
+        .bubble-stage-actions-trigger::after {
+            content: "";
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            width: 8px;
+            height: 8px;
+            margin-top: -6px;
+            border-right: 2px solid rgba(234, 242, 255, 0.9);
+            border-bottom: 2px solid rgba(234, 242, 255, 0.9);
+            transform: rotate(45deg);
+            transition: transform 0.2s ease, margin-top 0.2s ease;
+        }
+
+        .bubble-stage-actions[open] .bubble-stage-actions-trigger::after {
+            transform: rotate(-135deg);
+            margin-top: -1px;
         }
 
         .bubble-filter-form {
             display: grid;
             gap: 12px;
-            margin-top: 14px;
         }
 
         .bubble-select {
@@ -696,10 +721,6 @@
 
             .bubble-stage-count {
                 text-align: left;
-            }
-
-            .bubble-stage-filter[open] {
-                width: auto;
             }
 
             .bubble-stage-shell {
