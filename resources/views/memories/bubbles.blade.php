@@ -32,9 +32,11 @@
                             <span class="bubble-stage-actions-trigger-label">今日は<br>何をする？</span>
                         </summary>
                         <div class="bubble-stage-actions-menu">
-                            <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶を追加</a>
-                            <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶と話す</a>
-                            <a class="btn btn-secondary bubble-rail-btn" href="{{ route('memories.index') }}">記憶一覧を見る</a>
+                            <div class="bubble-stage-actions-row">
+                                <a class="btn btn-secondary bubble-rail-btn bubble-action-orb" href="#" aria-disabled="true">記憶を追加</a>
+                                <a class="btn btn-secondary bubble-rail-btn bubble-action-orb" href="#" aria-disabled="true">記憶と話す</a>
+                                <a class="btn btn-secondary bubble-rail-btn bubble-action-orb" href="{{ route('memories.index') }}">記憶一覧を見る</a>
+                            </div>
 
                             <form method="get" action="{{ route('memories.bubbles') }}" class="bubble-filter-form">
                                 <label for="period" class="bubble-side-label">年代別で表示</label>
@@ -545,7 +547,7 @@
 
         .bubble-stage-actions-menu {
             display: grid;
-            gap: 10px;
+            gap: 14px;
             position: absolute;
             top: calc(100% + 16px);
             left: 50%;
@@ -563,6 +565,13 @@
                 inset 0 1px 0 rgba(255,255,255,0.09);
             backdrop-filter: blur(18px);
             transform: translateX(-50%);
+        }
+
+        .bubble-stage-actions-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 12px;
         }
 
         .bubble-stage-actions .bubble-stage-actions-trigger {
@@ -658,6 +667,45 @@
         .bubble-filter-form {
             display: grid;
             gap: 12px;
+        }
+
+        .bubble-action-orb {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 88px;
+            height: 88px;
+            padding: 12px;
+            border-radius: 50%;
+            border: 1px solid rgba(223, 244, 255, 0.18);
+            background:
+                radial-gradient(circle at 28% 26%, rgba(219, 248, 255, 0.72), rgba(219, 248, 255, 0) 28%),
+                radial-gradient(circle at 74% 24%, rgba(255, 211, 236, 0.44), rgba(255, 211, 236, 0) 24%),
+                linear-gradient(145deg, rgba(226, 246, 255, 0.22), rgba(137, 188, 255, 0.14));
+            color: rgba(246, 251, 255, 0.98);
+            text-align: center;
+            line-height: 1.35;
+            font-size: 12px;
+            box-shadow:
+                0 18px 30px rgba(33, 62, 114, 0.16),
+                inset 0 1px 0 rgba(255,255,255,0.22),
+                inset 0 -10px 24px rgba(126, 185, 255, 0.08);
+            backdrop-filter: blur(18px) saturate(130%);
+            text-decoration: none;
+            flex: 0 0 auto;
+        }
+
+        .bubble-action-orb:hover {
+            transform: translateY(-2px) scale(1.03);
+            border-color: rgba(241, 249, 255, 0.28);
+            background:
+                radial-gradient(circle at 28% 26%, rgba(227, 250, 255, 0.84), rgba(227, 250, 255, 0) 30%),
+                radial-gradient(circle at 74% 24%, rgba(255, 219, 240, 0.52), rgba(255, 219, 240, 0) 26%),
+                linear-gradient(145deg, rgba(233, 249, 255, 0.28), rgba(151, 199, 255, 0.18));
+        }
+
+        .bubble-action-orb[aria-disabled="true"] {
+            opacity: 0.68;
         }
 
         .bubble-select {
@@ -1006,6 +1054,16 @@
             .bubble-stage-actions .bubble-stage-actions-trigger {
                 width: min(68vw, 240px);
                 height: min(68vw, 240px);
+            }
+
+            .bubble-stage-actions-row {
+                gap: 10px;
+            }
+
+            .bubble-action-orb {
+                width: 76px;
+                height: 76px;
+                font-size: 11px;
             }
 
             .bubble-stage-shell {
