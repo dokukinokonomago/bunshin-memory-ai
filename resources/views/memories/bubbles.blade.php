@@ -462,6 +462,8 @@
             background: transparent;
             box-shadow: none;
             backdrop-filter: none;
+            display: flex;
+            justify-content: center;
         }
 
         .bubble-rail-btn {
@@ -514,7 +516,7 @@
         }
 
         .bubble-stage-rail .btn,
-        .bubble-stage-hub .btn {
+        .bubble-stage-hub .btn:not(.bubble-stage-actions-trigger) {
             padding: 9px 12px;
             font-size: 11px;
             border-radius: 11px;
@@ -563,16 +565,16 @@
             transform: translateX(-50%);
         }
 
-        .bubble-stage-actions-trigger {
+        .bubble-stage-actions .bubble-stage-actions-trigger {
             position: relative;
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
-            width: 100%;
-            aspect-ratio: 1;
-            min-height: 188px;
-            padding: 24px 28px;
-            border-radius: 999px;
+            width: clamp(188px, 18vw, 220px);
+            height: clamp(188px, 18vw, 220px);
+            min-height: 0;
+            padding: 22px;
+            border-radius: 50%;
             border: 1px solid rgba(220, 243, 255, 0.22);
             background:
                 radial-gradient(circle at 26% 30%, rgba(212, 246, 255, 0.74), rgba(212, 246, 255, 0) 30%),
@@ -589,6 +591,7 @@
             isolation: isolate;
             text-shadow: 0 1px 10px rgba(100, 140, 210, 0.16);
             text-align: center;
+            flex: 0 0 auto;
         }
 
         .bubble-stage-actions-trigger::after {
@@ -607,12 +610,12 @@
             transition: transform 0.2s ease, bottom 0.2s ease;
         }
 
-        .bubble-stage-actions-trigger::before {
+        .bubble-stage-actions .bubble-stage-actions-trigger::before {
             content: "";
             position: absolute;
             inset: -10px;
             z-index: -1;
-            border-radius: 999px;
+            border-radius: 50%;
             background:
                 radial-gradient(circle at 20% 24%, rgba(216, 248, 255, 0.56), transparent 24%),
                 radial-gradient(circle at 40% 74%, rgba(189, 234, 255, 0.3), transparent 28%),
@@ -1000,8 +1003,9 @@
                 justify-self: center;
             }
 
-            .bubble-stage-actions-trigger {
-                min-height: min(68vw, 240px);
+            .bubble-stage-actions .bubble-stage-actions-trigger {
+                width: min(68vw, 240px);
+                height: min(68vw, 240px);
             }
 
             .bubble-stage-shell {
