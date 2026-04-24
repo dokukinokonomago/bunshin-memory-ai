@@ -33,17 +33,17 @@
                         </summary>
                         <div class="bubble-stage-actions-menu">
                             <div class="bubble-stage-actions-row">
-                                <a class="btn btn-secondary bubble-rail-btn bubble-action-orb" href="#" aria-disabled="true">
+                                <a class="bubble-menu-orb" href="#" aria-disabled="true">
                                     <span class="bubble-orb-label">記憶を<br>追加</span>
                                 </a>
-                                <a class="btn btn-secondary bubble-rail-btn bubble-action-orb" href="#" aria-disabled="true">
+                                <a class="bubble-menu-orb" href="#" aria-disabled="true">
                                     <span class="bubble-orb-label">記憶と<br>話す</span>
                                 </a>
-                                <a class="btn btn-secondary bubble-rail-btn bubble-action-orb" href="{{ route('memories.index') }}">
+                                <a class="bubble-menu-orb" href="{{ route('memories.index') }}">
                                     <span class="bubble-orb-label">記憶一覧を<br>見る</span>
                                 </a>
                                 <details class="bubble-inline-filter">
-                                    <summary class="btn btn-secondary bubble-action-orb bubble-filter-launch">
+                                    <summary class="bubble-menu-orb bubble-filter-launch">
                                         <span class="bubble-orb-label">年代別で<br>表示</span>
                                     </summary>
                                     <div class="bubble-inline-filter-menu">
@@ -524,7 +524,7 @@
         }
 
         .bubble-stage-rail .btn,
-        .bubble-stage-hub .btn:not(.bubble-stage-actions-trigger):not(.bubble-filter-launch):not(.bubble-action-orb) {
+        .bubble-stage-hub .btn:not(.bubble-stage-actions-trigger) {
             padding: 9px 12px;
             font-size: 11px;
             border-radius: 11px;
@@ -645,8 +645,7 @@
             flex: 0 0 auto;
         }
 
-        .bubble-action-orb,
-        .bubble-inline-filter .bubble-filter-launch {
+        .bubble-menu-orb {
             position: relative;
             display: flex;
             align-items: center;
@@ -669,6 +668,8 @@
             text-decoration: none;
             text-align: center;
             flex: 0 0 auto;
+            cursor: pointer;
+            list-style: none;
         }
 
         .bubble-stage-actions-trigger::after {
@@ -701,8 +702,7 @@
             opacity: 0.96;
         }
 
-        .bubble-action-orb::before,
-        .bubble-inline-filter .bubble-filter-launch::before {
+        .bubble-menu-orb::before {
             content: "";
             position: absolute;
             inset: -10px;
@@ -736,7 +736,7 @@
             bottom: 29px;
         }
 
-        .bubble-action-orb:hover,
+        .bubble-menu-orb:hover,
         .bubble-inline-filter:hover .bubble-filter-launch,
         .bubble-inline-filter[open] .bubble-filter-launch {
             transform: translateY(-2px) scale(1.03);
@@ -758,11 +758,7 @@
             letter-spacing: 0.05em;
         }
 
-        .bubble-action-orb {
-            text-align: center;
-        }
-
-        .bubble-action-orb[aria-disabled="true"] {
+        .bubble-menu-orb[aria-disabled="true"] {
             opacity: 1;
         }
 
@@ -1163,10 +1159,9 @@
                 gap: 10px;
             }
 
-            .bubble-action-orb {
+            .bubble-menu-orb {
                 width: 76px;
                 height: 76px;
-                font-size: 11px;
             }
 
             .bubble-inline-filter .bubble-filter-launch {
