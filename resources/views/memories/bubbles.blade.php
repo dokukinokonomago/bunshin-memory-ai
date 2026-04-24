@@ -202,7 +202,6 @@
 
                     <g id="bubbleMapViewport" class="bubble-map-viewport">
                         <g id="bubbleMapGrid"></g>
-                        <g id="bubbleMapIslands"></g>
                         <g id="bubbleMapPeriods"></g>
                         <g id="bubbleLayer"></g>
                     </g>
@@ -587,29 +586,6 @@
             stroke-dasharray: 10 12;
         }
 
-        .bubble-island-shadow {
-            fill: rgba(5, 10, 24, 0.22);
-            filter: url(#shellGlow);
-        }
-
-        .bubble-island-shape {
-            fill: rgba(110, 152, 96, 0.28);
-            stroke: rgba(198, 231, 183, 0.2);
-            stroke-width: 1.6;
-        }
-
-        .bubble-island-ridge {
-            fill: none;
-            stroke: rgba(227, 244, 214, 0.12);
-            stroke-width: 1.2;
-        }
-
-        .bubble-island-shore {
-            fill: none;
-            stroke: rgba(170, 220, 255, 0.12);
-            stroke-width: 3;
-        }
-
         .bubble-period-halo {
             fill: rgba(167, 213, 255, 0.075);
             stroke: rgba(175, 212, 255, 0.18);
@@ -620,10 +596,6 @@
             cursor: pointer;
         }
 
-        .bubble-period-zone .bubble-island-shadow,
-        .bubble-period-zone .bubble-island-shape,
-        .bubble-period-zone .bubble-island-ridge,
-        .bubble-period-zone .bubble-island-shore,
         .bubble-period-zone .bubble-period-halo,
         .bubble-period-zone .bubble-period-anchor,
         .bubble-period-zone .bubble-period-name,
@@ -633,20 +605,7 @@
             transform-origin: center;
         }
 
-        .bubble-period-zone.is-active .bubble-island-shape {
-            fill: rgba(138, 183, 116, 0.34);
-            stroke: rgba(220, 246, 205, 0.24);
-        }
-
-        .bubble-period-zone.is-active .bubble-island-shore {
-            stroke: rgba(198, 232, 255, 0.2);
-        }
-
         .bubble-period-zone.is-active .bubble-period-halo,
-        .bubble-period-zone.is-active .bubble-island-shadow,
-        .bubble-period-zone.is-active .bubble-island-shape,
-        .bubble-period-zone.is-active .bubble-island-ridge,
-        .bubble-period-zone.is-active .bubble-island-shore,
         .bubble-period-zone.is-active .bubble-period-anchor,
         .bubble-period-zone.is-active .bubble-period-name,
         .bubble-period-zone.is-active .bubble-period-count {
@@ -886,7 +845,6 @@
             const defs = document.getElementById("bubbleDefs");
             const bubbleLayer = document.getElementById("bubbleLayer");
             const bubbleMapGrid = document.getElementById("bubbleMapGrid");
-            const bubbleMapIslands = document.getElementById("bubbleMapIslands");
             const bubbleMapPeriods = document.getElementById("bubbleMapPeriods");
             const bubbleMapViewport = document.getElementById("bubbleMapViewport");
             const bubbleStage = document.getElementById("bubbleStage");
@@ -1080,74 +1038,12 @@
                 }
             }
 
-            function islandPath(x, y, radius, varianceSeed = 0) {
-                const points = 12;
-                const smoothPoints = [];
-
-                for (let index = 0; index < points; index += 1) {
-                    const angle = (Math.PI * 2 * index) / points;
-                    const wobble = 0.84
-                        + ((((index + varianceSeed) % 4) * 0.08))
-                        + (((index + varianceSeed) % 3) * 0.035);
-                    const pointRadius = radius * wobble;
-                    smoothPoints.push({
-                        x: x + (Math.cos(angle) * pointRadius),
-                        y: y + (Math.sin(angle) * pointRadius),
-                    });
-                }
-
-                let path = `M ${smoothPoints[0].x} ${smoothPoints[0].y}`;
-
-                for (let index = 0; index < smoothPoints.length; index += 1) {
-                    const current = smoothPoints[index];
-                    const next = smoothPoints[(index + 1) % smoothPoints.length];
-                    const midX = (current.x + next.x) / 2;
-                    const midY = (current.y + next.y) / 2;
-                    path += ` Q ${current.x} ${current.y} ${midX} ${midY}`;
-                }
-
-                return path + " Z";
-            }
-
-            function renderIslands(world) {
-                world.periodNodes.forEach((node, index) => {
-                    const islandRadius = node.radius * 0.92;
-                    const ridgeRadius = islandRadius * 0.72;
-                    const path = islandPath(node.x, node.y, islandRadius, index);
-                    const ridgePath = islandPath(node.x + 10, node.y + 6, ridgeRadius, index + 2);
+            function renderPeriods(world) {
+                world.periodNodes.forEach((node) => {
                     const zone = createSvg("g", {
                         class: "bubble-period-zone",
                         "data-period-zone": node.period,
                     });
-
-                    zone.appendChild(createSvg("path", {
-                        d: islandPath(node.x + 16, node.y + 18, islandRadius * 0.98, index + 1),
-                        class: "bubble-island-shadow",
-                    }));
-                    zone.appendChild(createSvg("path", {
-                        d: path,
-                        class: "bubble-island-shore",
-                    }));
-                    zone.appendChild(createSvg("path", {
-                        d: path,
-                        class: "bubble-island-shape",
-                    }));
-                    zone.appendChild(createSvg("path", {
-                        d: ridgePath,
-                        class: "bubble-island-ridge",
-                    }));
-
-                    bubbleMapIslands.appendChild(zone);
-                    periodZones.set(node.period, zone);
-                });
-            }
-
-            function renderPeriods(world) {
-                world.periodNodes.forEach((node) => {
-                    const zone = periodZones.get(node.period);
-                    if (!zone) {
-                        return;
-                    }
 
                     zone.appendChild(createSvg("circle", {
                         cx: node.x,
@@ -1179,6 +1075,8 @@
 
                     zone.appendChild(periodName);
                     zone.appendChild(periodCount);
+                    bubbleMapPeriods.appendChild(zone);
+                    periodZones.set(node.period, zone);
                 });
             }
 
@@ -1431,7 +1329,6 @@
             const world = buildWorldData();
             state.worldBounds = buildBounds(world);
             renderGrid(state.worldBounds);
-            renderIslands(world);
             renderPeriods(world);
             renderMemories(world);
             frameInitialView();
