@@ -36,23 +36,22 @@
                                 <a class="btn btn-secondary bubble-rail-btn bubble-action-orb" href="#" aria-disabled="true">記憶を追加</a>
                                 <a class="btn btn-secondary bubble-rail-btn bubble-action-orb" href="#" aria-disabled="true">記憶と話す</a>
                                 <a class="btn btn-secondary bubble-rail-btn bubble-action-orb" href="{{ route('memories.index') }}">記憶一覧を見る</a>
-                            </div>
-                        </div>
-                    </details>
-
-                    <details class="bubble-stage-hub-card bubble-stage-filter">
-                        <summary class="btn btn-secondary bubble-stage-filter-trigger">
-                            <span class="bubble-stage-filter-trigger-label">年代別で<br>表示</span>
-                        </summary>
-                        <div class="bubble-stage-filter-menu">
-                            <div class="bubble-stage-filter-row">
-                                <a class="bubble-filter-orb {{ $selectedPeriod === 'すべて' ? 'is-active' : '' }}" href="{{ route('memories.bubbles') }}">すべて</a>
-                                @foreach ($periods as $period)
-                                    <a
-                                        class="bubble-filter-orb {{ $selectedPeriod === $period ? 'is-active' : '' }}"
-                                        href="{{ route('memories.bubbles', ['period' => $period]) }}"
-                                    >{{ $period }}</a>
-                                @endforeach
+                                <details class="bubble-inline-filter">
+                                    <summary class="btn btn-secondary bubble-action-orb bubble-filter-launch">
+                                        <span class="bubble-filter-launch-label">年代別で<br>表示</span>
+                                    </summary>
+                                    <div class="bubble-inline-filter-menu">
+                                        <div class="bubble-stage-filter-row">
+                                            <a class="bubble-filter-orb {{ $selectedPeriod === 'すべて' ? 'is-active' : '' }}" href="{{ route('memories.bubbles') }}">すべて</a>
+                                            @foreach ($periods as $period)
+                                                <a
+                                                    class="bubble-filter-orb {{ $selectedPeriod === $period ? 'is-active' : '' }}"
+                                                    href="{{ route('memories.bubbles', ['period' => $period]) }}"
+                                                >{{ $period }}</a>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </details>
                             </div>
                         </div>
                     </details>
@@ -469,19 +468,6 @@
             justify-content: center;
         }
 
-        .bubble-stage-filter {
-            position: relative;
-            width: clamp(152px, 14vw, 180px);
-            min-width: 0;
-            overflow: visible;
-            border: 0;
-            background: transparent;
-            box-shadow: none;
-            backdrop-filter: none;
-            display: flex;
-            justify-content: center;
-        }
-
         .bubble-rail-btn {
             width: 100%;
         }
@@ -532,7 +518,7 @@
         }
 
         .bubble-stage-rail .btn,
-        .bubble-stage-hub .btn:not(.bubble-stage-actions-trigger) {
+        .bubble-stage-hub .btn:not(.bubble-stage-actions-trigger):not(.bubble-filter-launch) {
             padding: 9px 12px;
             font-size: 11px;
             border-radius: 11px;
@@ -559,7 +545,7 @@
             display: none;
         }
 
-        .bubble-stage-filter summary::-webkit-details-marker {
+        .bubble-inline-filter summary::-webkit-details-marker {
             display: none;
         }
 
@@ -585,7 +571,7 @@
             transform: translateX(-50%);
         }
 
-        .bubble-stage-filter-menu {
+        .bubble-inline-filter-menu {
             position: absolute;
             top: calc(100% + 16px);
             left: 50%;
@@ -618,6 +604,11 @@
             gap: 12px;
         }
 
+        .bubble-inline-filter {
+            position: relative;
+            flex: 0 0 auto;
+        }
+
         .bubble-stage-actions .bubble-stage-actions-trigger {
             position: relative;
             display: flex;
@@ -647,28 +638,26 @@
             flex: 0 0 auto;
         }
 
-        .bubble-stage-filter .bubble-stage-filter-trigger {
+        .bubble-inline-filter .bubble-filter-launch {
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: clamp(152px, 14vw, 180px);
-            height: clamp(152px, 14vw, 180px);
-            padding: 18px;
+            width: 88px;
+            height: 88px;
+            padding: 12px;
             border-radius: 50%;
-            border: 1px solid rgba(220, 243, 255, 0.22);
+            border: 1px solid rgba(223, 244, 255, 0.18);
             background:
-                radial-gradient(circle at 26% 30%, rgba(212, 246, 255, 0.68), rgba(212, 246, 255, 0) 30%),
-                radial-gradient(circle at 74% 26%, rgba(255, 206, 233, 0.4), rgba(255, 206, 233, 0) 26%),
-                radial-gradient(circle at 52% 70%, rgba(166, 219, 255, 0.2), rgba(166, 219, 255, 0) 36%),
-                linear-gradient(135deg, rgba(217, 245, 255, 0.2), rgba(142, 191, 255, 0.12));
-            color: rgba(248, 252, 255, 0.98);
+                radial-gradient(circle at 28% 26%, rgba(219, 248, 255, 0.72), rgba(219, 248, 255, 0) 28%),
+                radial-gradient(circle at 74% 24%, rgba(255, 211, 236, 0.44), rgba(255, 211, 236, 0) 24%),
+                linear-gradient(145deg, rgba(226, 246, 255, 0.22), rgba(137, 188, 255, 0.14));
+            color: rgba(246, 251, 255, 0.98);
             box-shadow:
-                0 18px 34px rgba(34, 64, 118, 0.16),
-                inset 0 1px 0 rgba(255,255,255,0.24),
-                inset 0 -10px 24px rgba(126, 185, 255, 0.06);
+                0 18px 30px rgba(33, 62, 114, 0.16),
+                inset 0 1px 0 rgba(255,255,255,0.22),
+                inset 0 -10px 24px rgba(126, 185, 255, 0.08);
             backdrop-filter: blur(18px) saturate(130%);
-            overflow: hidden;
             text-align: center;
             flex: 0 0 auto;
         }
@@ -703,17 +692,18 @@
             opacity: 0.96;
         }
 
-        .bubble-stage-filter .bubble-stage-filter-trigger::before {
+        .bubble-inline-filter .bubble-filter-launch::before {
             content: "";
             position: absolute;
             inset: -10px;
             z-index: -1;
             border-radius: 50%;
             background:
-                radial-gradient(circle at 20% 24%, rgba(216, 248, 255, 0.48), transparent 24%),
-                radial-gradient(circle at 78% 32%, rgba(255, 206, 232, 0.34), transparent 24%);
+                radial-gradient(circle at 20% 24%, rgba(216, 248, 255, 0.56), transparent 24%),
+                radial-gradient(circle at 40% 74%, rgba(189, 234, 255, 0.3), transparent 28%),
+                radial-gradient(circle at 78% 32%, rgba(255, 206, 232, 0.4), transparent 24%);
             filter: blur(12px);
-            opacity: 0.9;
+            opacity: 0.96;
         }
 
         .bubble-stage-actions:hover .bubble-stage-actions-trigger,
@@ -736,10 +726,14 @@
             bottom: 29px;
         }
 
-        .bubble-stage-filter:hover .bubble-stage-filter-trigger,
-        .bubble-stage-filter[open] .bubble-stage-filter-trigger {
-            transform: translateY(-2px) scale(1.01);
-            border-color: rgba(239, 248, 255, 0.3);
+        .bubble-inline-filter:hover .bubble-filter-launch,
+        .bubble-inline-filter[open] .bubble-filter-launch {
+            transform: translateY(-2px) scale(1.03);
+            border-color: rgba(241, 249, 255, 0.28);
+            background:
+                radial-gradient(circle at 28% 26%, rgba(227, 250, 255, 0.84), rgba(227, 250, 255, 0) 30%),
+                radial-gradient(circle at 74% 24%, rgba(255, 219, 240, 0.52), rgba(255, 219, 240, 0) 26%),
+                linear-gradient(145deg, rgba(233, 249, 255, 0.28), rgba(151, 199, 255, 0.18));
         }
 
         .bubble-stage-actions-trigger-label {
@@ -792,14 +786,14 @@
             opacity: 0.68;
         }
 
-        .bubble-stage-filter-trigger-label {
+        .bubble-filter-launch-label {
             position: relative;
             z-index: 1;
             display: block;
             color: rgba(247, 251, 255, 0.98);
-            font-size: clamp(17px, 1.45vw, 20px);
+            font-size: 11px;
             font-weight: 700;
-            line-height: 1.45;
+            line-height: 1.35;
             letter-spacing: 0.04em;
         }
 
@@ -1174,19 +1168,9 @@
                 justify-self: center;
             }
 
-            .bubble-stage-filter {
-                width: min(56vw, 200px);
-                justify-self: center;
-            }
-
             .bubble-stage-actions .bubble-stage-actions-trigger {
                 width: min(68vw, 240px);
                 height: min(68vw, 240px);
-            }
-
-            .bubble-stage-filter .bubble-stage-filter-trigger {
-                width: min(56vw, 200px);
-                height: min(56vw, 200px);
             }
 
             .bubble-stage-actions-row {
@@ -1201,6 +1185,11 @@
                 width: 76px;
                 height: 76px;
                 font-size: 11px;
+            }
+
+            .bubble-inline-filter .bubble-filter-launch {
+                width: 76px;
+                height: 76px;
             }
 
             .bubble-filter-orb {
