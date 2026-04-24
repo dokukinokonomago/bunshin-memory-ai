@@ -33,12 +33,18 @@
                         </summary>
                         <div class="bubble-stage-actions-menu">
                             <div class="bubble-stage-actions-row">
-                                <a class="btn btn-secondary bubble-rail-btn bubble-action-orb" href="#" aria-disabled="true">記憶を追加</a>
-                                <a class="btn btn-secondary bubble-rail-btn bubble-action-orb" href="#" aria-disabled="true">記憶と話す</a>
-                                <a class="btn btn-secondary bubble-rail-btn bubble-action-orb" href="{{ route('memories.index') }}">記憶一覧を見る</a>
+                                <a class="btn btn-secondary bubble-rail-btn bubble-action-orb" href="#" aria-disabled="true">
+                                    <span class="bubble-orb-label">記憶を<br>追加</span>
+                                </a>
+                                <a class="btn btn-secondary bubble-rail-btn bubble-action-orb" href="#" aria-disabled="true">
+                                    <span class="bubble-orb-label">記憶と<br>話す</span>
+                                </a>
+                                <a class="btn btn-secondary bubble-rail-btn bubble-action-orb" href="{{ route('memories.index') }}">
+                                    <span class="bubble-orb-label">記憶一覧を<br>見る</span>
+                                </a>
                                 <details class="bubble-inline-filter">
                                     <summary class="btn btn-secondary bubble-action-orb bubble-filter-launch">
-                                        <span class="bubble-filter-launch-label">年代別で<br>表示</span>
+                                        <span class="bubble-orb-label">年代別で<br>表示</span>
                                     </summary>
                                     <div class="bubble-inline-filter-menu">
                                         <div class="bubble-stage-filter-row">
@@ -754,15 +760,13 @@
 
         .bubble-action-orb {
             text-align: center;
-            line-height: 1.35;
-            font-size: 12px;
         }
 
         .bubble-action-orb[aria-disabled="true"] {
             opacity: 1;
         }
 
-        .bubble-filter-launch-label {
+        .bubble-orb-label {
             position: relative;
             z-index: 1;
             display: block;
@@ -771,6 +775,7 @@
             font-weight: 700;
             line-height: 1.35;
             letter-spacing: 0.04em;
+            text-align: center;
         }
 
         .bubble-filter-orb {
