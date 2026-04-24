@@ -24,23 +24,15 @@
                 <div class="bubble-stage-copy">
                     <span class="eyebrow">PERSONAL MEMORY ARCHIVE</span>
                     <h1>YOUの記憶</h1>
-                    <div class="hero-actions">
-                        <a class="btn btn-secondary" href="{{ route('memories.index') }}">一覧へ戻る</a>
-                    </div>
                 </div>
 
                 <div class="bubble-stage-hub">
-                    <section class="bubble-stage-hub-card bubble-stage-count">
-                        <span class="bubble-side-label">全記憶数</span>
-                        <strong>{{ $matchingCount }}</strong>
-                    </section>
-
                     <details class="bubble-stage-hub-card bubble-stage-actions">
                         <summary class="btn btn-secondary bubble-stage-actions-trigger">今日は何をする？</summary>
                         <div class="bubble-stage-actions-menu">
                             <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶を追加</a>
                             <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶と話す</a>
-                            <a class="btn btn-secondary bubble-rail-btn" href="{{ route('memories.index') }}">一覧を見る</a>
+                            <a class="btn btn-secondary bubble-rail-btn" href="{{ route('memories.index') }}">記憶一覧を見る</a>
 
                             <form method="get" action="{{ route('memories.bubbles') }}" class="bubble-filter-form">
                                 <label for="period" class="bubble-side-label">年代別で表示</label>
@@ -61,6 +53,12 @@
                     </details>
                 </div>
             </div>
+
+            <section class="bubble-stage-count bubble-stage-count-floating" aria-label="全記憶数">
+                <span class="bubble-side-label">全記憶数</span>
+                <strong>{{ $matchingCount }}</strong>
+                <span class="bubble-stage-count-caption">memories drifting now</span>
+            </section>
 
             <div class="bubble-stage-rail">
                 <div class="bubble-stage-side bubble-stage-rail-card">
@@ -277,6 +275,53 @@
             backdrop-filter: blur(12px);
         }
 
+        .bubble-stage-count-floating {
+            position: absolute;
+            top: clamp(308px, 34vw, 380px);
+            left: clamp(32px, 4.2vw, 74px);
+            z-index: 3;
+            min-width: 238px;
+            max-width: 280px;
+            padding: 24px 26px 22px;
+            border-radius: 30px;
+            border: 1px solid rgba(186, 220, 255, 0.18);
+            background:
+                radial-gradient(circle at 20% 18%, rgba(170, 229, 255, 0.28), transparent 34%),
+                radial-gradient(circle at 76% 20%, rgba(255, 190, 226, 0.16), transparent 30%),
+                linear-gradient(155deg, rgba(11, 19, 39, 0.8), rgba(8, 14, 30, 0.58));
+            box-shadow:
+                0 24px 54px rgba(4, 8, 20, 0.28),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(20px);
+            text-align: left;
+            overflow: hidden;
+        }
+
+        .bubble-stage-count-floating::before,
+        .bubble-stage-count-floating::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(8px);
+        }
+
+        .bubble-stage-count-floating::before {
+            width: 148px;
+            height: 148px;
+            top: -54px;
+            left: -24px;
+            background: radial-gradient(circle, rgba(162, 223, 255, 0.24), transparent 68%);
+        }
+
+        .bubble-stage-count-floating::after {
+            width: 122px;
+            height: 122px;
+            right: -34px;
+            bottom: -44px;
+            background: radial-gradient(circle, rgba(255, 191, 226, 0.16), transparent 70%);
+        }
+
         .bubble-stage-copy h1 {
             margin: 16px 0 16px;
             font-size: clamp(30px, 3.4vw, 50px);
@@ -294,11 +339,6 @@
             font-size: 11px;
             box-shadow: 0 10px 26px rgba(8, 14, 30, 0.28);
             backdrop-filter: blur(12px);
-        }
-
-        .hero-actions {
-            display: flex;
-            justify-content: center;
         }
 
         .bubble-stage-panel .btn,
@@ -382,19 +422,32 @@
 
         .bubble-stage-count {
             min-width: 132px;
-            padding: 14px 18px;
-            text-align: center;
         }
 
         .bubble-stage-count strong {
+            position: relative;
+            z-index: 1;
             display: block;
             color: rgba(245, 249, 255, 0.98);
-            font-size: clamp(24px, 2.1vw, 32px);
-            line-height: 1.05;
+            font-size: clamp(62px, 7vw, 88px);
+            line-height: 0.88;
+            letter-spacing: -0.04em;
+            text-shadow: 0 0 34px rgba(155, 214, 255, 0.12);
+        }
+
+        .bubble-stage-count-caption {
+            position: relative;
+            z-index: 1;
+            display: block;
+            margin-top: 10px;
+            color: rgba(192, 215, 246, 0.74);
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
         }
 
         .bubble-stage-actions {
-            min-width: min(320px, 100%);
+            min-width: min(360px, 100%);
         }
 
         .bubble-rail-btn {
@@ -478,32 +531,88 @@
             display: grid;
             gap: 10px;
             margin-top: 14px;
-            padding: 14px;
-            border-radius: 16px;
-            background: rgba(10, 18, 37, 0.52);
-            border: 1px solid rgba(171, 205, 255, 0.1);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+            padding: 16px;
+            border-radius: 24px;
+            background:
+                radial-gradient(circle at top left, rgba(185, 236, 255, 0.18), transparent 34%),
+                radial-gradient(circle at top right, rgba(255, 197, 228, 0.14), transparent 30%),
+                rgba(18, 27, 50, 0.42);
+            border: 1px solid rgba(224, 243, 255, 0.16);
+            box-shadow:
+                0 18px 38px rgba(8, 14, 30, 0.16),
+                inset 0 1px 0 rgba(255,255,255,0.09);
+            backdrop-filter: blur(18px);
         }
 
         .bubble-stage-actions-trigger {
             position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 78px;
+            padding: 18px 54px 18px 28px;
             justify-content: flex-start;
-            padding-right: 34px;
             width: 100%;
+            border-radius: 999px;
+            border: 1px solid rgba(220, 243, 255, 0.22);
+            background:
+                radial-gradient(circle at 26% 30%, rgba(212, 246, 255, 0.74), rgba(212, 246, 255, 0) 30%),
+                radial-gradient(circle at 74% 26%, rgba(255, 206, 233, 0.44), rgba(255, 206, 233, 0) 26%),
+                radial-gradient(circle at 52% 70%, rgba(166, 219, 255, 0.24), rgba(166, 219, 255, 0) 36%),
+                linear-gradient(135deg, rgba(217, 245, 255, 0.24), rgba(142, 191, 255, 0.16));
+            color: rgba(248, 252, 255, 0.98);
+            box-shadow:
+                0 22px 42px rgba(34, 64, 118, 0.18),
+                inset 0 1px 0 rgba(255,255,255,0.28),
+                inset 0 -10px 26px rgba(126, 185, 255, 0.08);
+            backdrop-filter: blur(18px) saturate(130%);
+            overflow: hidden;
+            isolation: isolate;
+            text-shadow: 0 1px 10px rgba(100, 140, 210, 0.16);
         }
 
         .bubble-stage-actions-trigger::after {
             content: "";
             position: absolute;
-            right: 14px;
+            right: 24px;
             top: 50%;
-            width: 8px;
-            height: 8px;
+            z-index: 2;
+            width: 10px;
+            height: 10px;
             margin-top: -6px;
-            border-right: 2px solid rgba(234, 242, 255, 0.9);
-            border-bottom: 2px solid rgba(234, 242, 255, 0.9);
+            border-right: 2px solid rgba(246, 251, 255, 0.96);
+            border-bottom: 2px solid rgba(246, 251, 255, 0.96);
             transform: rotate(45deg);
             transition: transform 0.2s ease, margin-top 0.2s ease;
+        }
+
+        .bubble-stage-actions-trigger::before {
+            content: "";
+            position: absolute;
+            inset: -10px;
+            z-index: -1;
+            border-radius: 999px;
+            background:
+                radial-gradient(circle at 20% 24%, rgba(216, 248, 255, 0.56), transparent 24%),
+                radial-gradient(circle at 40% 74%, rgba(189, 234, 255, 0.3), transparent 28%),
+                radial-gradient(circle at 78% 32%, rgba(255, 206, 232, 0.4), transparent 24%);
+            filter: blur(12px);
+            opacity: 0.96;
+        }
+
+        .bubble-stage-actions:hover .bubble-stage-actions-trigger,
+        .bubble-stage-actions[open] .bubble-stage-actions-trigger {
+            transform: translateY(-2px) scale(1.01);
+            border-color: rgba(239, 248, 255, 0.34);
+            background:
+                radial-gradient(circle at 24% 28%, rgba(222, 249, 255, 0.82), rgba(222, 249, 255, 0) 30%),
+                radial-gradient(circle at 76% 24%, rgba(255, 213, 236, 0.5), rgba(255, 213, 236, 0) 28%),
+                radial-gradient(circle at 52% 72%, rgba(173, 224, 255, 0.28), rgba(173, 224, 255, 0) 38%),
+                linear-gradient(135deg, rgba(225, 247, 255, 0.28), rgba(150, 197, 255, 0.2));
+            box-shadow:
+                0 28px 50px rgba(44, 86, 152, 0.22),
+                inset 0 1px 0 rgba(255,255,255,0.34),
+                inset 0 -12px 28px rgba(126, 185, 255, 0.12);
         }
 
         .bubble-stage-actions[open] .bubble-stage-actions-trigger::after {
@@ -538,6 +647,15 @@
             font-size: 12px;
             letter-spacing: 0.08em;
             text-transform: uppercase;
+        }
+
+        .bubble-stage-count-floating .bubble-side-label {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 12px;
+            color: rgba(208, 229, 255, 0.82);
+            font-size: 12px;
+            letter-spacing: 0.2em;
         }
 
         .bubble-caption {
@@ -786,6 +904,13 @@
                 width: min(660px, calc(100% - 280px));
             }
 
+            .bubble-stage-count-floating {
+                top: clamp(360px, 39vw, 436px);
+                left: 24px;
+                min-width: 210px;
+                padding: 20px 22px 18px;
+            }
+
             .bubble-stage-rail {
                 top: 176px;
                 width: min(220px, 27vw);
@@ -799,6 +924,7 @@
             }
 
             .bubble-stage-top,
+            .bubble-stage-count-floating,
             .bubble-stage-rail {
                 position: static;
                 width: auto;
@@ -823,6 +949,15 @@
 
             .bubble-stage-count {
                 text-align: center;
+            }
+
+            .bubble-stage-count-floating {
+                max-width: none;
+                padding: 18px 18px 16px;
+            }
+
+            .bubble-stage-count strong {
+                font-size: clamp(44px, 16vw, 68px);
             }
 
             .bubble-stage-shell {
