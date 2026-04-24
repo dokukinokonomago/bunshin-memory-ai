@@ -518,7 +518,7 @@
         }
 
         .bubble-stage-rail .btn,
-        .bubble-stage-hub .btn:not(.bubble-stage-actions-trigger):not(.bubble-filter-launch) {
+        .bubble-stage-hub .btn:not(.bubble-stage-actions-trigger):not(.bubble-filter-launch):not(.bubble-action-orb) {
             padding: 9px 12px;
             font-size: 11px;
             border-radius: 11px;
