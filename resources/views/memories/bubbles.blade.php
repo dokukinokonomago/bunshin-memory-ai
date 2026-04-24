@@ -555,7 +555,7 @@
             position: absolute;
             top: calc(100% + 16px);
             left: 50%;
-            width: min(320px, calc(100vw - 48px));
+            width: min(452px, calc(100vw - 48px));
             margin-top: 0;
             padding: 16px;
             border-radius: 24px;
@@ -594,6 +594,7 @@
             display: flex;
             align-items: flex-start;
             justify-content: center;
+            flex-wrap: nowrap;
             gap: 12px;
         }
 
@@ -1174,6 +1175,7 @@
             }
 
             .bubble-stage-actions-row {
+                flex-wrap: wrap;
                 gap: 10px;
             }
 
