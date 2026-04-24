@@ -89,12 +89,12 @@
             </div>
 
             <div class="bubble-stage-shell">
-                <div class="bubble-caption">MEMORY BUBBLE / CLICK A MEMORY</div>
+                <div class="bubble-caption">MEMORY BUBBLE / DRAG TO MOVE / SCROLL OR PINCH TO ZOOM</div>
                 @if ($selectedPeriod !== 'すべて')
                     <div class="bubble-period-banner">{{ $selectedPeriod }}</div>
                 @endif
                 <svg id="bubbleStage" viewBox="0 0 1400 920" xmlns="http://www.w3.org/2000/svg" aria-label="YOUの記憶">
-                    <defs>
+                    <defs id="bubbleDefs">
                         <filter id="shellGlow" x="-80%" y="-80%" width="260%" height="260%">
                             <feGaussianBlur stdDeviation="44"></feGaussianBlur>
                         </filter>
@@ -200,8 +200,23 @@
                         class="bubble-shell-breath"
                         style="--shell-duration: 7.6s; --shell-delay: -0.4s;"
                     ></circle>
-                    <g id="bubbleLayer"></g>
+
+                    <g id="bubbleMapViewport" class="bubble-map-viewport">
+                        <g id="bubbleMapGrid"></g>
+                        <g id="bubbleMapPeriods"></g>
+                        <g id="bubbleLayer"></g>
+                    </g>
                 </svg>
+                <div class="bubble-gesture-guide" aria-hidden="true">
+                    <span class="bubble-gesture-chip">
+                        <i></i>
+                        ふわっとドラッグで移動
+                    </span>
+                    <span class="bubble-gesture-chip">
+                        <i></i>
+                        ホイール / ピンチで拡大縮小
+                    </span>
+                </div>
             </div>
         @endif
     </section>
@@ -287,6 +302,8 @@
             position: relative;
             width: 100%;
             height: 100%;
+            padding-bottom: 58px;
+            overflow: hidden;
         }
 
         .bubble-stage-rail {
@@ -452,10 +469,10 @@
         .bubble-caption {
             position: absolute;
             left: 28px;
-            bottom: 22px;
+            bottom: 44px;
             z-index: 2;
             color: rgba(176, 202, 245, 0.58);
-            font-size: 12px;
+            font-size: 11px;
             letter-spacing: 0.14em;
         }
 
@@ -482,6 +499,12 @@
             height: auto;
             max-height: min(920px, calc(100vh - 72px));
             display: block;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        #bubbleStage.is-dragging {
+            cursor: grabbing;
         }
 
         .bubble-shell-breath {
@@ -493,6 +516,36 @@
 
         .bubble-shell-main {
             animation-duration: var(--shell-duration, 7.6s);
+        }
+
+        .bubble-map-grid-line {
+            stroke: rgba(192, 220, 255, 0.08);
+            stroke-width: 1;
+            stroke-dasharray: 10 12;
+        }
+
+        .bubble-period-halo {
+            fill: rgba(135, 189, 255, 0.06);
+            stroke: rgba(175, 212, 255, 0.14);
+            stroke-width: 1.4;
+        }
+
+        .bubble-period-anchor {
+            fill: rgba(230, 241, 255, 0.72);
+        }
+
+        .bubble-period-name {
+            fill: rgba(231, 240, 255, 0.88);
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-anchor: middle;
+        }
+
+        .bubble-period-count {
+            fill: rgba(188, 214, 255, 0.68);
+            font-size: 12px;
+            text-anchor: middle;
         }
 
         .memory-ball-wrap {
@@ -519,6 +572,54 @@
             will-change: transform, filter;
             animation: bubblePulse var(--bubble-duration, 6.8s) ease-in-out var(--bubble-delay, 0s) infinite;
             transition: transform 0.42s cubic-bezier(0.2, 0.7, 0.2, 1), filter 0.42s cubic-bezier(0.2, 0.7, 0.2, 1);
+        }
+
+        .memory-label {
+            fill: white;
+            font-weight: 700;
+            font-size: 12px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            paint-order: stroke;
+            stroke: rgba(0, 0, 0, 0.12);
+            stroke-width: 2px;
+            stroke-linejoin: round;
+            pointer-events: none;
+        }
+
+        .bubble-gesture-guide {
+            position: absolute;
+            left: 50%;
+            bottom: 10px;
+            z-index: 2;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: min(720px, calc(100% - 60px));
+        }
+
+        .bubble-gesture-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(9, 17, 36, 0.74);
+            border: 1px solid rgba(175, 212, 255, 0.12);
+            color: rgba(228, 239, 255, 0.88);
+            font-size: 11px;
+            box-shadow: 0 12px 24px rgba(6, 10, 24, 0.18);
+            backdrop-filter: blur(10px);
+        }
+
+        .bubble-gesture-chip i {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(166, 215, 255, 0.98), rgba(255, 200, 222, 0.94));
+            box-shadow: 0 0 10px rgba(166, 215, 255, 0.38);
         }
 
         @keyframes bubblePulse {
@@ -564,19 +665,6 @@
             }
         }
 
-        .memory-label {
-            fill: white;
-            font-weight: 700;
-            font-size: 12px;
-            text-anchor: middle;
-            dominant-baseline: middle;
-            paint-order: stroke;
-            stroke: rgba(0, 0, 0, 0.12);
-            stroke-width: 2px;
-            stroke-linejoin: round;
-            pointer-events: none;
-        }
-
         @media (max-width: 980px) {
             .bubble-stage-panel {
                 min-height: 760px;
@@ -615,7 +703,7 @@
             }
 
             .bubble-stage-shell {
-                padding-bottom: 16px;
+                padding-bottom: 76px;
             }
 
             #bubbleStage {
@@ -624,7 +712,8 @@
 
             .bubble-caption {
                 left: 18px;
-                bottom: 18px;
+                bottom: 58px;
+                max-width: calc(100% - 36px);
             }
 
             .bubble-period-banner {
@@ -632,42 +721,60 @@
                 max-width: calc(100% - 136px);
                 text-align: center;
             }
+
+            .bubble-gesture-guide {
+                width: calc(100% - 24px);
+                bottom: 12px;
+            }
         }
     </style>
 
     @if ($bubbleMemories->isNotEmpty())
         <script>
             const memories = @json($bubbleMemories);
+            const periods = @json($periods);
+            const selectedPeriod = @json($selectedPeriod);
             const svgNS = "http://www.w3.org/2000/svg";
+            const defs = document.getElementById("bubbleDefs");
             const bubbleLayer = document.getElementById("bubbleLayer");
-            const stage = {
-                x: 700,
-                y: 470,
-                r: 362
+            const bubbleMapGrid = document.getElementById("bubbleMapGrid");
+            const bubbleMapPeriods = document.getElementById("bubbleMapPeriods");
+            const bubbleMapViewport = document.getElementById("bubbleMapViewport");
+            const bubbleStage = document.getElementById("bubbleStage");
+            const viewport = { width: 1400, height: 920 };
+            const state = {
+                scale: 1,
+                minScale: 0.72,
+                maxScale: 1.58,
+                tx: 0,
+                ty: 0,
+                dragging: false,
+                dragStarted: false,
+                pointerId: null,
+                startX: 0,
+                startY: 0,
+                startTx: 0,
+                startTy: 0,
+                touchMode: null,
+                pinchDistance: 0,
+                pinchMidpoint: null,
+                worldBounds: null,
+            };
+
+            const periodAnchors = {
+                "幼少期": { x: -180, y: 210 },
+                "小学生": { x: 180, y: 720 },
+                "中学生": { x: 620, y: 820 },
+                "高校生": { x: 1040, y: 660 },
+                "大学生": { x: 1430, y: 430 },
+                "成人期": { x: 1780, y: 700 },
+                "不明": { x: 1690, y: 100 },
             };
 
             function createSvg(tag, attrs = {}) {
                 const element = document.createElementNS(svgNS, tag);
                 Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
                 return element;
-            }
-
-            function addGradient(index, colors) {
-                const defs = document.querySelector("#bubbleStage defs");
-                const id = `memGrad${index}`;
-                const gradient = createSvg("radialGradient", {
-                    id,
-                    cx: "30%",
-                    cy: "28%",
-                    r: "70%"
-                });
-
-                gradient.appendChild(createSvg("stop", { offset: "0%", "stop-color": toRgba(colors[0], 0.96) }));
-                gradient.appendChild(createSvg("stop", { offset: "55%", "stop-color": toRgba(colors[0], 0.54) }));
-                gradient.appendChild(createSvg("stop", { offset: "100%", "stop-color": toRgba(colors[1], 0.74) }));
-                defs.appendChild(gradient);
-
-                return id;
             }
 
             function toRgba(color, alpha) {
@@ -685,17 +792,176 @@
                 return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
             }
 
-            function getPosition(index, total, radius) {
-                const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-                const t = (index + 0.5) / total;
-                const spread = stage.r - radius - 16;
-                const radial = Math.sqrt(t) * spread * 0.99;
-                const angle = index * goldenAngle - Math.PI / 2;
+            function addGradient(index, colors) {
+                const id = `memGrad${index}`;
+                const gradient = createSvg("radialGradient", {
+                    id,
+                    cx: "30%",
+                    cy: "28%",
+                    r: "70%",
+                    "data-memory-gradient": "true",
+                });
+
+                gradient.appendChild(createSvg("stop", { offset: "0%", "stop-color": toRgba(colors[0], 0.96) }));
+                gradient.appendChild(createSvg("stop", { offset: "55%", "stop-color": toRgba(colors[0], 0.54) }));
+                gradient.appendChild(createSvg("stop", { offset: "100%", "stop-color": toRgba(colors[1], 0.74) }));
+                defs.appendChild(gradient);
+
+                return id;
+            }
+
+            function radiusFor(index) {
+                const pattern = [108, 96, 92, 112, 86, 98, 90, 104, 88, 100, 91, 95];
+                return pattern[index % pattern.length];
+            }
+
+            function getAnchor(period) {
+                return periodAnchors[period] ?? { x: 900, y: 470 };
+            }
+
+            function buildWorldData() {
+                const buckets = new Map();
+
+                memories.forEach((memory) => {
+                    if (!buckets.has(memory.period)) {
+                        buckets.set(memory.period, []);
+                    }
+
+                    buckets.get(memory.period).push(memory);
+                });
+
+                const periodNodes = [];
+                const memoryNodes = [];
+
+                periods.forEach((period) => {
+                    const anchor = getAnchor(period);
+                    const items = buckets.get(period) ?? [];
+
+                    if (selectedPeriod !== "すべて" && selectedPeriod !== period) {
+                        return;
+                    }
+
+                    periodNodes.push({
+                        period,
+                        count: items.length,
+                        x: anchor.x,
+                        y: anchor.y,
+                        radius: Math.max(160, 170 + (items.length * 7)),
+                    });
+
+                    items.forEach((memory, index) => {
+                        const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+                        const bubbleRadius = radiusFor(index);
+                        const spread = 110 + Math.sqrt(items.length + 2) * 54;
+                        const orbit = items.length <= 1
+                            ? 0
+                            : Math.sqrt((index + 0.5) / items.length) * spread;
+                        const angle = index * goldenAngle - Math.PI / 2;
+                        const x = anchor.x + Math.cos(angle) * orbit;
+                        const y = anchor.y + Math.sin(angle) * orbit;
+
+                        memoryNodes.push({
+                            memory,
+                            x,
+                            y,
+                            radius: bubbleRadius,
+                        });
+                    });
+                });
 
                 return {
-                    x: stage.x + Math.cos(angle) * radial,
-                    y: stage.y + Math.sin(angle) * radial
+                    periodNodes,
+                    memoryNodes,
                 };
+            }
+
+            function buildBounds(world) {
+                let minX = Infinity;
+                let maxX = -Infinity;
+                let minY = Infinity;
+                let maxY = -Infinity;
+
+                world.periodNodes.forEach((node) => {
+                    minX = Math.min(minX, node.x - node.radius - 60);
+                    maxX = Math.max(maxX, node.x + node.radius + 60);
+                    minY = Math.min(minY, node.y - node.radius - 80);
+                    maxY = Math.max(maxY, node.y + node.radius + 40);
+                });
+
+                world.memoryNodes.forEach((node) => {
+                    minX = Math.min(minX, node.x - node.radius - 40);
+                    maxX = Math.max(maxX, node.x + node.radius + 40);
+                    minY = Math.min(minY, node.y - node.radius - 40);
+                    maxY = Math.max(maxY, node.y + node.radius + 40);
+                });
+
+                return {
+                    minX,
+                    minY,
+                    maxX,
+                    maxY,
+                    width: maxX - minX,
+                    height: maxY - minY,
+                };
+            }
+
+            function renderGrid(bounds) {
+                const step = 240;
+
+                for (let x = Math.floor(bounds.minX / step) * step; x <= bounds.maxX; x += step) {
+                    bubbleMapGrid.appendChild(createSvg("line", {
+                        x1: x,
+                        y1: bounds.minY - 120,
+                        x2: x,
+                        y2: bounds.maxY + 120,
+                        class: "bubble-map-grid-line",
+                    }));
+                }
+
+                for (let y = Math.floor(bounds.minY / step) * step; y <= bounds.maxY; y += step) {
+                    bubbleMapGrid.appendChild(createSvg("line", {
+                        x1: bounds.minX - 120,
+                        y1: y,
+                        x2: bounds.maxX + 120,
+                        y2: y,
+                        class: "bubble-map-grid-line",
+                    }));
+                }
+            }
+
+            function renderPeriods(world) {
+                world.periodNodes.forEach((node) => {
+                    bubbleMapPeriods.appendChild(createSvg("circle", {
+                        cx: node.x,
+                        cy: node.y,
+                        r: node.radius,
+                        class: "bubble-period-halo",
+                    }));
+
+                    bubbleMapPeriods.appendChild(createSvg("circle", {
+                        cx: node.x,
+                        cy: node.y,
+                        r: 4.5,
+                        class: "bubble-period-anchor",
+                    }));
+
+                    const periodName = createSvg("text", {
+                        x: node.x,
+                        y: node.y - node.radius - 26,
+                        class: "bubble-period-name",
+                    });
+                    periodName.textContent = node.period;
+
+                    const periodCount = createSvg("text", {
+                        x: node.x,
+                        y: node.y - node.radius - 8,
+                        class: "bubble-period-count",
+                    });
+                    periodCount.textContent = `${node.count} memories`;
+
+                    bubbleMapPeriods.appendChild(periodName);
+                    bubbleMapPeriods.appendChild(periodCount);
+                });
             }
 
             function createLabel(x, y, text, radius) {
@@ -703,126 +969,302 @@
                     x,
                     y,
                     class: "memory-label",
-                    "font-size": Math.max(10, radius * 0.2)
+                    "font-size": Math.max(10, radius * 0.2),
                 });
 
                 node.textContent = text;
                 return node;
             }
 
-            function getRadius(index) {
-                const pattern = [108, 96, 92, 112, 86, 98, 90, 104, 88, 100, 91, 95];
-                return pattern[index % pattern.length];
+            function renderMemories(world) {
+                world.memoryNodes.forEach((node, index) => {
+                    const gradientId = addGradient(index + 1, node.memory.colors);
+                    const wrapper = createSvg("g", {
+                        class: "memory-ball-wrap",
+                        style: `--bubble-appear-delay:${(0.03 * index).toFixed(2)}s`,
+                    });
+                    const group = createSvg("a", {
+                        href: `/memories/${node.memory.id}`,
+                        class: "memory-ball",
+                        "data-period": node.memory.period,
+                        "data-emotion": node.memory.emotion,
+                        "data-tags": node.memory.tags.join(","),
+                        "aria-label": `${node.memory.period}の記憶`,
+                        style: [
+                            `--bubble-rest-scale:${(0.93 + (index % 4) * 0.02).toFixed(2)}`,
+                            `--bubble-rise-scale:${(1.02 + (index % 5) * 0.025).toFixed(2)}`,
+                            `--bubble-hover-scale:${(1.12 + (index % 4) * 0.025).toFixed(2)}`,
+                            `--bubble-duration:${(5.2 + (index % 5) * 0.55).toFixed(2)}s`,
+                            `--bubble-delay:${(-index * 0.45).toFixed(2)}s`,
+                        ].join(";"),
+                    });
+                    const body = createSvg("g", {
+                        class: "memory-ball-body",
+                    });
+
+                    const hitArea = createSvg("circle", {
+                        cx: node.x,
+                        cy: node.y,
+                        r: node.radius + 18,
+                        fill: "rgba(255,255,255,0.001)",
+                        "pointer-events": "all",
+                    });
+
+                    const aura = createSvg("circle", {
+                        cx: node.x,
+                        cy: node.y,
+                        r: node.radius + 20,
+                        fill: toRgba(node.memory.colors[1], 0.2),
+                        filter: "url(#ballAura)",
+                    });
+
+                    const glow = createSvg("circle", {
+                        cx: node.x,
+                        cy: node.y,
+                        r: node.radius + 11,
+                        fill: "rgba(255,255,255,0.1)",
+                        filter: "url(#ballAura)",
+                    });
+
+                    const circle = createSvg("circle", {
+                        cx: node.x,
+                        cy: node.y,
+                        r: node.radius,
+                        fill: `url(#${gradientId})`,
+                        filter: "url(#ballShadow)",
+                        opacity: "0.88",
+                    });
+
+                    const inner = createSvg("circle", {
+                        cx: node.x - node.radius * 0.25,
+                        cy: node.y - node.radius * 0.28,
+                        r: Math.max(10, node.radius * 0.26),
+                        fill: "rgba(255,255,255,0.30)",
+                    });
+
+                    const rim = createSvg("circle", {
+                        cx: node.x,
+                        cy: node.y,
+                        r: node.radius - 1,
+                        fill: "none",
+                        stroke: "rgba(255,255,255,0.1)",
+                        "stroke-width": "0.9",
+                        filter: "url(#ballAura)",
+                    });
+
+                    const core = createSvg("circle", {
+                        cx: node.x + node.radius * 0.2,
+                        cy: node.y + node.radius * 0.14,
+                        r: Math.max(10, node.radius * 0.42),
+                        fill: toRgba(node.memory.colors[0], 0.12),
+                    });
+
+                    group.appendChild(hitArea);
+                    body.appendChild(aura);
+                    body.appendChild(glow);
+                    body.appendChild(circle);
+                    body.appendChild(core);
+                    body.appendChild(inner);
+                    body.appendChild(rim);
+                    body.appendChild(createLabel(node.x, node.y, node.memory.label, node.radius));
+                    group.appendChild(body);
+                    group.appendChild(createSvg("title", {})).textContent = `${node.memory.period} / ${node.memory.emotion}\n${node.memory.content}`;
+
+                    wrapper.appendChild(group);
+                    wrapper.addEventListener("mouseenter", () => {
+                        group.classList.add("is-hovered");
+                    });
+                    wrapper.addEventListener("mouseleave", () => {
+                        group.classList.remove("is-hovered");
+                    });
+                    bubbleLayer.appendChild(wrapper);
+                });
             }
 
-            memories.forEach((memory, index) => {
-                const radius = getRadius(index);
-                const position = getPosition(index, memories.length, radius);
-                const gradientId = addGradient(index + 1, memory.colors);
+            function svgPointFromClient(clientX, clientY) {
+                const rect = bubbleStage.getBoundingClientRect();
+                return {
+                    x: ((clientX - rect.left) / rect.width) * viewport.width,
+                    y: ((clientY - rect.top) / rect.height) * viewport.height,
+                };
+            }
 
-                const wrapper = createSvg("g", {
-                    class: "memory-ball-wrap",
-                    style: [
-                        `--bubble-appear-delay:${(0.06 * index).toFixed(2)}s`
-                    ].join(";")
-                });
+            function clampTranslation(scale, tx, ty) {
+                const bounds = state.worldBounds;
+                const marginX = 120;
+                const marginY = 120;
+                const scaledWidth = bounds.width * scale;
+                const scaledHeight = bounds.height * scale;
 
-                const group = createSvg("a", {
-                    href: `/memories/${memory.id}`,
-                    class: "memory-ball",
-                    "data-period": memory.period,
-                    "data-emotion": memory.emotion,
-                    "data-tags": memory.tags.join(","),
-                    "aria-label": `${memory.period}の記憶`,
-                    style: [
-                        `--bubble-rest-scale:${(0.93 + (index % 4) * 0.02).toFixed(2)}`,
-                        `--bubble-rise-scale:${(1.02 + (index % 5) * 0.025).toFixed(2)}`,
-                        `--bubble-hover-scale:${(1.12 + (index % 4) * 0.025).toFixed(2)}`,
-                        `--bubble-duration:${(5.2 + (index % 5) * 0.55).toFixed(2)}s`,
-                        `--bubble-delay:${(-index * 0.45).toFixed(2)}s`
-                    ].join(";")
-                });
+                if (scaledWidth <= viewport.width - (marginX * 2)) {
+                    tx = (viewport.width - scaledWidth) / 2 - (bounds.minX * scale);
+                } else {
+                    const minTx = viewport.width - ((bounds.maxX * scale) + marginX);
+                    const maxTx = marginX - (bounds.minX * scale);
+                    tx = Math.min(maxTx, Math.max(minTx, tx));
+                }
 
-                const body = createSvg("g", {
-                    class: "memory-ball-body"
-                });
+                if (scaledHeight <= viewport.height - (marginY * 2)) {
+                    ty = (viewport.height - scaledHeight) / 2 - (bounds.minY * scale);
+                } else {
+                    const minTy = viewport.height - ((bounds.maxY * scale) + marginY);
+                    const maxTy = marginY - (bounds.minY * scale);
+                    ty = Math.min(maxTy, Math.max(minTy, ty));
+                }
 
-                const hitArea = createSvg("circle", {
-                    cx: position.x,
-                    cy: position.y,
-                    r: radius + 18,
-                    fill: "rgba(255,255,255,0.001)",
-                    "pointer-events": "all"
-                });
+                return { tx, ty };
+            }
 
-                const aura = createSvg("circle", {
-                    cx: position.x,
-                    cy: position.y,
-                    r: radius + 20,
-                    fill: toRgba(memory.colors[1], 0.2),
-                    filter: "url(#ballAura)"
-                });
+            function applyTransform() {
+                const clamped = clampTranslation(state.scale, state.tx, state.ty);
+                state.tx = clamped.tx;
+                state.ty = clamped.ty;
+                bubbleMapViewport.setAttribute("transform", `matrix(${state.scale} 0 0 ${state.scale} ${state.tx} ${state.ty})`);
+            }
 
-                const glow = createSvg("circle", {
-                    cx: position.x,
-                    cy: position.y,
-                    r: radius + 11,
-                    fill: "rgba(255,255,255,0.1)",
-                    filter: "url(#ballAura)"
-                });
+            function frameInitialView() {
+                const bounds = state.worldBounds;
+                const paddingX = 420;
+                const paddingY = 320;
+                const scaleX = viewport.width / (bounds.width + paddingX);
+                const scaleY = viewport.height / (bounds.height + paddingY);
+                state.scale = Math.min(state.maxScale, Math.max(0.9, Math.min(scaleX, scaleY)));
+                state.tx = (viewport.width / 2) - (((bounds.minX + bounds.maxX) / 2) * state.scale);
+                state.ty = (viewport.height / 2) - (((bounds.minY + bounds.maxY) / 2) * state.scale);
+                applyTransform();
+            }
 
-                const circle = createSvg("circle", {
-                    cx: position.x,
-                    cy: position.y,
-                    r: radius,
-                    fill: `url(#${gradientId})`,
-                    filter: "url(#ballShadow)",
-                    opacity: "0.88"
-                });
+            function zoomTo(nextScale, point) {
+                const clampedScale = Math.min(state.maxScale, Math.max(state.minScale, nextScale));
+                const worldX = (point.x - state.tx) / state.scale;
+                const worldY = (point.y - state.ty) / state.scale;
+                state.tx = point.x - (worldX * clampedScale);
+                state.ty = point.y - (worldY * clampedScale);
+                state.scale = clampedScale;
+                applyTransform();
+            }
 
-                const inner = createSvg("circle", {
-                    cx: position.x - radius * 0.25,
-                    cy: position.y - radius * 0.28,
-                    r: Math.max(10, radius * 0.26),
-                    fill: "rgba(255,255,255,0.30)"
-                });
+            function startDrag(point, pointerId = null) {
+                state.dragging = true;
+                state.dragStarted = false;
+                state.pointerId = pointerId;
+                state.startX = point.x;
+                state.startY = point.y;
+                state.startTx = state.tx;
+                state.startTy = state.ty;
+                bubbleStage.classList.add("is-dragging");
+            }
 
-                const rim = createSvg("circle", {
-                    cx: position.x,
-                    cy: position.y,
-                    r: radius - 1,
-                    fill: "none",
-                    stroke: "rgba(255,255,255,0.1)",
-                    "stroke-width": "0.9",
-                    filter: "url(#ballAura)"
-                });
+            function updateDrag(point) {
+                if (!state.dragging) {
+                    return;
+                }
 
-                const core = createSvg("circle", {
-                    cx: position.x + radius * 0.2,
-                    cy: position.y + radius * 0.14,
-                    r: Math.max(10, radius * 0.42),
-                    fill: toRgba(memory.colors[0], 0.12)
-                });
+                const dx = point.x - state.startX;
+                const dy = point.y - state.startY;
 
-                group.appendChild(hitArea);
-                body.appendChild(aura);
-                body.appendChild(glow);
-                body.appendChild(circle);
-                body.appendChild(core);
-                body.appendChild(inner);
-                body.appendChild(rim);
-                body.appendChild(createLabel(position.x, position.y, memory.label, radius));
-                group.appendChild(body);
-                group.appendChild(createSvg("title", {})).textContent = `${memory.period} / ${memory.emotion}\n${memory.content}`;
+                if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+                    state.dragStarted = true;
+                }
 
-                wrapper.appendChild(group);
-                wrapper.addEventListener("mouseenter", () => {
-                    group.classList.add("is-hovered");
-                });
-                wrapper.addEventListener("mouseleave", () => {
-                    group.classList.remove("is-hovered");
-                });
-                bubbleLayer.appendChild(wrapper);
+                state.tx = state.startTx + dx;
+                state.ty = state.startTy + dy;
+                applyTransform();
+            }
+
+            function endDrag() {
+                state.dragging = false;
+                state.pointerId = null;
+                bubbleStage.classList.remove("is-dragging");
+            }
+
+            const world = buildWorldData();
+            state.worldBounds = buildBounds(world);
+            renderGrid(state.worldBounds);
+            renderPeriods(world);
+            renderMemories(world);
+            frameInitialView();
+
+            bubbleStage.addEventListener("wheel", (event) => {
+                event.preventDefault();
+                const point = svgPointFromClient(event.clientX, event.clientY);
+                const factor = event.deltaY < 0 ? 1.12 : 0.9;
+                zoomTo(state.scale * factor, point);
+            }, { passive: false });
+
+            bubbleStage.addEventListener("pointerdown", (event) => {
+                if (event.target.closest(".memory-ball")) {
+                    return;
+                }
+
+                const point = svgPointFromClient(event.clientX, event.clientY);
+                startDrag(point, event.pointerId);
+            });
+
+            bubbleStage.addEventListener("pointermove", (event) => {
+                if (!state.dragging || state.pointerId !== event.pointerId) {
+                    return;
+                }
+
+                updateDrag(svgPointFromClient(event.clientX, event.clientY));
+            });
+
+            bubbleStage.addEventListener("pointerup", () => {
+                endDrag();
+            });
+
+            bubbleStage.addEventListener("pointerleave", () => {
+                endDrag();
+            });
+
+            bubbleStage.addEventListener("touchstart", (event) => {
+                if (event.touches.length === 2) {
+                    const first = svgPointFromClient(event.touches[0].clientX, event.touches[0].clientY);
+                    const second = svgPointFromClient(event.touches[1].clientX, event.touches[1].clientY);
+                    state.touchMode = "pinch";
+                    state.pinchDistance = Math.hypot(first.x - second.x, first.y - second.y);
+                    state.pinchMidpoint = {
+                        x: (first.x + second.x) / 2,
+                        y: (first.y + second.y) / 2,
+                    };
+                    return;
+                }
+
+                if (event.touches.length === 1 && !event.target.closest(".memory-ball")) {
+                    state.touchMode = "drag";
+                    startDrag(svgPointFromClient(event.touches[0].clientX, event.touches[0].clientY));
+                }
+            }, { passive: true });
+
+            bubbleStage.addEventListener("touchmove", (event) => {
+                if (state.touchMode === "pinch" && event.touches.length === 2) {
+                    const first = svgPointFromClient(event.touches[0].clientX, event.touches[0].clientY);
+                    const second = svgPointFromClient(event.touches[1].clientX, event.touches[1].clientY);
+                    const nextDistance = Math.hypot(first.x - second.x, first.y - second.y);
+                    const midpoint = {
+                        x: (first.x + second.x) / 2,
+                        y: (first.y + second.y) / 2,
+                    };
+
+                    if (state.pinchDistance > 0) {
+                        const factor = nextDistance / state.pinchDistance;
+                        zoomTo(state.scale * factor, midpoint);
+                    }
+
+                    state.pinchDistance = nextDistance;
+                    state.pinchMidpoint = midpoint;
+                    return;
+                }
+
+                if (state.touchMode === "drag" && event.touches.length === 1) {
+                    updateDrag(svgPointFromClient(event.touches[0].clientX, event.touches[0].clientY));
+                }
+            }, { passive: true });
+
+            bubbleStage.addEventListener("touchend", () => {
+                state.touchMode = null;
+                state.pinchDistance = 0;
+                endDrag();
             });
         </script>
     @endif
