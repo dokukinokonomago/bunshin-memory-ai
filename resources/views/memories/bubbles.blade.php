@@ -18,6 +18,7 @@
         @else
             @php
                 $bubbleBaseParams = $selectedPeriod !== 'すべて' ? ['period' => $selectedPeriod] : [];
+                $bubbleBaseRoute = route('memories.bubbles');
             @endphp
             <div class="bubble-stage-copy">
                 <span class="eyebrow">PERSONAL MEMORY ARCHIVE</span>
@@ -615,6 +616,51 @@
             stroke-width: 1.2;
         }
 
+        .bubble-period-zone {
+            cursor: pointer;
+        }
+
+        .bubble-period-zone .bubble-island-shadow,
+        .bubble-period-zone .bubble-island-shape,
+        .bubble-period-zone .bubble-island-ridge,
+        .bubble-period-zone .bubble-island-shore,
+        .bubble-period-zone .bubble-period-halo,
+        .bubble-period-zone .bubble-period-anchor,
+        .bubble-period-zone .bubble-period-name,
+        .bubble-period-zone .bubble-period-count {
+            transition: transform 0.24s ease, opacity 0.24s ease, filter 0.24s ease, fill 0.24s ease, stroke 0.24s ease;
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+
+        .bubble-period-zone.is-active .bubble-island-shape {
+            fill: rgba(138, 183, 116, 0.34);
+            stroke: rgba(220, 246, 205, 0.24);
+        }
+
+        .bubble-period-zone.is-active .bubble-island-shore {
+            stroke: rgba(198, 232, 255, 0.2);
+        }
+
+        .bubble-period-zone.is-active .bubble-period-halo,
+        .bubble-period-zone.is-active .bubble-island-shadow,
+        .bubble-period-zone.is-active .bubble-island-shape,
+        .bubble-period-zone.is-active .bubble-island-ridge,
+        .bubble-period-zone.is-active .bubble-island-shore,
+        .bubble-period-zone.is-active .bubble-period-anchor,
+        .bubble-period-zone.is-active .bubble-period-name,
+        .bubble-period-zone.is-active .bubble-period-count {
+            transform: scale(1.06);
+        }
+
+        .bubble-period-zone.is-active .bubble-period-name {
+            fill: rgba(250, 252, 255, 0.98);
+        }
+
+        .bubble-period-zone.is-active .bubble-period-count {
+            fill: rgba(214, 232, 255, 0.88);
+        }
+
         .bubble-period-anchor {
             fill: rgba(243, 249, 255, 0.88);
         }
@@ -649,6 +695,12 @@
             animation: none;
             transform: scale(var(--bubble-hover-scale, 1.16));
             filter: brightness(1.12) saturate(1.12) drop-shadow(0 26px 34px rgba(108, 127, 169, 0.2));
+        }
+
+        .memory-ball.is-period-hovered .memory-ball-body {
+            animation: none;
+            transform: scale(1.14);
+            filter: brightness(1.16) saturate(1.14) drop-shadow(0 22px 30px rgba(104, 140, 182, 0.28));
         }
 
         .memory-ball-body {
@@ -829,6 +881,7 @@
             const memories = @json($bubbleMemories);
             const periods = @json($periods);
             const selectedPeriod = @json($selectedPeriod);
+            const bubblesRoute = @json($bubbleBaseRoute);
             const svgNS = "http://www.w3.org/2000/svg";
             const defs = document.getElementById("bubbleDefs");
             const bubbleLayer = document.getElementById("bubbleLayer");
@@ -837,6 +890,8 @@
             const bubbleMapPeriods = document.getElementById("bubbleMapPeriods");
             const bubbleMapViewport = document.getElementById("bubbleMapViewport");
             const bubbleStage = document.getElementById("bubbleStage");
+            const periodZones = new Map();
+            const memoryGroupsByPeriod = new Map();
             const viewport = { width: 1400, height: 920 };
             const state = {
                 scale: 1,
@@ -1060,36 +1115,48 @@
                     const ridgeRadius = islandRadius * 0.72;
                     const path = islandPath(node.x, node.y, islandRadius, index);
                     const ridgePath = islandPath(node.x + 10, node.y + 6, ridgeRadius, index + 2);
+                    const zone = createSvg("g", {
+                        class: "bubble-period-zone",
+                        "data-period-zone": node.period,
+                    });
 
-                    bubbleMapIslands.appendChild(createSvg("path", {
+                    zone.appendChild(createSvg("path", {
                         d: islandPath(node.x + 16, node.y + 18, islandRadius * 0.98, index + 1),
                         class: "bubble-island-shadow",
                     }));
-                    bubbleMapIslands.appendChild(createSvg("path", {
+                    zone.appendChild(createSvg("path", {
                         d: path,
                         class: "bubble-island-shore",
                     }));
-                    bubbleMapIslands.appendChild(createSvg("path", {
+                    zone.appendChild(createSvg("path", {
                         d: path,
                         class: "bubble-island-shape",
                     }));
-                    bubbleMapIslands.appendChild(createSvg("path", {
+                    zone.appendChild(createSvg("path", {
                         d: ridgePath,
                         class: "bubble-island-ridge",
                     }));
+
+                    bubbleMapIslands.appendChild(zone);
+                    periodZones.set(node.period, zone);
                 });
             }
 
             function renderPeriods(world) {
                 world.periodNodes.forEach((node) => {
-                    bubbleMapPeriods.appendChild(createSvg("circle", {
+                    const zone = periodZones.get(node.period);
+                    if (!zone) {
+                        return;
+                    }
+
+                    zone.appendChild(createSvg("circle", {
                         cx: node.x,
                         cy: node.y,
                         r: node.radius,
                         class: "bubble-period-halo",
                     }));
 
-                    bubbleMapPeriods.appendChild(createSvg("circle", {
+                    zone.appendChild(createSvg("circle", {
                         cx: node.x,
                         cy: node.y,
                         r: 4.5,
@@ -1110,8 +1177,8 @@
                     });
                     periodCount.textContent = `${node.count} memories`;
 
-                    bubbleMapPeriods.appendChild(periodName);
-                    bubbleMapPeriods.appendChild(periodCount);
+                    zone.appendChild(periodName);
+                    zone.appendChild(periodCount);
                 });
             }
 
@@ -1132,6 +1199,7 @@
                     const gradientId = addGradient(index + 1, node.memory.colors);
                     const wrapper = createSvg("g", {
                         class: "memory-ball-wrap",
+                        "data-period-memory": node.memory.period,
                         style: `--bubble-appear-delay:${(0.03 * index).toFixed(2)}s`,
                     });
                     const group = createSvg("a", {
@@ -1229,7 +1297,38 @@
                         group.classList.remove("is-hovered");
                     });
                     bubbleLayer.appendChild(wrapper);
+
+                    if (!memoryGroupsByPeriod.has(node.memory.period)) {
+                        memoryGroupsByPeriod.set(node.memory.period, []);
+                    }
+
+                    memoryGroupsByPeriod.get(node.memory.period).push(group);
                 });
+            }
+
+            function setActivePeriod(period) {
+                periodZones.forEach((zone, zonePeriod) => {
+                    zone.classList.toggle("is-active", zonePeriod === period);
+                });
+
+                memoryGroupsByPeriod.forEach((groups, groupPeriod) => {
+                    groups.forEach((group) => {
+                        group.classList.toggle("is-period-hovered", groupPeriod === period);
+                    });
+                });
+            }
+
+            function clearActivePeriod() {
+                periodZones.forEach((zone) => zone.classList.remove("is-active"));
+                memoryGroupsByPeriod.forEach((groups) => {
+                    groups.forEach((group) => group.classList.remove("is-period-hovered"));
+                });
+            }
+
+            function jumpToPeriod(period) {
+                const url = new URL(bubblesRoute, window.location.origin);
+                url.searchParams.set("period", period);
+                window.location.href = url.toString();
             }
 
             function svgPointFromClient(clientX, clientY) {
@@ -1336,6 +1435,23 @@
             renderPeriods(world);
             renderMemories(world);
             frameInitialView();
+            if (selectedPeriod !== "すべて") {
+                setActivePeriod(selectedPeriod);
+            }
+
+            periodZones.forEach((zone, period) => {
+                zone.addEventListener("mouseenter", () => {
+                    setActivePeriod(period);
+                });
+
+                zone.addEventListener("mouseleave", () => {
+                    clearActivePeriod();
+                });
+
+                zone.addEventListener("click", () => {
+                    jumpToPeriod(period);
+                });
+            });
 
             bubbleStage.addEventListener("wheel", (event) => {
                 event.preventDefault();
@@ -1345,7 +1461,7 @@
             }, { passive: false });
 
             bubbleStage.addEventListener("pointerdown", (event) => {
-                if (event.target.closest(".memory-ball")) {
+                if (event.target.closest(".memory-ball") || event.target.closest(".bubble-period-zone")) {
                     return;
                 }
 
@@ -1382,7 +1498,7 @@
                     return;
                 }
 
-                if (event.touches.length === 1 && !event.target.closest(".memory-ball")) {
+                if (event.touches.length === 1 && !event.target.closest(".memory-ball") && !event.target.closest(".bubble-period-zone")) {
                     state.touchMode = "drag";
                     startDrag(svgPointFromClient(event.touches[0].clientX, event.touches[0].clientY));
                 }
