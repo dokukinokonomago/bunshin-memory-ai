@@ -21,10 +21,19 @@
                 $bubbleBaseRoute = route('memories.bubbles');
             @endphp
             <div class="bubble-stage-copy">
-                <span class="eyebrow">PERSONAL MEMORY ARCHIVE</span>
-                <h1>YOUの記憶</h1>
-                <div class="hero-actions">
-                    <a class="btn btn-secondary" href="{{ route('memories.index') }}">一覧へ戻る</a>
+                <div class="bubble-stage-copy-shell">
+                    <span class="bubble-stage-kicker">
+                        <i class="bubble-stage-kicker-dot" aria-hidden="true"></i>
+                        <span class="eyebrow">PERSONAL MEMORY ARCHIVE</span>
+                    </span>
+                    <h1><span>YOU</span>の記憶</h1>
+                    <p class="bubble-stage-subtitle">静かに漂う記憶を、地図のようにたどるアーカイブ。</p>
+                    <div class="hero-actions">
+                        <a class="bubble-back-link" href="{{ route('memories.index') }}">
+                            <span class="bubble-back-link-mark" aria-hidden="true">←</span>
+                            一覧へ戻る
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -32,10 +41,16 @@
                 <section class="bubble-stage-hub-card bubble-stage-count">
                     <span class="bubble-side-label">全記憶数</span>
                     <strong>{{ $matchingCount }}</strong>
+                    <span class="bubble-stage-count-note">memories in orbit</span>
                 </section>
 
                 <details class="bubble-stage-hub-card bubble-stage-actions">
-                    <summary class="btn btn-secondary bubble-stage-actions-trigger">今日は何する？</summary>
+                    <summary class="btn btn-secondary bubble-stage-actions-trigger">
+                        <span class="bubble-stage-actions-copy">
+                            <span class="bubble-stage-actions-label">今日は何をする？</span>
+                            <small>choose your next move</small>
+                        </span>
+                    </summary>
                     <div class="bubble-stage-actions-menu">
                         <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶を追加</a>
                         <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶と話す</a>
@@ -242,10 +257,34 @@
 
         .bubble-stage-copy {
             position: absolute;
-            top: 28px;
-            left: 28px;
+            top: 24px;
+            left: 24px;
             z-index: 3;
-            max-width: 280px;
+            max-width: 360px;
+        }
+
+        .bubble-stage-copy-shell {
+            position: relative;
+            padding: 20px 22px 18px;
+            border-radius: 28px;
+            border: 1px solid rgba(170, 206, 255, 0.14);
+            background:
+                radial-gradient(circle at top left, rgba(173, 225, 255, 0.18), transparent 42%),
+                linear-gradient(145deg, rgba(13, 20, 42, 0.9), rgba(7, 13, 30, 0.76));
+            box-shadow:
+                0 24px 52px rgba(4, 8, 20, 0.36),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            overflow: hidden;
+        }
+
+        .bubble-stage-copy-shell::after {
+            content: "";
+            position: absolute;
+            inset: 1px;
+            border-radius: 27px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            pointer-events: none;
         }
 
         .bubble-stage-hub {
@@ -256,37 +295,93 @@
             transform: translateX(-50%);
             display: flex;
             align-items: flex-start;
-            gap: 12px;
-            width: min(520px, calc(100% - 360px));
+            gap: 14px;
+            width: min(560px, calc(100% - 420px));
             justify-content: center;
         }
 
         .bubble-stage-hub-card {
+            position: relative;
             border-radius: 18px;
-            border: 1px solid rgba(171, 205, 255, 0.12);
-            background: linear-gradient(180deg, rgba(12, 21, 42, 0.92), rgba(10, 18, 39, 0.82));
-            box-shadow: 0 14px 28px rgba(6, 10, 24, 0.24);
-            backdrop-filter: blur(12px);
+            border: 1px solid rgba(171, 205, 255, 0.16);
+            background:
+                radial-gradient(circle at top, rgba(166, 215, 255, 0.16), transparent 46%),
+                linear-gradient(180deg, rgba(12, 21, 42, 0.94), rgba(10, 18, 39, 0.82));
+            box-shadow:
+                0 18px 34px rgba(6, 10, 24, 0.28),
+                inset 0 1px 0 rgba(255,255,255,0.05);
+            backdrop-filter: blur(16px);
+            overflow: hidden;
+        }
+
+        .bubble-stage-hub-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto auto 18px;
+            width: 84px;
+            height: 84px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(176, 221, 255, 0.2), transparent 68%);
+            pointer-events: none;
+            filter: blur(4px);
         }
 
         .bubble-stage-copy h1 {
-            margin: 16px 0 16px;
-            font-size: clamp(30px, 3.4vw, 50px);
+            position: relative;
+            z-index: 1;
+            margin: 14px 0 10px;
+            font-family: "Times New Roman", "Hiragino Mincho ProN", serif;
+            font-size: clamp(34px, 3.8vw, 56px);
             color: rgba(245, 249, 255, 0.96);
-            letter-spacing: 0.03em;
-            white-space: nowrap;
+            letter-spacing: 0.05em;
+            line-height: 0.98;
+        }
+
+        .bubble-stage-copy h1 span {
+            display: inline-block;
+            margin-right: 0.08em;
+            color: rgba(209, 232, 255, 0.98);
+            text-shadow: 0 0 28px rgba(148, 200, 255, 0.18);
         }
 
         .bubble-stage-copy .eyebrow {
-            padding: 8px 14px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, rgba(12, 21, 44, 0.92), rgba(27, 47, 88, 0.78));
-            border: 1px solid rgba(166, 205, 255, 0.18);
             color: rgba(216, 234, 255, 0.92);
             letter-spacing: 0.16em;
             font-size: 11px;
-            box-shadow: 0 10px 26px rgba(8, 14, 30, 0.28);
-            backdrop-filter: blur(12px);
+        }
+
+        .bubble-stage-kicker {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(10, 18, 39, 0.54);
+            border: 1px solid rgba(175, 212, 255, 0.12);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+
+        .bubble-stage-kicker-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 32% 32%, rgba(255,255,255,0.96), rgba(153, 216, 255, 0.94) 46%, rgba(255, 190, 224, 0.9));
+            box-shadow:
+                0 0 18px rgba(144, 208, 255, 0.54),
+                0 0 36px rgba(255, 186, 221, 0.24);
+            flex: 0 0 auto;
+        }
+
+        .bubble-stage-subtitle {
+            position: relative;
+            z-index: 1;
+            margin: 0 0 18px;
+            color: rgba(202, 220, 246, 0.82);
+            font-size: 13px;
+            line-height: 1.7;
+            letter-spacing: 0.02em;
         }
 
         .bubble-stage-panel .btn,
@@ -370,15 +465,29 @@
 
         .bubble-stage-count {
             min-width: 132px;
-            padding: 14px 18px;
+            padding: 16px 20px 14px;
             text-align: center;
         }
 
         .bubble-stage-count strong {
+            position: relative;
+            z-index: 1;
             display: block;
             color: rgba(245, 249, 255, 0.98);
-            font-size: clamp(24px, 2.1vw, 32px);
+            font-size: clamp(28px, 2.2vw, 36px);
             line-height: 1.05;
+            text-shadow: 0 0 26px rgba(164, 214, 255, 0.12);
+        }
+
+        .bubble-stage-count-note {
+            position: relative;
+            z-index: 1;
+            display: block;
+            margin-top: 6px;
+            color: rgba(184, 209, 242, 0.68);
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
         }
 
         .bubble-stage-actions {
@@ -465,33 +574,69 @@
         .bubble-stage-actions-menu {
             display: grid;
             gap: 10px;
-            margin-top: 14px;
+            margin: 8px 12px 12px;
             padding: 14px;
-            border-radius: 16px;
-            background: rgba(10, 18, 37, 0.52);
+            border-radius: 18px;
+            background:
+                radial-gradient(circle at top, rgba(173, 225, 255, 0.12), transparent 48%),
+                rgba(10, 18, 37, 0.58);
             border: 1px solid rgba(171, 205, 255, 0.1);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.04),
+                0 14px 30px rgba(6, 10, 24, 0.16);
         }
 
         .bubble-stage-actions-trigger {
             position: relative;
+            display: flex;
+            align-items: center;
             justify-content: flex-start;
-            padding-right: 34px;
+            min-height: 78px;
+            padding: 16px 44px 16px 18px;
             width: 100%;
+            border-radius: 18px;
+            border-color: rgba(182, 216, 255, 0.2);
+            background:
+                radial-gradient(circle at 18% 24%, rgba(255, 192, 226, 0.16), transparent 20%),
+                radial-gradient(circle at 72% 20%, rgba(166, 218, 255, 0.18), transparent 24%),
+                linear-gradient(135deg, rgba(18, 28, 56, 0.94), rgba(8, 15, 31, 0.98));
+            box-shadow:
+                0 18px 34px rgba(6, 10, 24, 0.24),
+                inset 0 1px 0 rgba(255,255,255,0.06);
+            text-align: left;
         }
 
         .bubble-stage-actions-trigger::after {
             content: "";
             position: absolute;
-            right: 14px;
+            right: 18px;
             top: 50%;
-            width: 8px;
-            height: 8px;
+            width: 9px;
+            height: 9px;
             margin-top: -6px;
             border-right: 2px solid rgba(234, 242, 255, 0.9);
             border-bottom: 2px solid rgba(234, 242, 255, 0.9);
             transform: rotate(45deg);
             transition: transform 0.2s ease, margin-top 0.2s ease;
+        }
+
+        .bubble-stage-actions-copy {
+            display: grid;
+            gap: 4px;
+        }
+
+        .bubble-stage-actions-label {
+            color: rgba(245, 249, 255, 0.98);
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+
+        .bubble-stage-actions-copy small {
+            color: rgba(191, 214, 247, 0.66);
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
         }
 
         .bubble-stage-actions[open] .bubble-stage-actions-trigger::after {
@@ -522,10 +667,51 @@
         .bubble-side-label {
             display: block;
             margin-bottom: 6px;
-            color: rgba(188, 214, 255, 0.68);
-            font-size: 12px;
-            letter-spacing: 0.08em;
+            color: rgba(196, 220, 255, 0.72);
+            font-size: 11px;
+            letter-spacing: 0.18em;
             text-transform: uppercase;
+        }
+
+        .hero-actions {
+            position: relative;
+            z-index: 1;
+        }
+
+        .bubble-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(176, 212, 255, 0.14);
+            background: rgba(9, 17, 35, 0.48);
+            color: rgba(234, 242, 255, 0.92);
+            font-size: 12px;
+            letter-spacing: 0.04em;
+            text-decoration: none;
+            box-shadow: 0 14px 28px rgba(6, 10, 24, 0.16);
+            backdrop-filter: blur(10px);
+            transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .bubble-back-link:hover {
+            transform: translateY(-1px);
+            border-color: rgba(196, 224, 255, 0.28);
+            background: rgba(14, 25, 48, 0.72);
+            box-shadow: 0 18px 34px rgba(9, 18, 38, 0.24);
+        }
+
+        .bubble-back-link-mark {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(162, 216, 255, 0.18), rgba(255, 186, 222, 0.18));
+            color: rgba(246, 250, 255, 0.96);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
         }
 
         .bubble-caption {
