@@ -858,13 +858,13 @@
             };
 
             const periodAnchors = {
-                "幼少期": { x: -180, y: 210 },
-                "小学生": { x: 180, y: 720 },
-                "中学生": { x: 620, y: 820 },
-                "高校生": { x: 1040, y: 660 },
-                "大学生": { x: 1430, y: 430 },
-                "成人期": { x: 1780, y: 700 },
-                "不明": { x: 1690, y: 100 },
+                "幼少期": { x: -280, y: 150 },
+                "小学生": { x: 130, y: 810 },
+                "中学生": { x: 760, y: 960 },
+                "高校生": { x: 1380, y: 740 },
+                "大学生": { x: 1820, y: 360 },
+                "成人期": { x: 2280, y: 780 },
+                "不明": { x: 2220, y: -40 },
             };
 
             function createSvg(tag, attrs = {}) {
@@ -942,13 +942,13 @@
                         count: items.length,
                         x: anchor.x,
                         y: anchor.y,
-                        radius: Math.max(160, 170 + (items.length * 7)),
+                        radius: Math.max(150, 158 + (items.length * 6)),
                     });
 
                     items.forEach((memory, index) => {
                         const goldenAngle = Math.PI * (3 - Math.sqrt(5));
                         const bubbleRadius = radiusFor(index);
-                        const spread = 110 + Math.sqrt(items.length + 2) * 54;
+                        const spread = 98 + Math.sqrt(items.length + 2) * 48;
                         const orbit = items.length <= 1
                             ? 0
                             : Math.sqrt((index + 0.5) / items.length) * spread;
