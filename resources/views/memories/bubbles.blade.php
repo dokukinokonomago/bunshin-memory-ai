@@ -639,6 +639,7 @@
             flex: 0 0 auto;
         }
 
+        .bubble-action-orb,
         .bubble-inline-filter .bubble-filter-launch {
             position: relative;
             display: flex;
@@ -659,6 +660,7 @@
                 inset 0 1px 0 rgba(255,255,255,0.22),
                 inset 0 -10px 24px rgba(126, 185, 255, 0.08);
             backdrop-filter: blur(18px) saturate(130%);
+            text-decoration: none;
             text-align: center;
             flex: 0 0 auto;
         }
@@ -693,6 +695,7 @@
             opacity: 0.96;
         }
 
+        .bubble-action-orb::before,
         .bubble-inline-filter .bubble-filter-launch::before {
             content: "";
             position: absolute;
@@ -727,6 +730,7 @@
             bottom: 29px;
         }
 
+        .bubble-action-orb:hover,
         .bubble-inline-filter:hover .bubble-filter-launch,
         .bubble-inline-filter[open] .bubble-filter-launch {
             transform: translateY(-2px) scale(1.03);
@@ -749,42 +753,13 @@
         }
 
         .bubble-action-orb {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 88px;
-            height: 88px;
-            padding: 12px;
-            border-radius: 50%;
-            border: 1px solid rgba(223, 244, 255, 0.18);
-            background:
-                radial-gradient(circle at 28% 26%, rgba(219, 248, 255, 0.72), rgba(219, 248, 255, 0) 28%),
-                radial-gradient(circle at 74% 24%, rgba(255, 211, 236, 0.44), rgba(255, 211, 236, 0) 24%),
-                linear-gradient(145deg, rgba(226, 246, 255, 0.22), rgba(137, 188, 255, 0.14));
-            color: rgba(246, 251, 255, 0.98);
             text-align: center;
             line-height: 1.35;
             font-size: 12px;
-            box-shadow:
-                0 18px 30px rgba(33, 62, 114, 0.16),
-                inset 0 1px 0 rgba(255,255,255,0.22),
-                inset 0 -10px 24px rgba(126, 185, 255, 0.08);
-            backdrop-filter: blur(18px) saturate(130%);
-            text-decoration: none;
-            flex: 0 0 auto;
-        }
-
-        .bubble-action-orb:hover {
-            transform: translateY(-2px) scale(1.03);
-            border-color: rgba(241, 249, 255, 0.28);
-            background:
-                radial-gradient(circle at 28% 26%, rgba(227, 250, 255, 0.84), rgba(227, 250, 255, 0) 30%),
-                radial-gradient(circle at 74% 24%, rgba(255, 219, 240, 0.52), rgba(255, 219, 240, 0) 26%),
-                linear-gradient(145deg, rgba(233, 249, 255, 0.28), rgba(151, 199, 255, 0.18));
         }
 
         .bubble-action-orb[aria-disabled="true"] {
-            opacity: 0.68;
+            opacity: 1;
         }
 
         .bubble-filter-launch-label {
