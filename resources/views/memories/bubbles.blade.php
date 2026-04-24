@@ -42,11 +42,17 @@
                                 <a class="bubble-menu-orb" href="{{ route('memories.index') }}">
                                     <span class="bubble-orb-label">記憶一覧を<br>見る</span>
                                 </a>
-                                <details class="bubble-inline-filter">
-                                    <summary class="bubble-menu-orb bubble-filter-launch">
+                                <div class="bubble-inline-filter" id="bubbleInlineFilter">
+                                    <button
+                                        type="button"
+                                        class="bubble-menu-orb bubble-filter-launch"
+                                        id="bubbleInlineFilterToggle"
+                                        aria-expanded="false"
+                                        aria-controls="bubbleInlineFilterMenu"
+                                    >
                                         <span class="bubble-orb-label">年代別で<br>表示</span>
-                                    </summary>
-                                    <div class="bubble-inline-filter-menu">
+                                    </button>
+                                    <div class="bubble-inline-filter-menu" id="bubbleInlineFilterMenu" hidden>
                                         <div class="bubble-stage-filter-row">
                                             <a class="bubble-filter-orb {{ $selectedPeriod === 'すべて' ? 'is-active' : '' }}" href="{{ route('memories.bubbles') }}">すべて</a>
                                             @foreach ($periods as $period)
@@ -57,7 +63,7 @@
                                             @endforeach
                                         </div>
                                     </div>
-                                </details>
+                                </div>
                             </div>
                         </div>
                     </details>
@@ -551,10 +557,6 @@
             display: none;
         }
 
-        .bubble-inline-filter summary::-webkit-details-marker {
-            display: none;
-        }
-
         .bubble-stage-actions-menu {
             display: grid;
             gap: 14px;
@@ -616,6 +618,10 @@
             flex: 0 0 auto;
         }
 
+        .bubble-inline-filter-menu[hidden] {
+            display: none;
+        }
+
         .bubble-stage-actions .bubble-stage-actions-trigger {
             position: relative;
             display: flex;
@@ -670,6 +676,8 @@
             flex: 0 0 auto;
             cursor: pointer;
             list-style: none;
+            appearance: none;
+            -webkit-appearance: none;
         }
 
         .bubble-stage-actions-trigger::after {
@@ -738,7 +746,7 @@
 
         .bubble-menu-orb:hover,
         .bubble-inline-filter:hover .bubble-filter-launch,
-        .bubble-inline-filter[open] .bubble-filter-launch {
+        .bubble-inline-filter.is-open .bubble-filter-launch {
             transform: translateY(-2px) scale(1.03);
             border-color: rgba(241, 249, 255, 0.28);
             background:
@@ -1215,6 +1223,9 @@
             const bubbleMapPeriods = document.getElementById("bubbleMapPeriods");
             const bubbleMapViewport = document.getElementById("bubbleMapViewport");
             const bubbleStage = document.getElementById("bubbleStage");
+            const inlineFilter = document.getElementById("bubbleInlineFilter");
+            const inlineFilterToggle = document.getElementById("bubbleInlineFilterToggle");
+            const inlineFilterMenu = document.getElementById("bubbleInlineFilterMenu");
             const periodZones = new Map();
             const memoryGroupsByPeriod = new Map();
             const viewport = { width: 1400, height: 920 };
@@ -1691,6 +1702,44 @@
                 state.dragging = false;
                 state.pointerId = null;
                 bubbleStage.classList.remove("is-dragging");
+            }
+
+            function closeInlineFilter() {
+                if (!inlineFilter || !inlineFilterToggle || !inlineFilterMenu) {
+                    return;
+                }
+
+                inlineFilter.classList.remove("is-open");
+                inlineFilterToggle.setAttribute("aria-expanded", "false");
+                inlineFilterMenu.hidden = true;
+            }
+
+            if (inlineFilter && inlineFilterToggle && inlineFilterMenu) {
+                inlineFilterToggle.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    const willOpen = !inlineFilter.classList.contains("is-open");
+
+                    if (!willOpen) {
+                        closeInlineFilter();
+                        return;
+                    }
+
+                    inlineFilter.classList.add("is-open");
+                    inlineFilterToggle.setAttribute("aria-expanded", "true");
+                    inlineFilterMenu.hidden = false;
+                });
+
+                document.addEventListener("click", (event) => {
+                    if (!inlineFilter.contains(event.target)) {
+                        closeInlineFilter();
+                    }
+                });
+
+                document.addEventListener("keydown", (event) => {
+                    if (event.key === "Escape") {
+                        closeInlineFilter();
+                    }
+                });
             }
 
             const world = buildWorldData();
