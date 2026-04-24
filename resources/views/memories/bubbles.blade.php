@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'YOUの記憶 | 分身AI MVP')
+@section('page_class', 'page-bubbles-full')
 
 @section('content')
     <section class="panel bubble-stage-panel">
@@ -26,13 +27,40 @@
                 </div>
             </div>
 
+            <div class="bubble-stage-hub">
+                <section class="bubble-stage-hub-card bubble-stage-count">
+                    <span class="bubble-side-label">全記憶数</span>
+                    <strong>{{ $matchingCount }}</strong>
+                </section>
+
+                <details class="bubble-stage-hub-card bubble-stage-actions">
+                    <summary class="btn btn-secondary bubble-stage-actions-trigger">今日は何する？</summary>
+                    <div class="bubble-stage-actions-menu">
+                        <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶を追加</a>
+                        <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶と話す</a>
+                        <a class="btn btn-secondary bubble-rail-btn" href="{{ route('memories.index') }}">一覧を見る</a>
+
+                        <form method="get" action="{{ route('memories.bubbles') }}" class="bubble-filter-form">
+                            <label for="period" class="bubble-side-label">年代別で表示</label>
+                            <select id="period" name="period" class="bubble-select">
+                                <option value="すべて" {{ $selectedPeriod === 'すべて' ? 'selected' : '' }}>すべて</option>
+                                @foreach ($periods as $period)
+                                    <option value="{{ $period }}" {{ $selectedPeriod === $period ? 'selected' : '' }}>{{ $period }}</option>
+                                @endforeach
+                            </select>
+                            <div class="bubble-filter-actions">
+                                <button type="submit" class="btn btn-primary">表示する</button>
+                                @if ($selectedPeriod !== 'すべて')
+                                    <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">解除</a>
+                                @endif
+                            </div>
+                        </form>
+                    </div>
+                </details>
+            </div>
+
             <div class="bubble-stage-rail">
                 <div class="bubble-stage-side bubble-stage-rail-card">
-                    <section class="bubble-rail-section bubble-stage-count">
-                        <span class="bubble-side-label">全記憶数</span>
-                        <strong>{{ $matchingCount }}</strong>
-                    </section>
-
                     @if ($layerCount > 1)
                         <section class="bubble-rail-section bubble-stage-nav">
                             <span class="bubble-side-label">表示階層</span>
@@ -55,30 +83,6 @@
                         </section>
                     @endif
 
-                    <details class="bubble-rail-section bubble-stage-actions">
-                        <summary class="btn btn-secondary bubble-stage-actions-trigger">今日は何する？</summary>
-                        <div class="bubble-stage-actions-menu">
-                            <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶を追加</a>
-                            <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶と話す</a>
-                            <a class="btn btn-secondary bubble-rail-btn" href="{{ route('memories.index') }}">一覧を見る</a>
-
-                            <form method="get" action="{{ route('memories.bubbles') }}" class="bubble-filter-form">
-                                <label for="period" class="bubble-side-label">年代別で表示</label>
-                                <select id="period" name="period" class="bubble-select">
-                                    <option value="すべて" {{ $selectedPeriod === 'すべて' ? 'selected' : '' }}>すべて</option>
-                                    @foreach ($periods as $period)
-                                        <option value="{{ $period }}" {{ $selectedPeriod === $period ? 'selected' : '' }}>{{ $period }}</option>
-                                    @endforeach
-                                </select>
-                                <div class="bubble-filter-actions">
-                                    <button type="submit" class="btn btn-primary">表示する</button>
-                                    @if ($selectedPeriod !== 'すべて')
-                                        <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">解除</a>
-                                    @endif
-                                </div>
-                            </form>
-                        </div>
-                    </details>
                 </div>
             </div>
 
@@ -216,9 +220,15 @@
     </section>
 
     <style>
+        .page.page-bubbles-full {
+            width: calc(100vw - 12px);
+            max-width: none;
+            padding: 8px 0 14px;
+        }
+
         .bubble-stage-panel {
             position: relative;
-            min-height: min(920px, calc(100vh - 72px));
+            min-height: calc(100vh - 22px);
             padding: 0;
             overflow: hidden;
             background:
@@ -235,6 +245,27 @@
             left: 28px;
             z-index: 3;
             max-width: 280px;
+        }
+
+        .bubble-stage-hub {
+            position: absolute;
+            top: 24px;
+            left: 50%;
+            z-index: 4;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            width: min(520px, calc(100% - 360px));
+            justify-content: center;
+        }
+
+        .bubble-stage-hub-card {
+            border-radius: 18px;
+            border: 1px solid rgba(171, 205, 255, 0.12);
+            background: linear-gradient(180deg, rgba(12, 21, 42, 0.92), rgba(10, 18, 39, 0.82));
+            box-shadow: 0 14px 28px rgba(6, 10, 24, 0.24);
+            backdrop-filter: blur(12px);
         }
 
         .bubble-stage-copy h1 {
@@ -302,11 +333,10 @@
 
         .bubble-stage-rail {
             position: absolute;
-            top: 184px;
+            top: 138px;
             right: 24px;
             z-index: 3;
-            width: min(236px, 24vw);
-            height: min(430px, calc(100% - 240px));
+            width: min(236px, 22vw);
         }
 
         .bubble-stage-side {
@@ -338,8 +368,9 @@
         }
 
         .bubble-stage-count {
-            text-align: right;
-            padding-top: 0;
+            min-width: 132px;
+            padding: 14px 18px;
+            text-align: center;
         }
 
         .bubble-stage-count strong {
@@ -350,7 +381,7 @@
         }
 
         .bubble-stage-actions {
-            padding-bottom: 0;
+            min-width: min(320px, 100%);
         }
 
         .bubble-rail-btn {
@@ -402,23 +433,27 @@
             width: 100%;
         }
 
-        .bubble-stage-rail .btn {
+        .bubble-stage-rail .btn,
+        .bubble-stage-hub .btn {
             padding: 9px 12px;
             font-size: 11px;
             border-radius: 11px;
         }
 
-        .bubble-stage-rail .bubble-side-label {
+        .bubble-stage-rail .bubble-side-label,
+        .bubble-stage-hub .bubble-side-label {
             font-size: 11px;
             margin-bottom: 5px;
         }
 
-        .bubble-stage-rail .bubble-select {
+        .bubble-stage-rail .bubble-select,
+        .bubble-stage-hub .bubble-select {
             padding: 10px 12px;
             font-size: 12px;
         }
 
-        .bubble-stage-rail .bubble-filter-actions {
+        .bubble-stage-rail .bubble-filter-actions,
+        .bubble-stage-hub .bubble-filter-actions {
             gap: 8px;
         }
 
@@ -441,6 +476,7 @@
             position: relative;
             justify-content: flex-start;
             padding-right: 34px;
+            width: 100%;
         }
 
         .bubble-stage-actions-trigger::after {
@@ -691,14 +727,21 @@
         }
 
         @media (max-width: 980px) {
+            .page.page-bubbles-full {
+                width: calc(100vw - 8px);
+            }
+
             .bubble-stage-panel {
                 min-height: 760px;
             }
 
+            .bubble-stage-hub {
+                width: min(460px, calc(100% - 300px));
+            }
+
             .bubble-stage-rail {
-                top: 170px;
+                top: 138px;
                 width: min(220px, 27vw);
-                height: min(408px, calc(100% - 224px));
             }
         }
 
@@ -709,18 +752,25 @@
             }
 
             .bubble-stage-copy,
+            .bubble-stage-hub,
             .bubble-stage-rail {
                 position: static;
                 width: auto;
                 margin: 0 18px 14px;
+                transform: none;
             }
 
             .bubble-stage-side {
                 width: auto;
             }
 
+            .bubble-stage-hub {
+                display: grid;
+                gap: 10px;
+            }
+
             .bubble-stage-count {
-                text-align: left;
+                text-align: center;
             }
 
             .bubble-stage-shell {
