@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', '記憶ステータス | 分身AI MVP')
+@section('page_class', 'page-memory-status-wide')
 
 @php
     use Illuminate\Support\Str;
@@ -290,6 +291,11 @@
     </section>
 
     <style>
+        .page.page-memory-status-wide {
+            width: calc(100vw - 24px);
+            max-width: none;
+        }
+
         .memory-dashboard {
             position: relative;
             min-height: max(760px, calc(100vh - 72px));
@@ -1076,6 +1082,10 @@
         }
 
         @media (max-width: 640px) {
+            .page.page-memory-status-wide {
+                width: calc(100vw - 18px);
+            }
+
             .memory-dashboard {
                 padding: 16px;
                 border-radius: 24px;
