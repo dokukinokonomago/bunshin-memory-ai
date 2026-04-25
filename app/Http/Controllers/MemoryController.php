@@ -75,9 +75,9 @@ class MemoryController extends Controller
         'ネガティブ（強め）' => ['不安', '悲しい', 'イライラ', '怒り', '落ち込み', '孤独', '無力感', '自信がない'],
     ];
 
-    public function home(): View
+    public function home(): \Illuminate\Http\RedirectResponse
     {
-        return view('home');
+        return redirect()->route('memories.bubbles');
     }
 
     public function index(Request $request): View
@@ -162,7 +162,7 @@ class MemoryController extends Controller
                 'content' => $memory->content,
                 'label' => $this->bubbleKeyword($memory),
                 'tone' => $tone,
-                'colors' => $this->toneColors($tone),
+                'colors' => $this->periodColors($memory->period),
                 'tags' => [$memory->period, $memory->emotion],
             ];
         });
@@ -279,6 +279,22 @@ class MemoryController extends Controller
         }
 
         return ['#dce9ff', '#63a6ff'];
+    }
+
+    /** 年代ごとに虹色順でカラーを割り当てる */
+    private function periodColors(string $period): array
+    {
+        $map = [
+            '幼少期' => ['#ff6b6b', '#ff4757'], // 赤
+            '小学生' => ['#ffa94d', '#ff7c1f'], // オレンジ
+            '中学生' => ['#ffe066', '#ffbc00'], // 黄
+            '高校生' => ['#69db7c', '#2dbe4e'], // 緑
+            '大学生' => ['#4dabf7', '#1c7ed6'], // 青
+            '成人期' => ['#9775fa', '#6741d9'], // 紫
+            '不明'   => ['#f06595', '#c2255c'], // ピンク（虹の外側）
+        ];
+
+        return $map[$period] ?? ['#dce9ff', '#63a6ff'];
     }
 
     private function bubbleKeyword(Memory $memory): string
