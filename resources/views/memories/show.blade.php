@@ -217,8 +217,16 @@
                         @endforeach
                     </div>
                     <div class="memory-core-content-footer">
-                        <span>{{ $sentenceCount }} fragments analyzed</span>
-                        <span>Theme: {{ $theme }}</span>
+                        <div class="memory-dashboard-actions memory-dashboard-actions-inline">
+                            <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">記憶玉へ戻る</a>
+                            <a class="btn btn-secondary" href="{{ route('memories.index') }}">一覧を見る</a>
+                            <a class="btn btn-secondary" href="{{ route('memories.edit', $memory) }}">修正する</a>
+                            <form method="post" action="{{ route('memories.destroy', $memory) }}" onsubmit="return confirm('この記憶を削除しますか？');">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn btn-secondary btn-danger" type="submit">削除する</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -273,16 +281,6 @@
             </aside>
         </div>
 
-        <div class="memory-dashboard-actions memory-dashboard-actions-floating">
-            <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">記憶玉へ戻る</a>
-            <a class="btn btn-secondary" href="{{ route('memories.index') }}">一覧を見る</a>
-            <a class="btn btn-secondary" href="{{ route('memories.edit', $memory) }}">修正する</a>
-            <form method="post" action="{{ route('memories.destroy', $memory) }}" onsubmit="return confirm('この記憶を削除しますか？');">
-                @csrf
-                @method('DELETE')
-                <button class="btn btn-secondary btn-danger" type="submit">削除する</button>
-            </form>
-        </div>
     </section>
 
     <style>
@@ -296,7 +294,7 @@
             position: relative;
             min-height: calc(100vh - 20px);
             max-height: calc(100vh - 20px);
-            padding: 16px 18px 74px;
+            padding: 16px 18px;
             display: grid;
             grid-template-rows: minmax(0, 1fr);
             border-radius: 36px;
@@ -645,6 +643,8 @@
             display: grid;
             gap: 10px;
             padding: 0 12px 12px;
+            max-height: 188px;
+            overflow: auto;
         }
 
         .memory-core-panel {
@@ -891,6 +891,11 @@
             font-size: 13px;
         }
 
+        .memory-dashboard-actions-inline {
+            width: 100%;
+            justify-content: flex-end;
+        }
+
         .memory-bar-list {
             display: grid;
             gap: 12px;
@@ -998,14 +1003,6 @@
             text-align: center;
         }
 
-        .memory-dashboard-actions-floating {
-            position: absolute;
-            right: 18px;
-            bottom: 14px;
-            z-index: 2;
-            justify-content: flex-end;
-        }
-
         @keyframes memoryCorePulse {
             0% { transform: scale(0.985); }
             50% { transform: scale(1.015); }
@@ -1042,9 +1039,7 @@
                 order: -1;
             }
 
-            .memory-dashboard-actions-floating {
-                position: static;
-                margin-top: 12px;
+            .memory-dashboard-actions-inline {
                 justify-content: flex-start;
             }
         }
