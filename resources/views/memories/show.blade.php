@@ -94,31 +94,6 @@
             <span class="memory-dashboard-grid"></span>
         </div>
 
-        <header class="memory-dashboard-header">
-            <div class="memory-dashboard-brand">
-                <span class="memory-dashboard-kicker">PERSONAL MEMORY ARCHIVE</span>
-                <h1>YOUの記憶</h1>
-                <p>MEMORY STATUS OVERVIEW</p>
-            </div>
-
-            <div class="memory-dashboard-meta">
-                <span class="memory-dashboard-chip">ID {{ str_pad((string) $memory->id, 4, '0', STR_PAD_LEFT) }}</span>
-                <span class="memory-dashboard-chip">{{ $savedAt->format('Y.m.d') }}</span>
-                <span class="memory-dashboard-chip">{{ $memory->period }}</span>
-            </div>
-
-            <div class="memory-dashboard-actions">
-                <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">記憶玉へ戻る</a>
-                <a class="btn btn-secondary" href="{{ route('memories.index') }}">一覧を見る</a>
-                <a class="btn btn-secondary" href="{{ route('memories.edit', $memory) }}">修正する</a>
-                <form method="post" action="{{ route('memories.destroy', $memory) }}" onsubmit="return confirm('この記憶を削除しますか？');">
-                    @csrf
-                    @method('DELETE')
-                    <button class="btn btn-secondary btn-danger" type="submit">削除する</button>
-                </form>
-            </div>
-        </header>
-
         <div class="memory-dashboard-shell">
             <aside class="memory-side-panel memory-side-panel-left">
                 <section class="memory-side-block">
@@ -178,25 +153,35 @@
                     </div>
 
                     <div class="memory-log-list">
-                        @foreach ($logEntries as $entry)
+                        @if (isset($logEntries[0]))
                             <article class="memory-log-item">
-                                <span class="memory-log-time">{{ $entry['time'] }}</span>
-                                <strong>{{ $entry['title'] }}</strong>
-                                <p>{{ $entry['body'] }}</p>
+                                <span class="memory-log-time">{{ $logEntries[0]['time'] }}</span>
+                                <strong>{{ $logEntries[0]['title'] }}</strong>
+                                <p>{{ $logEntries[0]['body'] }}</p>
                             </article>
-                        @endforeach
+                        @endif
+
+                        @if (count($logEntries) > 1)
+                            <details class="memory-log-more">
+                                <summary>過去ログを表示</summary>
+                                <div class="memory-log-more-list">
+                                    @foreach (array_slice($logEntries, 1) as $entry)
+                                        <article class="memory-log-item">
+                                            <span class="memory-log-time">{{ $entry['time'] }}</span>
+                                            <strong>{{ $entry['title'] }}</strong>
+                                            <p>{{ $entry['body'] }}</p>
+                                        </article>
+                                    @endforeach
+                                </div>
+                            </details>
+                        @endif
                     </div>
                 </section>
             </aside>
 
             <section class="memory-core-panel">
                 <div class="memory-core-panel-head">
-                    <span class="memory-core-label">MEMORY CORE</span>
-                    <div class="memory-core-chips">
-                        <span>{{ $theme }}</span>
-                        <span>{{ $memory->emotion }}</span>
-                        <span>{{ $savedAt->format('Y.m.d H:i') }}</span>
-                    </div>
+                    <h1>YOUの記憶</h1>
                 </div>
 
                 <div class="memory-core-stage">
@@ -209,7 +194,7 @@
                     <div class="memory-core-bubble" style="--bubble-start: {{ $colors[0] }}; --bubble-end: {{ $colors[1] }};">
                         <div class="memory-core-aura"></div>
                         <div class="memory-core-inner">
-                            <span class="memory-core-type">{{ $memory->period }}</span>
+                            <span class="memory-core-date">{{ $savedAt->format('Y.m.d') }}</span>
                             <strong>{{ $theme }}</strong>
                             <small>{{ $memory->emotion }}</small>
                         </div>
@@ -225,7 +210,6 @@
                 <div class="memory-core-content-card">
                     <div class="memory-core-content-head">
                         <span>記憶内容</span>
-                        <strong>{{ $contentLength }} letters</strong>
                     </div>
                     <div class="memory-core-content-body">
                         @foreach ($previewLines as $line)
@@ -288,21 +272,33 @@
                 </section>
             </aside>
         </div>
+
+        <div class="memory-dashboard-actions memory-dashboard-actions-floating">
+            <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">記憶玉へ戻る</a>
+            <a class="btn btn-secondary" href="{{ route('memories.index') }}">一覧を見る</a>
+            <a class="btn btn-secondary" href="{{ route('memories.edit', $memory) }}">修正する</a>
+            <form method="post" action="{{ route('memories.destroy', $memory) }}" onsubmit="return confirm('この記憶を削除しますか？');">
+                @csrf
+                @method('DELETE')
+                <button class="btn btn-secondary btn-danger" type="submit">削除する</button>
+            </form>
+        </div>
     </section>
 
     <style>
         .page.page-memory-status-wide {
             width: calc(100vw - 24px);
             max-width: none;
+            padding: 10px 0;
         }
 
         .memory-dashboard {
             position: relative;
-            min-height: max(760px, calc(100vh - 72px));
-            padding: 26px;
+            min-height: calc(100vh - 20px);
+            max-height: calc(100vh - 20px);
+            padding: 16px 18px 74px;
             display: grid;
-            grid-template-rows: auto minmax(0, 1fr);
-            gap: 18px;
+            grid-template-rows: minmax(0, 1fr);
             border-radius: 36px;
             overflow: hidden;
             color: rgba(236, 244, 255, 0.95);
@@ -392,71 +388,34 @@
             mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.85), transparent 84%);
         }
 
-        .memory-dashboard-header,
         .memory-dashboard-shell {
             position: relative;
             z-index: 1;
         }
 
-        .memory-dashboard-header {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto auto;
-            align-items: start;
-            gap: 18px;
-        }
-
-        .memory-dashboard-kicker {
-            display: inline-flex;
-            margin-bottom: 10px;
-            color: rgba(125, 208, 255, 0.8);
-            font-size: 11px;
-            letter-spacing: 0.34em;
-            text-transform: uppercase;
-        }
-
-        .memory-dashboard-brand h1 {
-            margin: 0;
-            font-size: clamp(32px, 3.7vw, 46px);
-            line-height: 0.96;
-            letter-spacing: 0.06em;
-            color: rgba(248, 251, 255, 0.98);
-            text-shadow: 0 12px 40px rgba(45, 118, 255, 0.16);
-        }
-
-        .memory-dashboard-brand p {
-            margin: 8px 0 0;
-            color: rgba(176, 200, 235, 0.7);
-            font-size: 12px;
-            letter-spacing: 0.28em;
-            text-transform: uppercase;
-        }
-
-        .memory-dashboard-meta,
         .memory-dashboard-actions {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            justify-content: flex-end;
             align-items: center;
         }
 
-        .memory-dashboard-chip,
         .memory-dashboard .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-height: 36px;
-            padding: 0 14px;
+            min-height: 34px;
+            padding: 0 13px;
             border-radius: 999px;
             border: 1px solid rgba(153, 208, 255, 0.14);
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.02)),
-                rgba(10, 18, 35, 0.7);
+                linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015)),
+                rgba(10, 18, 35, 0.34);
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.08),
-                0 10px 28px rgba(2, 7, 18, 0.26);
+                inset 0 1px 0 rgba(255, 255, 255, 0.05),
+                0 10px 24px rgba(2, 7, 18, 0.16);
             color: rgba(235, 243, 255, 0.92);
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.08em;
             backdrop-filter: blur(12px);
@@ -480,7 +439,7 @@
         .memory-dashboard-shell {
             display: grid;
             grid-template-columns: minmax(260px, 0.86fr) minmax(440px, 1.35fr) minmax(260px, 0.88fr);
-            gap: 18px;
+            gap: 14px;
             align-items: stretch;
             min-height: 0;
             height: 100%;
@@ -491,46 +450,35 @@
             position: relative;
             min-width: 0;
             border-radius: 28px;
-            border: 1px solid rgba(147, 188, 255, 0.11);
-            background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02) 12%, transparent 24%),
-                rgba(5, 11, 24, 0.76);
-            box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.1),
-                0 26px 58px rgba(2, 7, 20, 0.32);
-            backdrop-filter: blur(16px);
+            border: 1px solid transparent;
+            background: transparent;
+            box-shadow: none;
+            backdrop-filter: none;
             overflow: hidden;
         }
 
         .memory-side-panel::before,
         .memory-core-panel::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03) 12%, transparent 28%),
-                linear-gradient(120deg, rgba(255, 255, 255, 0.09), transparent 24%);
-            mix-blend-mode: screen;
-            pointer-events: none;
+            display: none;
         }
 
         .memory-side-panel {
-            padding: 18px;
+            padding: 4px;
             display: grid;
-            gap: 14px;
+            gap: 10px;
             min-height: 0;
         }
 
         .memory-side-block {
             position: relative;
             z-index: 1;
-            padding: 16px;
+            padding: 10px 12px;
             border-radius: 22px;
-            border: 1px solid rgba(136, 182, 255, 0.09);
+            border: 1px solid rgba(136, 182, 255, 0.05);
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.016)),
-                rgba(9, 16, 32, 0.76);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+                linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.008)),
+                rgba(9, 16, 32, 0.18);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
         }
 
         .memory-side-heading {
@@ -538,7 +486,7 @@
             grid-template-columns: auto 1fr;
             gap: 10px;
             align-items: center;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
         }
 
         .memory-side-index {
@@ -557,52 +505,52 @@
 
         .memory-side-heading h2 {
             margin: 0;
-            font-size: 17px;
+            font-size: 15px;
             color: rgba(244, 249, 255, 0.96);
         }
 
         .memory-side-heading p {
             margin: 4px 0 0;
             color: rgba(162, 187, 224, 0.68);
-            font-size: 12px;
+            font-size: 11px;
             letter-spacing: 0.05em;
         }
 
         .memory-stat-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px;
+            gap: 8px;
         }
 
         .memory-stat-tile {
             display: grid;
-            gap: 8px;
-            padding: 14px;
-            border-radius: 18px;
+            gap: 4px;
+            padding: 10px 12px;
+            border-radius: 16px;
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015)),
-                rgba(68, 108, 178, 0.08);
-            border: 1px solid rgba(140, 184, 255, 0.08);
+                linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)),
+                rgba(68, 108, 178, 0.05);
+            border: 1px solid rgba(140, 184, 255, 0.06);
         }
 
         .memory-stat-label {
             color: rgba(162, 194, 235, 0.68);
-            font-size: 11px;
-            letter-spacing: 0.16em;
+            font-size: 9px;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
         }
 
         .memory-stat-tile strong {
             color: rgba(249, 251, 255, 0.98);
-            font-size: 18px;
+            font-size: 14px;
             line-height: 1.2;
         }
 
         .memory-stat-emotion .badge {
             border-radius: 999px;
-            padding: 8px 12px;
+            padding: 6px 10px;
             color: #06121f;
-            font-size: 12px;
+            font-size: 10px;
         }
 
         .memory-tag-cloud {
@@ -629,7 +577,7 @@
 
         .memory-log-list {
             display: grid;
-            gap: 12px;
+            gap: 10px;
         }
 
         .memory-log-item {
@@ -660,23 +608,50 @@
 
         .memory-log-item strong {
             display: block;
-            margin-bottom: 6px;
-            font-size: 15px;
+            margin-bottom: 4px;
+            font-size: 13px;
             color: rgba(248, 251, 255, 0.95);
         }
 
         .memory-log-item p {
             margin: 0;
             color: rgba(197, 214, 238, 0.78);
-            line-height: 1.58;
-            font-size: 13px;
+            line-height: 1.48;
+            font-size: 12px;
+        }
+
+        .memory-log-more {
+            border-radius: 16px;
+            border: 1px solid rgba(129, 201, 255, 0.08);
+            background: rgba(9, 16, 32, 0.18);
+            overflow: hidden;
+        }
+
+        .memory-log-more summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 10px 12px;
+            color: rgba(207, 226, 250, 0.88);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+        }
+
+        .memory-log-more summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .memory-log-more-list {
+            display: grid;
+            gap: 10px;
+            padding: 0 12px 12px;
         }
 
         .memory-core-panel {
-            padding: 20px;
+            padding: 4px 4px 0;
             display: grid;
             grid-template-rows: auto minmax(0, 1fr) auto;
-            gap: 16px;
+            gap: 8px;
             min-height: 0;
         }
 
@@ -686,37 +661,24 @@
             z-index: 1;
         }
 
-        .memory-core-label {
-            display: inline-flex;
-            color: rgba(130, 209, 255, 0.82);
-            font-size: 11px;
-            letter-spacing: 0.28em;
-            text-transform: uppercase;
+        .memory-core-panel-head {
+            display: grid;
+            justify-items: center;
+            padding-top: 4px;
         }
 
-        .memory-core-chips {
-            margin-top: 12px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .memory-core-chips span {
-            display: inline-flex;
-            align-items: center;
-            min-height: 32px;
-            padding: 0 12px;
-            border-radius: 999px;
-            background: rgba(118, 173, 255, 0.08);
-            border: 1px solid rgba(140, 198, 255, 0.1);
-            color: rgba(232, 242, 255, 0.9);
-            font-size: 12px;
-            font-weight: 700;
+        .memory-core-panel-head h1 {
+            margin: 0;
+            font-size: clamp(26px, 3.4vw, 40px);
+            line-height: 1;
+            letter-spacing: 0.04em;
+            color: rgba(248, 251, 255, 0.98);
+            text-shadow: 0 10px 26px rgba(45, 118, 255, 0.16);
         }
 
         .memory-core-stage {
             position: relative;
-            min-height: 460px;
+            min-height: 328px;
             display: grid;
             place-items: center;
             overflow: hidden;
@@ -834,11 +796,11 @@
             z-index: 1;
             width: min(72%, 220px);
             display: grid;
-            gap: 8px;
+            gap: 10px;
             text-align: center;
         }
 
-        .memory-core-type,
+        .memory-core-date,
         .memory-core-inner small {
             color: rgba(235, 244, 255, 0.82);
             font-size: 12px;
@@ -884,13 +846,13 @@
         }
 
         .memory-core-content-card {
-            padding: 16px 18px;
+            padding: 10px 14px;
             border-radius: 22px;
-            border: 1px solid rgba(138, 190, 255, 0.1);
+            border: 1px solid rgba(138, 190, 255, 0.06);
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-                rgba(8, 14, 27, 0.82);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+                linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+                rgba(8, 14, 27, 0.2);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
         }
 
         .memory-core-content-head,
@@ -918,15 +880,15 @@
 
         .memory-core-content-body {
             display: grid;
-            gap: 10px;
-            margin: 16px 0;
+            gap: 6px;
+            margin: 8px 0 10px;
         }
 
         .memory-core-content-body p {
             margin: 0;
             color: rgba(226, 236, 251, 0.9);
-            line-height: 1.74;
-            font-size: 15px;
+            line-height: 1.52;
+            font-size: 13px;
         }
 
         .memory-bar-list {
@@ -987,19 +949,19 @@
         .memory-gauge-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px;
+            gap: 10px;
         }
 
         .memory-gauge-card {
             display: grid;
             justify-items: center;
-            gap: 10px;
-            padding: 10px 0 4px;
+            gap: 8px;
+            padding: 6px 0 2px;
         }
 
         .memory-gauge-ring {
             --ring-bg: rgba(84, 101, 140, 0.28);
-            width: 104px;
+            width: 116px;
             aspect-ratio: 1 / 1;
             border-radius: 50%;
             display: grid;
@@ -1013,7 +975,7 @@
         }
 
         .memory-gauge-inner {
-            width: 74px;
+            width: 82px;
             aspect-ratio: 1 / 1;
             border-radius: 50%;
             display: grid;
@@ -1026,7 +988,7 @@
 
         .memory-gauge-inner strong {
             color: rgba(245, 249, 255, 0.96);
-            font-size: 17px;
+            font-size: 18px;
         }
 
         .memory-gauge-card span {
@@ -1034,6 +996,14 @@
             font-size: 12px;
             letter-spacing: 0.08em;
             text-align: center;
+        }
+
+        .memory-dashboard-actions-floating {
+            position: absolute;
+            right: 18px;
+            bottom: 14px;
+            z-index: 2;
+            justify-content: flex-end;
         }
 
         @keyframes memoryCorePulse {
@@ -1049,27 +1019,19 @@
 
         @media (max-width: 1240px) {
             .memory-dashboard-shell {
-                grid-template-columns: minmax(240px, 0.8fr) minmax(380px, 1.2fr) minmax(240px, 0.84fr);
+                grid-template-columns: minmax(220px, 0.78fr) minmax(360px, 1.2fr) minmax(220px, 0.84fr);
             }
 
             .memory-core-stage {
-                min-height: 400px;
+                min-height: 304px;
             }
         }
 
         @media (max-width: 980px) {
             .memory-dashboard {
                 min-height: auto;
+                max-height: none;
                 padding: 20px;
-            }
-
-            .memory-dashboard-header {
-                grid-template-columns: 1fr;
-            }
-
-            .memory-dashboard-meta,
-            .memory-dashboard-actions {
-                justify-content: flex-start;
             }
 
             .memory-dashboard-shell {
@@ -1079,16 +1041,24 @@
             .memory-core-panel {
                 order: -1;
             }
+
+            .memory-dashboard-actions-floating {
+                position: static;
+                margin-top: 12px;
+                justify-content: flex-start;
+            }
         }
 
         @media (max-width: 640px) {
             .page.page-memory-status-wide {
                 width: calc(100vw - 18px);
+                padding: 8px 0;
             }
 
             .memory-dashboard {
                 padding: 16px;
                 border-radius: 24px;
+                max-height: none;
             }
 
             .memory-dashboard-brand h1 {
