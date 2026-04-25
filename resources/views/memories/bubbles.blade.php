@@ -4,1849 +4,1318 @@
 @section('page_class', 'page-bubbles-full')
 
 @section('content')
-    <section class="panel bubble-stage-panel">
-        @if ($bubbleMemories->isEmpty())
-            <div class="empty-state">
-                @if ($selectedPeriod !== 'すべて')
-                    「{{ $selectedPeriod }}」に該当する記憶がありません。<br>
-                    右上の年代別表示から別の年代を選んでください。
-                @else
-                    記憶がまだありません。<br>
-                    一覧に戻るか、サンプルデータを投入してください。
-                @endif
-            </div>
-        @else
-            @php
-                $bubbleBaseParams = $selectedPeriod !== 'すべて' ? ['period' => $selectedPeriod] : [];
-                $bubbleBaseRoute = route('memories.bubbles');
-            @endphp
-            <div class="bubble-stage-top">
-                <div class="bubble-stage-copy">
-                    <span class="eyebrow">PERSONAL MEMORY ARCHIVE</span>
-                    <h1>YOUの記憶</h1>
-                </div>
+<div class="mem-universe">
 
-                <div class="bubble-stage-hub">
-                    <details class="bubble-stage-hub-card bubble-stage-actions">
-                        <summary class="btn btn-secondary bubble-stage-actions-trigger">
-                            <span class="bubble-stage-actions-trigger-label">今日は<br>何をする？</span>
-                        </summary>
-                        <div class="bubble-stage-actions-menu">
-                            <div class="bubble-stage-actions-row">
-                                <a class="bubble-menu-orb" href="#" aria-disabled="true">
-                                    <span class="bubble-orb-label">記憶を<br>追加</span>
-                                </a>
-                                <a class="bubble-menu-orb" href="#" aria-disabled="true">
-                                    <span class="bubble-orb-label">記憶と<br>話す</span>
-                                </a>
-                                <a class="bubble-menu-orb" href="{{ route('memories.index') }}">
-                                    <span class="bubble-orb-label">記憶一覧を<br>見る</span>
-                                </a>
-                                <div class="bubble-inline-filter" id="bubbleInlineFilter">
-                                    <button
-                                        type="button"
-                                        class="bubble-menu-orb bubble-filter-launch"
-                                        id="bubbleInlineFilterToggle"
-                                        aria-expanded="false"
-                                        aria-controls="bubbleInlineFilterMenu"
-                                    >
-                                        <span class="bubble-orb-label">年代別で<br>表示</span>
-                                    </button>
-                                    <div class="bubble-inline-filter-menu" id="bubbleInlineFilterMenu" hidden>
-                                        <div class="bubble-stage-filter-row">
-                                            <a class="bubble-filter-orb {{ $selectedPeriod === 'すべて' ? 'is-active' : '' }}" href="{{ route('memories.bubbles') }}">すべて</a>
-                                            @foreach ($periods as $period)
-                                                <a
-                                                    class="bubble-filter-orb {{ $selectedPeriod === $period ? 'is-active' : '' }}"
-                                                    href="{{ route('memories.bubbles', ['period' => $period]) }}"
-                                                >{{ $period }}</a>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </details>
-                </div>
+    {{-- ========== 背景：深宇宙パーティクル ========== --}}
+    <canvas id="starCanvas" class="star-canvas" aria-hidden="true"></canvas>
+
+    {{-- ========== TOP NAV ========== --}}
+    <nav class="mem-nav">
+        <div class="mem-nav-left">
+            <span class="mem-nav-eyebrow">PERSONAL MEMORY ARCHIVE</span>
+            <h1 class="mem-nav-title">YOUの記憶</h1>
+        </div>
+        <div class="mem-nav-right">
+            {{-- 記憶数 --}}
+            <div class="mem-count-orb">
+                <span class="mem-count-num">{{ $matchingCount }}</span>
+                <span class="mem-count-label">MEMORIES</span>
             </div>
 
-            <section class="bubble-stage-count bubble-stage-count-floating" aria-label="全記憶数">
-                <span class="bubble-side-label">全記憶数</span>
-                <strong>{{ $matchingCount }}</strong>
-                <span class="bubble-stage-count-caption">memories drifting now</span>
-            </section>
-
-            <div class="bubble-stage-rail">
-                <div class="bubble-stage-side bubble-stage-rail-card">
-                    @if ($layerCount > 1)
-                        <section class="bubble-rail-section bubble-stage-nav">
-                            <span class="bubble-side-label">表示階層</span>
-                            <strong>第{{ $currentLayer }}層 / 全{{ $layerCount }}層</strong>
-                            <div class="bubble-nav-actions">
-                                @if ($hasNextLayer)
-                                    <a class="bubble-mini-btn" href="{{ route('memories.bubbles', array_merge($bubbleBaseParams, ['layer' => $currentLayer + 1])) }}">もっと見る</a>
-                                @else
-                                    <span class="bubble-mini-btn is-disabled">もっと見る</span>
-                                @endif
-
-                                @if ($hasPreviousLayer)
-                                    <a class="bubble-mini-btn" href="{{ route('memories.bubbles', array_merge($bubbleBaseParams, ['layer' => $currentLayer - 1])) }}">1つ戻る</a>
-                                    <a class="bubble-mini-btn" href="{{ route('memories.bubbles', $bubbleBaseParams) }}">最初に戻る</a>
-                                @else
-                                    <span class="bubble-mini-btn is-disabled">1つ戻る</span>
-                                    <span class="bubble-mini-btn is-disabled">最初に戻る</span>
-                                @endif
-                            </div>
-                        </section>
-                    @endif
-
-                </div>
-            </div>
-
-            <div class="bubble-stage-shell">
-                <div class="bubble-caption">MEMORY BUBBLE / DRAG TO MOVE / SCROLL OR PINCH TO ZOOM</div>
-                @if ($selectedPeriod !== 'すべて')
-                    <div class="bubble-period-banner">{{ $selectedPeriod }}</div>
-                @endif
-                <svg id="bubbleStage" viewBox="0 0 1400 920" xmlns="http://www.w3.org/2000/svg" aria-label="YOUの記憶">
-                    <defs id="bubbleDefs">
-                        <filter id="shellGlow" x="-80%" y="-80%" width="260%" height="260%">
-                            <feGaussianBlur stdDeviation="44"></feGaussianBlur>
-                        </filter>
-                        <filter id="stackShadow" x="-120%" y="-120%" width="340%" height="340%">
-                            <feGaussianBlur stdDeviation="24"></feGaussianBlur>
-                        </filter>
-                        <filter id="ballShadow" x="-70%" y="-70%" width="240%" height="240%">
-                            <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#6f7a92" flood-opacity="0.18" />
-                        </filter>
-                        <filter id="ballAura" x="-160%" y="-160%" width="420%" height="420%">
-                            <feGaussianBlur stdDeviation="28"></feGaussianBlur>
-                        </filter>
-                    </defs>
-
-                    <circle cx="160" cy="720" r="128" fill="rgba(184, 220, 255, 0.12)"></circle>
-                    <circle cx="1230" cy="150" r="96" fill="rgba(201, 226, 255, 0.14)"></circle>
-                    <circle cx="210" cy="140" r="4" fill="rgba(255,255,255,0.82)"></circle>
-                    <circle cx="320" cy="210" r="2.8" fill="rgba(220,236,255,0.72)"></circle>
-                    <circle cx="1110" cy="112" r="3.2" fill="rgba(255,255,255,0.86)"></circle>
-                    <circle cx="1205" cy="238" r="2.2" fill="rgba(216,232,255,0.72)"></circle>
-                    <circle cx="1048" cy="732" r="3.8" fill="rgba(255,255,255,0.74)"></circle>
-                    <circle cx="248" cy="622" r="2.6" fill="rgba(218,234,255,0.7)"></circle>
-
-                    @if ($layerCount > 1)
-                        @foreach (range(min($layerCount - 1, 3), 1) as $stackIndex)
-                            @php
-                                $stackOffsetX = 38 * $stackIndex;
-                                $stackOffsetY = -30 * $stackIndex;
-                                $stackRadius = 376 - (14 * $stackIndex);
-                                $stackOpacity = 0.1 + (0.03 * (min($layerCount - 1, 3) - $stackIndex));
-                            @endphp
-                            <ellipse
-                                cx="{{ 714 + $stackOffsetX }}"
-                                cy="{{ 548 + $stackOffsetY }}"
-                                rx="{{ 176 - (12 * $stackIndex) }}"
-                                ry="{{ 52 - (4 * $stackIndex) }}"
-                                fill="rgba(20, 48, 86, 0.28)"
-                                filter="url(#stackShadow)"
-                                class="bubble-stack-shadow bubble-shell-breath"
-                                style="--shell-duration: {{ 8.4 + ($stackIndex * 0.7) }}s; --shell-delay: -{{ 0.85 * $stackIndex }}s;"
-                            ></ellipse>
-                            <g
-                                filter="url(#shellGlow)"
-                                class="bubble-stack-layer bubble-shell-breath"
-                                style="--shell-duration: {{ 8.4 + ($stackIndex * 0.7) }}s; --shell-delay: -{{ 0.85 * $stackIndex }}s;"
-                            >
-                                <circle
-                                    cx="{{ 700 + $stackOffsetX }}"
-                                    cy="{{ 470 + $stackOffsetY }}"
-                                    r="{{ $stackRadius }}"
-                                    fill="rgba(130, 194, 255, {{ $stackOpacity }})"
-                                ></circle>
-                                <ellipse
-                                    cx="{{ 624 + $stackOffsetX }}"
-                                    cy="{{ 374 + $stackOffsetY }}"
-                                    rx="{{ 108 - (8 * $stackIndex) }}"
-                                    ry="{{ 40 - (3 * $stackIndex) }}"
-                                    fill="rgba(255,255,255,0.10)"
-                                    transform="rotate(-18 {{ 624 + $stackOffsetX }} {{ 374 + $stackOffsetY }})"
-                                ></ellipse>
-                                <circle
-                                    cx="{{ 700 + $stackOffsetX }}"
-                                    cy="{{ 470 + $stackOffsetY }}"
-                                    r="{{ $stackRadius - 10 }}"
-                                    fill="none"
-                                    stroke="rgba(214, 236, 255, 0.14)"
-                                    stroke-width="2"
-                                ></circle>
-                            </g>
-                        @endforeach
-                    @endif
-
-                    <g filter="url(#shellGlow)" class="bubble-shell-breath bubble-shell-main" style="--shell-duration: 7.6s; --shell-delay: -0.4s;">
-                        <circle cx="700" cy="470" r="372" fill="rgba(124, 187, 255, 0.22)"></circle>
-                    </g>
-
-                    <ellipse
-                        cx="578"
-                        cy="340"
-                        rx="120"
-                        ry="58"
-                        fill="rgba(255,255,255,0.16)"
-                        transform="rotate(-20 578 340)"
-                        class="bubble-shell-breath"
-                        style="--shell-duration: 7.6s; --shell-delay: -0.4s;"
-                    ></ellipse>
-                    <ellipse
-                        cx="820"
-                        cy="585"
-                        rx="38"
-                        ry="18"
-                        fill="rgba(255,255,255,0.10)"
-                        transform="rotate(14 820 585)"
-                        class="bubble-shell-breath"
-                        style="--shell-duration: 7.6s; --shell-delay: -0.4s;"
-                    ></ellipse>
-
-                    <circle
-                        cx="700"
-                        cy="470"
-                        r="324"
-                        fill="rgba(202,228,255,0.04)"
-                        class="bubble-shell-breath"
-                        style="--shell-duration: 7.6s; --shell-delay: -0.4s;"
-                    ></circle>
-
-                    <g id="bubbleMapViewport" class="bubble-map-viewport">
-                        <g id="bubbleMapGrid"></g>
-                        <g id="bubbleMapPeriods"></g>
-                        <g id="bubbleLayer"></g>
-                    </g>
-                </svg>
-                <div class="bubble-gesture-guide" aria-hidden="true">
-                    <span class="bubble-gesture-chip">
-                        <i></i>
-                        ふわっとドラッグで移動
+            {{-- アクション --}}
+            <details class="mem-details" id="detAction">
+                <summary class="mem-glass-pill mem-glass-pill--blue">
+                    <span>今日は何をする？</span>
+                    <svg class="mem-chevron" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+                </summary>
+                <div class="mem-dropdown">
+                    <a class="mem-drop-item" href="{{ route('memories.create') }}">
+                        <span class="mem-drop-icon">＋</span>記憶を追加
+                    </a>
+                    <span class="mem-drop-item mem-drop-item--dim">
+                        <span class="mem-drop-icon">💬</span>記憶と話す
                     </span>
-                    <span class="bubble-gesture-chip">
-                        <i></i>
-                        ホイール / ピンチで拡大縮小
-                    </span>
+                    <a class="mem-drop-item" href="{{ route('memories.index') }}">
+                        <span class="mem-drop-icon">☰</span>記憶一覧
+                    </a>
                 </div>
+            </details>
+
+            {{-- 年代フィルター --}}
+            <details class="mem-details" id="detFilter">
+                <summary class="mem-glass-pill mem-glass-pill--purple">
+                    <span>{{ $selectedPeriod === 'すべて' ? '年代を選ぶ' : $selectedPeriod }}</span>
+                    <svg class="mem-chevron" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+                </summary>
+                <div class="mem-dropdown mem-dropdown--filter">
+                    <a class="mem-filter-chip {{ $selectedPeriod==='すべて'?'is-on':'' }}"
+                       href="{{ route('memories.bubbles') }}">すべて</a>
+                    @foreach($periods as $p)
+                    <a class="mem-filter-chip {{ $selectedPeriod===$p?'is-on':'' }}"
+                       href="{{ route('memories.bubbles',['period'=>$p]) }}">{{ $p }}</a>
+                    @endforeach
+                </div>
+            </details>
+
+            {{-- 階層ナビ --}}
+            @if(($layerCount??1) > 1)
+            @php $bubbleBaseParams = $selectedPeriod!=='すべて'?['period'=>$selectedPeriod]:[]; @endphp
+            <div class="mem-layer-nav">
+                <span>{{ $currentLayer }}/{{ $layerCount }}層</span>
+                @if($hasNextLayer)<a class="mem-layer-btn" href="{{ route('memories.bubbles',array_merge($bubbleBaseParams,['layer'=>$currentLayer+1])) }}">次へ</a>@endif
+                @if($hasPreviousLayer)<a class="mem-layer-btn" href="{{ route('memories.bubbles',array_merge($bubbleBaseParams,['layer'=>$currentLayer-1])) }}">前へ</a>@endif
             </div>
-        @endif
-    </section>
-
-    <style>
-        .page.page-bubbles-full {
-            width: calc(100vw - 12px);
-            max-width: none;
-            padding: 8px 0 14px;
-        }
-
-        .bubble-stage-panel {
-            position: relative;
-            min-height: calc(100vh - 22px);
-            padding: 0;
-            overflow: hidden;
-            background:
-                radial-gradient(circle at 18% 18%, rgba(86, 132, 255, 0.18), transparent 20%),
-                radial-gradient(circle at 82% 16%, rgba(126, 209, 255, 0.14), transparent 18%),
-                radial-gradient(circle at 50% 72%, rgba(88, 108, 255, 0.12), transparent 26%),
-                linear-gradient(160deg, #02040b 0%, #050916 48%, #0a1124 100%);
-            color: rgba(238, 245, 255, 0.94);
-        }
-
-        .bubble-stage-top {
-            position: absolute;
-            top: 24px;
-            left: 50%;
-            z-index: 4;
-            transform: translateX(-50%);
-            display: grid;
-            justify-items: center;
-            gap: 12px;
-            width: min(760px, calc(100% - 360px));
-        }
-
-        .bubble-stage-copy {
-            position: relative;
-            z-index: 1;
-            max-width: 420px;
-            text-align: center;
-        }
-
-        .bubble-stage-hub {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            width: 100%;
-            justify-content: center;
-        }
-
-        .bubble-stage-hub-card {
-            border-radius: 18px;
-            border: 1px solid rgba(171, 205, 255, 0.12);
-            background: linear-gradient(180deg, rgba(12, 21, 42, 0.92), rgba(10, 18, 39, 0.82));
-            box-shadow: 0 14px 28px rgba(6, 10, 24, 0.24);
-            backdrop-filter: blur(12px);
-        }
-
-        .bubble-stage-count-floating {
-            position: absolute;
-            top: clamp(58px, 6vw, 82px);
-            left: clamp(108px, 12vw, 210px);
-            z-index: 3;
-            width: clamp(220px, 19vw, 252px);
-            height: clamp(220px, 19vw, 252px);
-            padding: 22px 18px 18px;
-            border-radius: 50%;
-            border: 1px solid rgba(186, 220, 255, 0.18);
-            background:
-                radial-gradient(circle at 24% 24%, rgba(201, 239, 255, 0.34), transparent 26%),
-                radial-gradient(circle at 76% 22%, rgba(255, 203, 230, 0.2), transparent 24%),
-                radial-gradient(circle at 50% 78%, rgba(167, 219, 255, 0.16), transparent 32%),
-                linear-gradient(155deg, rgba(13, 22, 42, 0.78), rgba(8, 14, 30, 0.56));
-            box-shadow:
-                0 24px 54px rgba(4, 8, 20, 0.28),
-                inset 0 1px 0 rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            overflow: hidden;
-        }
-
-        .bubble-stage-count-floating::before,
-        .bubble-stage-count-floating::after {
-            content: "";
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-            filter: blur(8px);
-        }
-
-        .bubble-stage-count-floating::before {
-            width: 148px;
-            height: 148px;
-            top: -28px;
-            left: -6px;
-            background: radial-gradient(circle, rgba(162, 223, 255, 0.28), transparent 68%);
-        }
-
-        .bubble-stage-count-floating::after {
-            width: 122px;
-            height: 122px;
-            right: -22px;
-            bottom: -26px;
-            background: radial-gradient(circle, rgba(255, 191, 226, 0.2), transparent 70%);
-        }
-
-        .bubble-stage-copy h1 {
-            margin: 16px 0 16px;
-            font-size: clamp(30px, 3.4vw, 50px);
-            color: rgba(245, 249, 255, 0.96);
-            letter-spacing: 0.03em;
-        }
-
-        .bubble-stage-copy .eyebrow {
-            padding: 8px 14px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, rgba(12, 21, 44, 0.92), rgba(27, 47, 88, 0.78));
-            border: 1px solid rgba(166, 205, 255, 0.18);
-            color: rgba(216, 234, 255, 0.92);
-            letter-spacing: 0.16em;
-            font-size: 11px;
-            box-shadow: 0 10px 26px rgba(8, 14, 30, 0.28);
-            backdrop-filter: blur(12px);
-        }
-
-        .bubble-stage-panel .btn,
-        .bubble-stage-panel .bubble-mini-btn {
-            border-radius: 14px;
-            border-width: 1px;
-            transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .bubble-stage-panel .btn:hover,
-        .bubble-stage-panel .bubble-mini-btn:hover {
-            transform: translateY(-1px);
-            border-color: rgba(196, 224, 255, 0.34);
-            color: rgba(250, 252, 255, 0.98);
-            box-shadow: 0 14px 28px rgba(18, 36, 78, 0.32);
-        }
-
-        .bubble-stage-panel .btn-primary {
-            background: linear-gradient(135deg, rgba(142, 204, 255, 0.28), rgba(87, 132, 255, 0.78));
-            border-color: rgba(180, 218, 255, 0.24);
-            color: rgba(245, 249, 255, 0.96);
-            box-shadow: 0 14px 28px rgba(40, 82, 168, 0.26);
-        }
-
-        .bubble-stage-panel .btn-secondary {
-            background: linear-gradient(135deg, rgba(20, 29, 54, 0.92), rgba(11, 19, 38, 0.96));
-            border-color: rgba(166, 204, 255, 0.16);
-            color: rgba(232, 241, 255, 0.92);
-            box-shadow: 0 10px 24px rgba(6, 10, 24, 0.28);
-        }
-
-        .bubble-stage-panel .btn-primary:hover,
-        .bubble-stage-panel .btn-secondary:hover,
-        .bubble-stage-panel .bubble-mini-btn:hover {
-            background: linear-gradient(135deg, rgba(88, 150, 255, 0.42), rgba(53, 98, 213, 0.92));
-        }
-
-        .bubble-stage-shell {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            padding-bottom: 58px;
-            overflow: hidden;
-        }
-
-        .bubble-stage-rail {
-            position: absolute;
-            top: 164px;
-            right: 24px;
-            z-index: 3;
-            width: min(236px, 22vw);
-        }
-
-        .bubble-stage-side {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            padding: 16px 18px;
-            border-radius: 20px;
-            background: transparent;
-            border: 1px solid transparent;
-            backdrop-filter: none;
-            box-shadow: none;
-        }
-
-        .bubble-stage-rail-card {
-            display: grid;
-            gap: 0;
-            height: 100%;
-            overflow: hidden;
-            align-content: start;
-        }
-
-        .bubble-rail-section {
-            padding: 14px 0;
-        }
-
-        .bubble-rail-section + .bubble-rail-section {
-            border-top: 1px solid rgba(171, 205, 255, 0.12);
-        }
-
-        .bubble-stage-count {
-            min-width: 132px;
-        }
-
-        .bubble-stage-count strong {
-            position: relative;
-            z-index: 1;
-            display: block;
-            color: rgba(245, 249, 255, 0.98);
-            font-size: clamp(60px, 6.4vw, 84px);
-            line-height: 0.84;
-            letter-spacing: -0.04em;
-            text-shadow: 0 0 34px rgba(155, 214, 255, 0.12);
-        }
-
-        .bubble-stage-count-caption {
-            position: relative;
-            z-index: 1;
-            display: block;
-            margin-top: 8px;
-            color: rgba(192, 215, 246, 0.74);
-            font-size: 10px;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-        }
-
-        .bubble-stage-actions {
-            position: relative;
-            width: clamp(188px, 18vw, 220px);
-            min-width: 0;
-            overflow: visible;
-            border: 0;
-            background: transparent;
-            box-shadow: none;
-            backdrop-filter: none;
-            display: flex;
-            justify-content: center;
-        }
-
-        .bubble-rail-btn {
-            width: 100%;
-        }
-
-        .bubble-stage-nav {
-            padding-bottom: 2px;
-            text-align: left;
-        }
-
-        .bubble-stage-nav strong {
-            display: block;
-            color: rgba(245, 249, 255, 0.98);
-            font-size: 17px;
-            margin-bottom: 10px;
-            text-align: left;
-        }
-
-        .bubble-nav-actions {
-            display: flex;
-            flex-wrap: nowrap;
-            justify-content: flex-start;
-            gap: 6px;
-        }
-
-        .bubble-mini-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 26px;
-            padding: 0 8px;
-            border: 1px solid rgba(178, 210, 255, 0.22);
-            background: linear-gradient(135deg, rgba(19, 30, 57, 0.96), rgba(10, 17, 35, 0.96));
-            color: rgba(240, 246, 255, 0.92);
-            font-size: 10px;
-            text-decoration: none;
-            white-space: nowrap;
-            box-shadow: 0 10px 22px rgba(6, 10, 24, 0.22);
-        }
-
-        .bubble-mini-btn.is-disabled {
-            opacity: 0.34;
-            pointer-events: none;
-        }
-
-        .bubble-stage-actions summary {
-            list-style: none;
-            width: 100%;
-        }
-
-        .bubble-stage-rail .btn,
-        .bubble-stage-hub .btn:not(.bubble-stage-actions-trigger) {
-            padding: 9px 12px;
-            font-size: 11px;
-            border-radius: 11px;
-        }
-
-        .bubble-stage-rail .bubble-side-label,
-        .bubble-stage-hub .bubble-side-label {
-            font-size: 11px;
-            margin-bottom: 5px;
-        }
-
-        .bubble-stage-rail .bubble-select,
-        .bubble-stage-hub .bubble-select {
-            padding: 10px 12px;
-            font-size: 12px;
-        }
-
-        .bubble-stage-rail .bubble-filter-actions,
-        .bubble-stage-hub .bubble-filter-actions {
-            gap: 8px;
-        }
-
-        .bubble-stage-actions summary::-webkit-details-marker {
-            display: none;
-        }
-
-        .bubble-stage-actions-menu {
-            display: grid;
-            gap: 14px;
-            position: absolute;
-            top: calc(100% + 16px);
-            left: 50%;
-            width: min(452px, calc(100vw - 48px));
-            margin-top: 0;
-            padding: 16px;
-            border-radius: 24px;
-            background:
-                radial-gradient(circle at top left, rgba(185, 236, 255, 0.18), transparent 34%),
-                radial-gradient(circle at top right, rgba(255, 197, 228, 0.14), transparent 30%),
-                rgba(18, 27, 50, 0.42);
-            border: 1px solid rgba(224, 243, 255, 0.16);
-            box-shadow:
-                0 18px 38px rgba(8, 14, 30, 0.16),
-                inset 0 1px 0 rgba(255,255,255,0.09);
-            backdrop-filter: blur(18px);
-            transform: translateX(-50%);
-        }
-
-        .bubble-inline-filter-menu {
-            position: absolute;
-            top: calc(100% + 16px);
-            left: 50%;
-            width: min(540px, calc(100vw - 48px));
-            padding: 16px;
-            border-radius: 28px;
-            background:
-                radial-gradient(circle at top left, rgba(185, 236, 255, 0.18), transparent 34%),
-                radial-gradient(circle at top right, rgba(255, 197, 228, 0.14), transparent 30%),
-                rgba(18, 27, 50, 0.42);
-            border: 1px solid rgba(224, 243, 255, 0.16);
-            box-shadow:
-                0 18px 38px rgba(8, 14, 30, 0.16),
-                inset 0 1px 0 rgba(255,255,255,0.09);
-            backdrop-filter: blur(18px);
-            transform: translateX(-50%);
-        }
-
-        .bubble-stage-actions-row {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            flex-wrap: nowrap;
-            gap: 12px;
-        }
-
-        .bubble-stage-filter-row {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 12px;
-        }
-
-        .bubble-inline-filter {
-            position: relative;
-            flex: 0 0 auto;
-        }
-
-        .bubble-inline-filter-menu[hidden] {
-            display: none;
-        }
-
-        .bubble-stage-actions .bubble-stage-actions-trigger {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: clamp(188px, 18vw, 220px);
-            height: clamp(188px, 18vw, 220px);
-            min-height: 0;
-            padding: 22px;
-            border-radius: 50%;
-            border: 1px solid rgba(220, 243, 255, 0.22);
-            background:
-                radial-gradient(circle at 26% 30%, rgba(212, 246, 255, 0.74), rgba(212, 246, 255, 0) 30%),
-                radial-gradient(circle at 74% 26%, rgba(255, 206, 233, 0.44), rgba(255, 206, 233, 0) 26%),
-                radial-gradient(circle at 52% 70%, rgba(166, 219, 255, 0.24), rgba(166, 219, 255, 0) 36%),
-                linear-gradient(135deg, rgba(217, 245, 255, 0.24), rgba(142, 191, 255, 0.16));
-            color: rgba(248, 252, 255, 0.98);
-            box-shadow:
-                0 22px 42px rgba(34, 64, 118, 0.18),
-                inset 0 1px 0 rgba(255,255,255,0.28),
-                inset 0 -10px 26px rgba(126, 185, 255, 0.08);
-            backdrop-filter: blur(18px) saturate(130%);
-            overflow: hidden;
-            isolation: isolate;
-            text-shadow: 0 1px 10px rgba(100, 140, 210, 0.16);
-            text-align: center;
-            flex: 0 0 auto;
-        }
-
-        .bubble-menu-orb {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 88px;
-            height: 88px;
-            padding: 12px;
-            border-radius: 50%;
-            border: 1px solid rgba(223, 244, 255, 0.18);
-            background:
-                radial-gradient(circle at 28% 26%, rgba(219, 248, 255, 0.72), rgba(219, 248, 255, 0) 28%),
-                radial-gradient(circle at 74% 24%, rgba(255, 211, 236, 0.44), rgba(255, 211, 236, 0) 24%),
-                linear-gradient(145deg, rgba(226, 246, 255, 0.22), rgba(137, 188, 255, 0.14));
-            color: rgba(246, 251, 255, 0.98);
-            box-shadow:
-                0 18px 30px rgba(33, 62, 114, 0.16),
-                inset 0 1px 0 rgba(255,255,255,0.22),
-                inset 0 -10px 24px rgba(126, 185, 255, 0.08);
-            backdrop-filter: blur(18px) saturate(130%);
-            text-decoration: none;
-            text-align: center;
-            flex: 0 0 auto;
-            cursor: pointer;
-            list-style: none;
-            appearance: none;
-            -webkit-appearance: none;
-        }
-
-        .bubble-stage-actions-trigger::after {
-            content: "";
-            position: absolute;
-            right: 50%;
-            top: auto;
-            bottom: 24px;
-            z-index: 2;
-            width: 10px;
-            height: 10px;
-            margin-right: -5px;
-            border-right: 2px solid rgba(246, 251, 255, 0.96);
-            border-bottom: 2px solid rgba(246, 251, 255, 0.96);
-            transform: rotate(45deg);
-            transition: transform 0.2s ease, bottom 0.2s ease;
-        }
-
-        .bubble-stage-actions .bubble-stage-actions-trigger::before {
-            content: "";
-            position: absolute;
-            inset: -10px;
-            z-index: -1;
-            border-radius: 50%;
-            background:
-                radial-gradient(circle at 20% 24%, rgba(216, 248, 255, 0.56), transparent 24%),
-                radial-gradient(circle at 40% 74%, rgba(189, 234, 255, 0.3), transparent 28%),
-                radial-gradient(circle at 78% 32%, rgba(255, 206, 232, 0.4), transparent 24%);
-            filter: blur(12px);
-            opacity: 0.96;
-        }
-
-        .bubble-menu-orb::before {
-            content: "";
-            position: absolute;
-            inset: -10px;
-            z-index: -1;
-            border-radius: 50%;
-            background:
-                radial-gradient(circle at 20% 24%, rgba(216, 248, 255, 0.56), transparent 24%),
-                radial-gradient(circle at 40% 74%, rgba(189, 234, 255, 0.3), transparent 28%),
-                radial-gradient(circle at 78% 32%, rgba(255, 206, 232, 0.4), transparent 24%);
-            filter: blur(12px);
-            opacity: 0.96;
-        }
-
-        .bubble-stage-actions:hover .bubble-stage-actions-trigger,
-        .bubble-stage-actions[open] .bubble-stage-actions-trigger {
-            transform: translateY(-2px) scale(1.01);
-            border-color: rgba(239, 248, 255, 0.34);
-            background:
-                radial-gradient(circle at 24% 28%, rgba(222, 249, 255, 0.82), rgba(222, 249, 255, 0) 30%),
-                radial-gradient(circle at 76% 24%, rgba(255, 213, 236, 0.5), rgba(255, 213, 236, 0) 28%),
-                radial-gradient(circle at 52% 72%, rgba(173, 224, 255, 0.28), rgba(173, 224, 255, 0) 38%),
-                linear-gradient(135deg, rgba(225, 247, 255, 0.28), rgba(150, 197, 255, 0.2));
-            box-shadow:
-                0 28px 50px rgba(44, 86, 152, 0.22),
-                inset 0 1px 0 rgba(255,255,255,0.34),
-                inset 0 -12px 28px rgba(126, 185, 255, 0.12);
-        }
-
-        .bubble-stage-actions[open] .bubble-stage-actions-trigger::after {
-            transform: rotate(-135deg);
-            bottom: 29px;
-        }
-
-        .bubble-menu-orb:hover,
-        .bubble-inline-filter:hover .bubble-filter-launch,
-        .bubble-inline-filter.is-open .bubble-filter-launch {
-            transform: translateY(-2px) scale(1.03);
-            border-color: rgba(241, 249, 255, 0.28);
-            background:
-                radial-gradient(circle at 28% 26%, rgba(227, 250, 255, 0.84), rgba(227, 250, 255, 0) 30%),
-                radial-gradient(circle at 74% 24%, rgba(255, 219, 240, 0.52), rgba(255, 219, 240, 0) 26%),
-                linear-gradient(145deg, rgba(233, 249, 255, 0.28), rgba(151, 199, 255, 0.18));
-        }
-
-        .bubble-stage-actions-trigger-label {
-            position: relative;
-            z-index: 1;
-            display: block;
-            color: rgba(247, 251, 255, 0.98);
-            font-size: clamp(20px, 1.8vw, 24px);
-            font-weight: 700;
-            line-height: 1.4;
-            letter-spacing: 0.05em;
-        }
-
-        .bubble-menu-orb[aria-disabled="true"] {
-            opacity: 1;
-        }
-
-        .bubble-orb-label {
-            position: relative;
-            z-index: 1;
-            display: block;
-            color: rgba(247, 251, 255, 0.98);
-            font-size: 11px;
-            font-weight: 700;
-            line-height: 1.35;
-            letter-spacing: 0.04em;
-            text-align: center;
-        }
-
-        .bubble-filter-orb {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 84px;
-            height: 84px;
-            padding: 10px;
-            border-radius: 50%;
-            border: 1px solid rgba(223, 244, 255, 0.18);
-            background:
-                radial-gradient(circle at 28% 26%, rgba(219, 248, 255, 0.64), rgba(219, 248, 255, 0) 28%),
-                radial-gradient(circle at 74% 24%, rgba(255, 211, 236, 0.38), rgba(255, 211, 236, 0) 24%),
-                linear-gradient(145deg, rgba(226, 246, 255, 0.18), rgba(137, 188, 255, 0.12));
-            color: rgba(246, 251, 255, 0.98);
-            text-align: center;
-            line-height: 1.3;
-            font-size: 12px;
-            text-decoration: none;
-            box-shadow:
-                0 16px 28px rgba(33, 62, 114, 0.14),
-                inset 0 1px 0 rgba(255,255,255,0.2),
-                inset 0 -10px 24px rgba(126, 185, 255, 0.08);
-            backdrop-filter: blur(18px) saturate(130%);
-            flex: 0 0 auto;
-        }
-
-        .bubble-filter-orb:hover {
-            transform: translateY(-2px) scale(1.03);
-            border-color: rgba(241, 249, 255, 0.28);
-        }
-
-        .bubble-filter-orb.is-active {
-            border-color: rgba(245, 250, 255, 0.36);
-            background:
-                radial-gradient(circle at 28% 26%, rgba(232, 250, 255, 0.84), rgba(232, 250, 255, 0) 30%),
-                radial-gradient(circle at 74% 24%, rgba(255, 222, 241, 0.5), rgba(255, 222, 241, 0) 26%),
-                linear-gradient(145deg, rgba(236, 249, 255, 0.28), rgba(163, 206, 255, 0.18));
-            box-shadow:
-                0 18px 30px rgba(46, 88, 156, 0.2),
-                inset 0 1px 0 rgba(255,255,255,0.28),
-                inset 0 -10px 24px rgba(126, 185, 255, 0.1);
-        }
-
-        .bubble-side-label {
-            display: block;
-            margin-bottom: 6px;
-            color: rgba(188, 214, 255, 0.68);
-            font-size: 12px;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-
-        .bubble-stage-count-floating .bubble-side-label {
-            position: relative;
-            z-index: 1;
-            margin-bottom: 10px;
-            color: rgba(208, 229, 255, 0.82);
-            font-size: 11px;
-            letter-spacing: 0.2em;
-        }
-
-        .bubble-caption {
-            position: absolute;
-            left: 28px;
-            bottom: 44px;
-            z-index: 2;
-            color: rgba(176, 202, 245, 0.58);
-            font-size: 11px;
-            letter-spacing: 0.14em;
-        }
-
-        .bubble-period-banner {
-            position: absolute;
-            left: 50%;
-            top: 86px;
-            z-index: 2;
-            transform: translateX(-50%);
-            padding: 10px 18px;
-            border-radius: 999px;
-            background: rgba(10, 18, 39, 0.66);
-            border: 1px solid rgba(178, 210, 255, 0.18);
-            color: rgba(234, 242, 255, 0.9);
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-            box-shadow: 0 18px 42px rgba(4, 8, 20, 0.3);
-            backdrop-filter: blur(12px);
-        }
-
-        #bubbleStage {
-            width: 100%;
-            height: auto;
-            max-height: min(920px, calc(100vh - 72px));
-            display: block;
-            cursor: grab;
-            touch-action: none;
-        }
-
-        #bubbleStage.is-dragging {
-            cursor: grabbing;
-        }
-
-        .bubble-shell-breath {
-            transform-box: fill-box;
-            transform-origin: center;
-            animation: shellPulse var(--shell-duration, 7.8s) ease-in-out var(--shell-delay, 0s) infinite;
-            will-change: transform, opacity;
-        }
-
-        .bubble-shell-main {
-            animation-duration: var(--shell-duration, 7.6s);
-        }
-
-        .bubble-map-grid-line {
-            stroke: rgba(192, 220, 255, 0.08);
-            stroke-width: 1;
-            stroke-dasharray: 10 12;
-        }
-
-        .bubble-period-halo {
-            fill: rgba(167, 213, 255, 0.075);
-            stroke: rgba(175, 212, 255, 0.18);
-            stroke-width: 1.2;
-        }
-
-        .bubble-period-zone {
-            cursor: pointer;
-        }
-
-        .bubble-period-zone .bubble-period-halo,
-        .bubble-period-zone .bubble-period-anchor,
-        .bubble-period-zone .bubble-period-name,
-        .bubble-period-zone .bubble-period-count {
-            transition: transform 0.24s ease, opacity 0.24s ease, filter 0.24s ease, fill 0.24s ease, stroke 0.24s ease;
-            transform-box: fill-box;
-            transform-origin: center;
-        }
-
-        .bubble-period-zone.is-active .bubble-period-halo,
-        .bubble-period-zone.is-active .bubble-period-anchor,
-        .bubble-period-zone.is-active .bubble-period-name,
-        .bubble-period-zone.is-active .bubble-period-count {
-            transform: scale(1.06);
-        }
-
-        .bubble-period-zone.is-active .bubble-period-name {
-            fill: rgba(250, 252, 255, 0.98);
-        }
-
-        .bubble-period-zone.is-active .bubble-period-count {
-            fill: rgba(214, 232, 255, 0.88);
-        }
-
-        .bubble-period-anchor {
-            fill: rgba(243, 249, 255, 0.88);
-        }
-
-        .bubble-period-name {
-            fill: rgba(244, 248, 255, 0.94);
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            text-anchor: middle;
-        }
-
-        .bubble-period-count {
-            fill: rgba(188, 214, 255, 0.68);
-            font-size: 12px;
-            text-anchor: middle;
-        }
-
-        .memory-ball-wrap {
-            transform-box: fill-box;
-            transform-origin: center;
-            will-change: opacity;
-            opacity: 0;
-            animation: bubbleReveal 0.72s ease var(--bubble-appear-delay, 0s) forwards;
-        }
-
-        .memory-ball {
-            cursor: pointer;
-        }
-
-        .memory-ball.is-hovered .memory-ball-body {
-            animation: none;
-            transform: scale(var(--bubble-hover-scale, 1.16));
-            filter: brightness(1.12) saturate(1.12) drop-shadow(0 26px 34px rgba(108, 127, 169, 0.2));
-        }
-
-        .memory-ball.is-period-hovered .memory-ball-body {
-            animation: none;
-            transform: scale(1.14);
-            filter: brightness(1.16) saturate(1.14) drop-shadow(0 22px 30px rgba(104, 140, 182, 0.28));
-        }
-
-        .memory-ball-body {
-            transform-box: fill-box;
-            transform-origin: center;
-            will-change: transform, filter;
-            animation: bubblePulse var(--bubble-duration, 6.8s) ease-in-out var(--bubble-delay, 0s) infinite;
-            transition: transform 0.42s cubic-bezier(0.2, 0.7, 0.2, 1), filter 0.42s cubic-bezier(0.2, 0.7, 0.2, 1);
-        }
-
-        .memory-label {
-            fill: white;
-            font-weight: 700;
-            font-size: 12px;
-            text-anchor: middle;
-            dominant-baseline: middle;
-            paint-order: stroke;
-            stroke: rgba(0, 0, 0, 0.12);
-            stroke-width: 2px;
-            stroke-linejoin: round;
-            pointer-events: none;
-        }
-
-        .bubble-gesture-guide {
-            position: absolute;
-            left: 50%;
-            bottom: 10px;
-            z-index: 2;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            width: min(720px, calc(100% - 60px));
-        }
-
-        .bubble-gesture-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 7px 12px;
-            border-radius: 999px;
-            background: rgba(9, 17, 36, 0.74);
-            border: 1px solid rgba(175, 212, 255, 0.12);
-            color: rgba(228, 239, 255, 0.88);
-            font-size: 11px;
-            box-shadow: 0 12px 24px rgba(6, 10, 24, 0.18);
-            backdrop-filter: blur(10px);
-        }
-
-        .bubble-gesture-chip i {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, rgba(166, 215, 255, 0.98), rgba(255, 200, 222, 0.94));
-            box-shadow: 0 0 10px rgba(166, 215, 255, 0.38);
-        }
-
-        @keyframes bubblePulse {
-            0% {
-                transform: scale(var(--bubble-rest-scale, 0.96));
-            }
-
-            50% {
-                transform: scale(var(--bubble-rise-scale, 1.06));
-            }
-
-            100% {
-                transform: scale(var(--bubble-rest-scale, 0.96));
-            }
-        }
-
-        @keyframes bubbleReveal {
-            0% {
-                opacity: 0;
-                filter: blur(8px);
-            }
-
-            100% {
-                opacity: 1;
-                filter: blur(0);
-            }
-        }
-
-        @keyframes shellPulse {
-            0% {
-                transform: scale(0.985);
-                opacity: 0.92;
-            }
-
-            50% {
-                transform: scale(1.015);
-                opacity: 1;
-            }
-
-            100% {
-                transform: scale(0.985);
-                opacity: 0.92;
-            }
-        }
-
-        @media (max-width: 980px) {
-            .page.page-bubbles-full {
-                width: calc(100vw - 8px);
-            }
-
-            .bubble-stage-panel {
-                min-height: 760px;
-            }
-
-            .bubble-stage-top {
-                width: min(660px, calc(100% - 280px));
-            }
-
-            .bubble-stage-count-floating {
-                top: 82px;
-                left: 86px;
-                width: 210px;
-                height: 210px;
-                padding: 20px 16px 16px;
-            }
-
-            .bubble-stage-rail {
-                top: 176px;
-                width: min(220px, 27vw);
-            }
-        }
-
-        @media (max-width: 760px) {
-            .bubble-stage-panel {
-                min-height: auto;
-                padding-top: 156px;
-            }
-
-            .bubble-stage-top,
-            .bubble-stage-count-floating,
-            .bubble-stage-rail {
-                position: static;
-                width: auto;
-                margin: 0 18px 14px;
-                transform: none;
-            }
-
-            .bubble-stage-copy,
-            .bubble-stage-hub {
-                width: auto;
-                margin: 0;
-            }
-
-            .bubble-stage-side {
-                width: auto;
-            }
-
-            .bubble-stage-hub {
-                display: grid;
-                gap: 10px;
-            }
-
-            .bubble-stage-count {
-                text-align: center;
-            }
-
-            .bubble-stage-count-floating {
-                max-width: none;
-                width: min(72vw, 240px);
-                height: min(72vw, 240px);
-                padding: 18px 18px 16px;
-            }
-
-            .bubble-stage-count strong {
-                font-size: clamp(44px, 16vw, 68px);
-            }
-
-            .bubble-stage-actions {
-                width: min(68vw, 240px);
-                justify-self: center;
-            }
-
-            .bubble-stage-actions .bubble-stage-actions-trigger {
-                width: min(68vw, 240px);
-                height: min(68vw, 240px);
-            }
-
-            .bubble-stage-actions-row {
-                flex-wrap: wrap;
-                gap: 10px;
-            }
-
-            .bubble-stage-filter-row {
-                gap: 10px;
-            }
-
-            .bubble-menu-orb {
-                width: 76px;
-                height: 76px;
-            }
-
-            .bubble-inline-filter .bubble-filter-launch {
-                width: 76px;
-                height: 76px;
-            }
-
-            .bubble-filter-orb {
-                width: 72px;
-                height: 72px;
-                font-size: 11px;
-            }
-
-            .bubble-stage-shell {
-                padding-bottom: 76px;
-            }
-
-            #bubbleStage {
-                max-height: none;
-            }
-
-            .bubble-caption {
-                left: 18px;
-                bottom: 58px;
-                max-width: calc(100% - 36px);
-            }
-
-            .bubble-period-banner {
-                top: 18px;
-                max-width: calc(100% - 136px);
-                text-align: center;
-            }
-
-            .bubble-gesture-guide {
-                width: calc(100% - 24px);
-                bottom: 12px;
-            }
-        }
-    </style>
-
-    @if ($bubbleMemories->isNotEmpty())
-        <script>
-            const memories = @json($bubbleMemories);
-            const periods = @json($periods);
-            const selectedPeriod = @json($selectedPeriod);
-            const bubblesRoute = @json($bubbleBaseRoute);
-            const svgNS = "http://www.w3.org/2000/svg";
-            const defs = document.getElementById("bubbleDefs");
-            const bubbleLayer = document.getElementById("bubbleLayer");
-            const bubbleMapGrid = document.getElementById("bubbleMapGrid");
-            const bubbleMapPeriods = document.getElementById("bubbleMapPeriods");
-            const bubbleMapViewport = document.getElementById("bubbleMapViewport");
-            const bubbleStage = document.getElementById("bubbleStage");
-            const inlineFilter = document.getElementById("bubbleInlineFilter");
-            const inlineFilterToggle = document.getElementById("bubbleInlineFilterToggle");
-            const inlineFilterMenu = document.getElementById("bubbleInlineFilterMenu");
-            const periodZones = new Map();
-            const memoryGroupsByPeriod = new Map();
-            const viewport = { width: 1400, height: 920 };
-            const state = {
-                scale: 1,
-                minScale: 0.72,
-                maxScale: 1.58,
-                tx: 0,
-                ty: 0,
-                dragging: false,
-                dragStarted: false,
-                pointerId: null,
-                startX: 0,
-                startY: 0,
-                startTx: 0,
-                startTy: 0,
-                touchMode: null,
-                pinchDistance: 0,
-                pinchMidpoint: null,
-                worldBounds: null,
-            };
-
-            const periodAnchors = {
-                "幼少期": { x: -280, y: 150 },
-                "小学生": { x: 130, y: 810 },
-                "中学生": { x: 760, y: 960 },
-                "高校生": { x: 1380, y: 740 },
-                "大学生": { x: 1820, y: 360 },
-                "成人期": { x: 2280, y: 780 },
-                "不明": { x: 2220, y: -40 },
-            };
-
-            function createSvg(tag, attrs = {}) {
-                const element = document.createElementNS(svgNS, tag);
-                Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
-                return element;
-            }
-
-            function toRgba(color, alpha) {
-                if (!color.startsWith("#")) {
-                    return color;
-                }
-
-                const normalized = color.length === 4
-                    ? color.split("").map((char, index) => index === 0 ? "" : char + char).join("")
-                    : color.slice(1);
-
-                const red = Number.parseInt(normalized.slice(0, 2), 16);
-                const green = Number.parseInt(normalized.slice(2, 4), 16);
-                const blue = Number.parseInt(normalized.slice(4, 6), 16);
-                return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-            }
-
-            function addGradient(index, colors) {
-                const id = `memGrad${index}`;
-                const gradient = createSvg("radialGradient", {
-                    id,
-                    cx: "30%",
-                    cy: "28%",
-                    r: "70%",
-                    "data-memory-gradient": "true",
-                });
-
-                gradient.appendChild(createSvg("stop", { offset: "0%", "stop-color": toRgba(colors[0], 0.96) }));
-                gradient.appendChild(createSvg("stop", { offset: "55%", "stop-color": toRgba(colors[0], 0.54) }));
-                gradient.appendChild(createSvg("stop", { offset: "100%", "stop-color": toRgba(colors[1], 0.74) }));
-                defs.appendChild(gradient);
-
-                return id;
-            }
-
-            function radiusFor(index) {
-                const pattern = [118, 108, 104, 122, 100, 112, 102, 116, 100, 114, 106, 110];
-                return pattern[index % pattern.length];
-            }
-
-            function getAnchor(period) {
-                return periodAnchors[period] ?? { x: 900, y: 470 };
-            }
-
-            function buildWorldData() {
-                const buckets = new Map();
-
-                memories.forEach((memory) => {
-                    if (!buckets.has(memory.period)) {
-                        buckets.set(memory.period, []);
-                    }
-
-                    buckets.get(memory.period).push(memory);
-                });
-
-                const periodNodes = [];
-                const memoryNodes = [];
-
-                periods.forEach((period) => {
-                    const anchor = getAnchor(period);
-                    const items = buckets.get(period) ?? [];
-
-                    if (selectedPeriod !== "すべて" && selectedPeriod !== period) {
-                        return;
-                    }
-
-                    periodNodes.push({
-                        period,
-                        count: items.length,
-                        x: anchor.x,
-                        y: anchor.y,
-                        radius: Math.max(228, 244 + (items.length * 8)),
-                    });
-
-                    items.forEach((memory, index) => {
-                        const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-                        const bubbleRadius = radiusFor(index);
-                        const spread = 112 + Math.sqrt(items.length + 2) * 52;
-                        const orbit = items.length <= 1
-                            ? 0
-                            : Math.sqrt((index + 0.5) / items.length) * spread;
-                        const angle = index * goldenAngle - Math.PI / 2;
-                        const x = anchor.x + Math.cos(angle) * orbit;
-                        const y = anchor.y + Math.sin(angle) * orbit;
-
-                        memoryNodes.push({
-                            memory,
-                            x,
-                            y,
-                            radius: bubbleRadius,
-                        });
-                    });
-                });
-
-                return {
-                    periodNodes,
-                    memoryNodes,
-                };
-            }
-
-            function buildBounds(world) {
-                let minX = Infinity;
-                let maxX = -Infinity;
-                let minY = Infinity;
-                let maxY = -Infinity;
-
-                world.periodNodes.forEach((node) => {
-                    minX = Math.min(minX, node.x - node.radius - 60);
-                    maxX = Math.max(maxX, node.x + node.radius + 60);
-                    minY = Math.min(minY, node.y - node.radius - 80);
-                    maxY = Math.max(maxY, node.y + node.radius + 40);
-                });
-
-                world.memoryNodes.forEach((node) => {
-                    minX = Math.min(minX, node.x - node.radius - 40);
-                    maxX = Math.max(maxX, node.x + node.radius + 40);
-                    minY = Math.min(minY, node.y - node.radius - 40);
-                    maxY = Math.max(maxY, node.y + node.radius + 40);
-                });
-
-                return {
-                    minX,
-                    minY,
-                    maxX,
-                    maxY,
-                    width: maxX - minX,
-                    height: maxY - minY,
-                };
-            }
-
-            function renderGrid(bounds) {
-                const step = 240;
-
-                for (let x = Math.floor(bounds.minX / step) * step; x <= bounds.maxX; x += step) {
-                    bubbleMapGrid.appendChild(createSvg("line", {
-                        x1: x,
-                        y1: bounds.minY - 120,
-                        x2: x,
-                        y2: bounds.maxY + 120,
-                        class: "bubble-map-grid-line",
-                    }));
-                }
-
-                for (let y = Math.floor(bounds.minY / step) * step; y <= bounds.maxY; y += step) {
-                    bubbleMapGrid.appendChild(createSvg("line", {
-                        x1: bounds.minX - 120,
-                        y1: y,
-                        x2: bounds.maxX + 120,
-                        y2: y,
-                        class: "bubble-map-grid-line",
-                    }));
-                }
-            }
-
-            function renderPeriods(world) {
-                world.periodNodes.forEach((node) => {
-                    const zone = createSvg("g", {
-                        class: "bubble-period-zone",
-                        "data-period-zone": node.period,
-                    });
-
-                    zone.appendChild(createSvg("circle", {
-                        cx: node.x,
-                        cy: node.y,
-                        r: node.radius,
-                        class: "bubble-period-halo",
-                    }));
-
-                    zone.appendChild(createSvg("circle", {
-                        cx: node.x,
-                        cy: node.y,
-                        r: 4.5,
-                        class: "bubble-period-anchor",
-                    }));
-
-                    const periodName = createSvg("text", {
-                        x: node.x,
-                        y: node.y - node.radius - 26,
-                        class: "bubble-period-name",
-                    });
-                    periodName.textContent = node.period;
-
-                    const periodCount = createSvg("text", {
-                        x: node.x,
-                        y: node.y - node.radius - 8,
-                        class: "bubble-period-count",
-                    });
-                    periodCount.textContent = `${node.count} memories`;
-
-                    zone.appendChild(periodName);
-                    zone.appendChild(periodCount);
-                    bubbleMapPeriods.appendChild(zone);
-                    periodZones.set(node.period, zone);
-                });
-            }
-
-            function createLabel(x, y, text, radius) {
-                const node = createSvg("text", {
-                    x,
-                    y,
-                    class: "memory-label",
-                    "font-size": Math.max(10, radius * 0.2),
-                });
-
-                node.textContent = text;
-                return node;
-            }
-
-            function renderMemories(world) {
-                world.memoryNodes.forEach((node, index) => {
-                    const gradientId = addGradient(index + 1, node.memory.colors);
-                    const wrapper = createSvg("g", {
-                        class: "memory-ball-wrap",
-                        "data-period-memory": node.memory.period,
-                        style: `--bubble-appear-delay:${(0.03 * index).toFixed(2)}s`,
-                    });
-                    const group = createSvg("a", {
-                        href: `/memories/${node.memory.id}`,
-                        class: "memory-ball",
-                        "data-period": node.memory.period,
-                        "data-emotion": node.memory.emotion,
-                        "data-tags": node.memory.tags.join(","),
-                        "aria-label": `${node.memory.period}の記憶`,
-                        style: [
-                            `--bubble-rest-scale:${(0.93 + (index % 4) * 0.02).toFixed(2)}`,
-                            `--bubble-rise-scale:${(1.02 + (index % 5) * 0.025).toFixed(2)}`,
-                            `--bubble-hover-scale:${(1.12 + (index % 4) * 0.025).toFixed(2)}`,
-                            `--bubble-duration:${(5.2 + (index % 5) * 0.55).toFixed(2)}s`,
-                            `--bubble-delay:${(-index * 0.45).toFixed(2)}s`,
-                        ].join(";"),
-                    });
-                    const body = createSvg("g", {
-                        class: "memory-ball-body",
-                    });
-
-                    const hitArea = createSvg("circle", {
-                        cx: node.x,
-                        cy: node.y,
-                        r: node.radius + 18,
-                        fill: "rgba(255,255,255,0.001)",
-                        "pointer-events": "all",
-                    });
-
-                    const aura = createSvg("circle", {
-                        cx: node.x,
-                        cy: node.y,
-                        r: node.radius + 20,
-                        fill: toRgba(node.memory.colors[1], 0.2),
-                        filter: "url(#ballAura)",
-                    });
-
-                    const glow = createSvg("circle", {
-                        cx: node.x,
-                        cy: node.y,
-                        r: node.radius + 11,
-                        fill: "rgba(255,255,255,0.1)",
-                        filter: "url(#ballAura)",
-                    });
-
-                    const circle = createSvg("circle", {
-                        cx: node.x,
-                        cy: node.y,
-                        r: node.radius,
-                        fill: `url(#${gradientId})`,
-                        filter: "url(#ballShadow)",
-                        opacity: "0.88",
-                    });
-
-                    const inner = createSvg("circle", {
-                        cx: node.x - node.radius * 0.25,
-                        cy: node.y - node.radius * 0.28,
-                        r: Math.max(10, node.radius * 0.26),
-                        fill: "rgba(255,255,255,0.30)",
-                    });
-
-                    const rim = createSvg("circle", {
-                        cx: node.x,
-                        cy: node.y,
-                        r: node.radius - 1,
-                        fill: "none",
-                        stroke: "rgba(255,255,255,0.1)",
-                        "stroke-width": "0.9",
-                        filter: "url(#ballAura)",
-                    });
-
-                    const core = createSvg("circle", {
-                        cx: node.x + node.radius * 0.2,
-                        cy: node.y + node.radius * 0.14,
-                        r: Math.max(10, node.radius * 0.42),
-                        fill: toRgba(node.memory.colors[0], 0.12),
-                    });
-
-                    group.appendChild(hitArea);
-                    body.appendChild(aura);
-                    body.appendChild(glow);
-                    body.appendChild(circle);
-                    body.appendChild(core);
-                    body.appendChild(inner);
-                    body.appendChild(rim);
-                    body.appendChild(createLabel(node.x, node.y, node.memory.label, node.radius));
-                    group.appendChild(body);
-                    group.appendChild(createSvg("title", {})).textContent = `${node.memory.period} / ${node.memory.emotion}\n${node.memory.content}`;
-
-                    wrapper.appendChild(group);
-                    wrapper.addEventListener("mouseenter", () => {
-                        group.classList.add("is-hovered");
-                    });
-                    wrapper.addEventListener("mouseleave", () => {
-                        group.classList.remove("is-hovered");
-                    });
-                    bubbleLayer.appendChild(wrapper);
-
-                    if (!memoryGroupsByPeriod.has(node.memory.period)) {
-                        memoryGroupsByPeriod.set(node.memory.period, []);
-                    }
-
-                    memoryGroupsByPeriod.get(node.memory.period).push(group);
-                });
-            }
-
-            function setActivePeriod(period) {
-                periodZones.forEach((zone, zonePeriod) => {
-                    zone.classList.toggle("is-active", zonePeriod === period);
-                });
-
-                memoryGroupsByPeriod.forEach((groups, groupPeriod) => {
-                    groups.forEach((group) => {
-                        group.classList.toggle("is-period-hovered", groupPeriod === period);
-                    });
-                });
-            }
-
-            function clearActivePeriod() {
-                periodZones.forEach((zone) => zone.classList.remove("is-active"));
-                memoryGroupsByPeriod.forEach((groups) => {
-                    groups.forEach((group) => group.classList.remove("is-period-hovered"));
-                });
-            }
-
-            function jumpToPeriod(period) {
-                const url = new URL(bubblesRoute, window.location.origin);
-                url.searchParams.set("period", period);
-                window.location.href = url.toString();
-            }
-
-            function svgPointFromClient(clientX, clientY) {
-                const rect = bubbleStage.getBoundingClientRect();
-                return {
-                    x: ((clientX - rect.left) / rect.width) * viewport.width,
-                    y: ((clientY - rect.top) / rect.height) * viewport.height,
-                };
-            }
-
-            function clampTranslation(scale, tx, ty) {
-                const bounds = state.worldBounds;
-                const marginX = 120;
-                const marginY = 120;
-                const scaledWidth = bounds.width * scale;
-                const scaledHeight = bounds.height * scale;
-
-                if (scaledWidth <= viewport.width - (marginX * 2)) {
-                    tx = (viewport.width - scaledWidth) / 2 - (bounds.minX * scale);
-                } else {
-                    const minTx = viewport.width - ((bounds.maxX * scale) + marginX);
-                    const maxTx = marginX - (bounds.minX * scale);
-                    tx = Math.min(maxTx, Math.max(minTx, tx));
-                }
-
-                if (scaledHeight <= viewport.height - (marginY * 2)) {
-                    ty = (viewport.height - scaledHeight) / 2 - (bounds.minY * scale);
-                } else {
-                    const minTy = viewport.height - ((bounds.maxY * scale) + marginY);
-                    const maxTy = marginY - (bounds.minY * scale);
-                    ty = Math.min(maxTy, Math.max(minTy, ty));
-                }
-
-                return { tx, ty };
-            }
-
-            function applyTransform() {
-                const clamped = clampTranslation(state.scale, state.tx, state.ty);
-                state.tx = clamped.tx;
-                state.ty = clamped.ty;
-                bubbleMapViewport.setAttribute("transform", `matrix(${state.scale} 0 0 ${state.scale} ${state.tx} ${state.ty})`);
-            }
-
-            function frameInitialView() {
-                const bounds = state.worldBounds;
-                const paddingX = 420;
-                const paddingY = 320;
-                const scaleX = viewport.width / (bounds.width + paddingX);
-                const scaleY = viewport.height / (bounds.height + paddingY);
-                state.scale = Math.min(state.maxScale, Math.max(0.9, Math.min(scaleX, scaleY)));
-                state.tx = (viewport.width / 2) - (((bounds.minX + bounds.maxX) / 2) * state.scale);
-                state.ty = (viewport.height / 2) - (((bounds.minY + bounds.maxY) / 2) * state.scale);
-                applyTransform();
-            }
-
-            function zoomTo(nextScale, point) {
-                const clampedScale = Math.min(state.maxScale, Math.max(state.minScale, nextScale));
-                const worldX = (point.x - state.tx) / state.scale;
-                const worldY = (point.y - state.ty) / state.scale;
-                state.tx = point.x - (worldX * clampedScale);
-                state.ty = point.y - (worldY * clampedScale);
-                state.scale = clampedScale;
-                applyTransform();
-            }
-
-            function startDrag(point, pointerId = null) {
-                state.dragging = true;
-                state.dragStarted = false;
-                state.pointerId = pointerId;
-                state.startX = point.x;
-                state.startY = point.y;
-                state.startTx = state.tx;
-                state.startTy = state.ty;
-                bubbleStage.classList.add("is-dragging");
-            }
-
-            function updateDrag(point) {
-                if (!state.dragging) {
-                    return;
-                }
-
-                const dx = point.x - state.startX;
-                const dy = point.y - state.startY;
-
-                if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
-                    state.dragStarted = true;
-                }
-
-                state.tx = state.startTx + dx;
-                state.ty = state.startTy + dy;
-                applyTransform();
-            }
-
-            function endDrag() {
-                state.dragging = false;
-                state.pointerId = null;
-                bubbleStage.classList.remove("is-dragging");
-            }
-
-            function closeInlineFilter() {
-                if (!inlineFilter || !inlineFilterToggle || !inlineFilterMenu) {
-                    return;
-                }
-
-                inlineFilter.classList.remove("is-open");
-                inlineFilterToggle.setAttribute("aria-expanded", "false");
-                inlineFilterMenu.hidden = true;
-            }
-
-            if (inlineFilter && inlineFilterToggle && inlineFilterMenu) {
-                inlineFilterToggle.addEventListener("click", (event) => {
-                    event.preventDefault();
-                    const willOpen = !inlineFilter.classList.contains("is-open");
-
-                    if (!willOpen) {
-                        closeInlineFilter();
-                        return;
-                    }
-
-                    inlineFilter.classList.add("is-open");
-                    inlineFilterToggle.setAttribute("aria-expanded", "true");
-                    inlineFilterMenu.hidden = false;
-                });
-
-                document.addEventListener("click", (event) => {
-                    if (!inlineFilter.contains(event.target)) {
-                        closeInlineFilter();
-                    }
-                });
-
-                document.addEventListener("keydown", (event) => {
-                    if (event.key === "Escape") {
-                        closeInlineFilter();
-                    }
-                });
-            }
-
-            const world = buildWorldData();
-            state.worldBounds = buildBounds(world);
-            renderGrid(state.worldBounds);
-            renderPeriods(world);
-            renderMemories(world);
-            frameInitialView();
-            if (selectedPeriod !== "すべて") {
-                setActivePeriod(selectedPeriod);
-            }
-
-            periodZones.forEach((zone, period) => {
-                zone.addEventListener("mouseenter", () => {
-                    setActivePeriod(period);
-                });
-
-                zone.addEventListener("mouseleave", () => {
-                    clearActivePeriod();
-                });
-
-                zone.addEventListener("click", () => {
-                    jumpToPeriod(period);
-                });
-            });
-
-            bubbleStage.addEventListener("wheel", (event) => {
-                event.preventDefault();
-                const point = svgPointFromClient(event.clientX, event.clientY);
-                const factor = event.deltaY < 0 ? 1.12 : 0.9;
-                zoomTo(state.scale * factor, point);
-            }, { passive: false });
-
-            bubbleStage.addEventListener("pointerdown", (event) => {
-                if (event.target.closest(".memory-ball") || event.target.closest(".bubble-period-zone")) {
-                    return;
-                }
-
-                const point = svgPointFromClient(event.clientX, event.clientY);
-                startDrag(point, event.pointerId);
-            });
-
-            bubbleStage.addEventListener("pointermove", (event) => {
-                if (!state.dragging || state.pointerId !== event.pointerId) {
-                    return;
-                }
-
-                updateDrag(svgPointFromClient(event.clientX, event.clientY));
-            });
-
-            bubbleStage.addEventListener("pointerup", () => {
-                endDrag();
-            });
-
-            bubbleStage.addEventListener("pointerleave", () => {
-                endDrag();
-            });
-
-            bubbleStage.addEventListener("touchstart", (event) => {
-                if (event.touches.length === 2) {
-                    const first = svgPointFromClient(event.touches[0].clientX, event.touches[0].clientY);
-                    const second = svgPointFromClient(event.touches[1].clientX, event.touches[1].clientY);
-                    state.touchMode = "pinch";
-                    state.pinchDistance = Math.hypot(first.x - second.x, first.y - second.y);
-                    state.pinchMidpoint = {
-                        x: (first.x + second.x) / 2,
-                        y: (first.y + second.y) / 2,
-                    };
-                    return;
-                }
-
-                if (event.touches.length === 1 && !event.target.closest(".memory-ball") && !event.target.closest(".bubble-period-zone")) {
-                    state.touchMode = "drag";
-                    startDrag(svgPointFromClient(event.touches[0].clientX, event.touches[0].clientY));
-                }
-            }, { passive: true });
-
-            bubbleStage.addEventListener("touchmove", (event) => {
-                if (state.touchMode === "pinch" && event.touches.length === 2) {
-                    const first = svgPointFromClient(event.touches[0].clientX, event.touches[0].clientY);
-                    const second = svgPointFromClient(event.touches[1].clientX, event.touches[1].clientY);
-                    const nextDistance = Math.hypot(first.x - second.x, first.y - second.y);
-                    const midpoint = {
-                        x: (first.x + second.x) / 2,
-                        y: (first.y + second.y) / 2,
-                    };
-
-                    if (state.pinchDistance > 0) {
-                        const factor = nextDistance / state.pinchDistance;
-                        zoomTo(state.scale * factor, midpoint);
-                    }
-
-                    state.pinchDistance = nextDistance;
-                    state.pinchMidpoint = midpoint;
-                    return;
-                }
-
-                if (state.touchMode === "drag" && event.touches.length === 1) {
-                    updateDrag(svgPointFromClient(event.touches[0].clientX, event.touches[0].clientY));
-                }
-            }, { passive: true });
-
-            bubbleStage.addEventListener("touchend", () => {
-                state.touchMode = null;
-                state.pinchDistance = 0;
-                endDrag();
-            });
-        </script>
+            @endif
+        </div>
+    </nav>
+
+    {{-- ========== MAIN STAGE ========== --}}
+    @if($bubbleMemories->isEmpty())
+        <div class="mem-empty">
+            <div class="mem-empty-orb"></div>
+            <p>記憶がまだありません</p>
+            <a href="{{ route('memories.create') }}" class="mem-glass-pill mem-glass-pill--blue" style="margin-top:20px;text-decoration:none;">記憶を追加する</a>
+        </div>
+    @else
+    @php
+        $bubbleBaseRoute = route('memories.bubbles');
+    @endphp
+
+    {{-- 期間バナー --}}
+    @if($selectedPeriod !== 'すべて')
+    <div class="mem-period-badge">{{ $selectedPeriod }}</div>
     @endif
+
+    <div class="mem-stage" id="memStage">
+        <svg id="memSvg" class="mem-svg" viewBox="0 0 1400 900"
+             xmlns="http://www.w3.org/2000/svg" aria-label="記憶マップ">
+            <defs id="memDefs">
+
+                {{-- ===== 共通フィルター ===== --}}
+
+                {{-- オーラぼかし（画像2の外縁ハロー） --}}
+                <filter id="fAura" x="-200%" y="-200%" width="500%" height="500%">
+                    <feGaussianBlur stdDeviation="32"/>
+                </filter>
+
+                {{-- リムグロー --}}
+                <filter id="fRimGlow" x="-80%" y="-80%" width="260%" height="260%">
+                    <feGaussianBlur stdDeviation="6"/>
+                </filter>
+
+                {{-- ドロップシャドウ --}}
+                <filter id="fShadow" x="-80%" y="-80%" width="260%" height="260%">
+                    <feDropShadow dx="0" dy="18" stdDeviation="20"
+                                  flood-color="#000008" flood-opacity="0.75"/>
+                </filter>
+
+                {{-- スペキュラソフト --}}
+                <filter id="fSpec" x="-120%" y="-120%" width="340%" height="340%">
+                    <feGaussianBlur stdDeviation="9"/>
+                </filter>
+
+                {{-- 背景大グロー --}}
+                <filter id="fBgGlow" x="-150%" y="-150%" width="400%" height="400%">
+                    <feGaussianBlur stdDeviation="60"/>
+                </filter>
+
+                {{-- リングブラー（画像3の多層リング） --}}
+                <filter id="fRing" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur stdDeviation="5"/>
+                </filter>
+
+                {{-- メインオーブのネオンリングぼかし --}}
+                <filter id="fNeon" x="-40%" y="-40%" width="180%" height="180%">
+                    <feGaussianBlur stdDeviation="8"/>
+                </filter>
+
+            </defs>
+
+            {{-- ===== 背景グロースポット ===== --}}
+            <ellipse cx="700" cy="450" rx="520" ry="460"
+                     fill="rgba(10,20,80,0.22)" filter="url(#fBgGlow)"/>
+            <ellipse cx="200" cy="780" rx="200" ry="160"
+                     fill="rgba(0,30,160,0.14)" filter="url(#fBgGlow)"/>
+            <ellipse cx="1240" cy="130" rx="180" ry="140"
+                     fill="rgba(60,0,180,0.10)" filter="url(#fBgGlow)"/>
+
+            {{-- ===== バブルレイヤー（JS描画） ===== --}}
+            <g id="memViewport">
+                <g id="memGrid"/>
+                <g id="memPeriods"/>
+                <g id="memBubbles"/>
+            </g>
+        </svg>
+
+        <p class="mem-hint">
+            <span><i class="mem-dot"></i>ドラッグで移動</span>
+            <span><i class="mem-dot"></i>ホイール/ピンチで拡縮</span>
+        </p>
+    </div>
+    @endif
+
+</div>
+
+{{-- =====================================================================
+     STYLES
+====================================================================== --}}
+<style>
+/* ── リセット ───────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.page.page-bubbles-full {
+    width: 100vw;
+    max-width: none;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* ── 宇宙背景 ──────────────────────────── */
+.mem-universe {
+    position: relative;
+    width: 100vw;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at 30% 20%, #0a1640 0%, #04091e 40%, #000208 100%);
+    overflow: hidden;
+    color: #d4eaff;
+    font-family: system-ui, sans-serif;
+}
+
+.star-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ── TOP NAV ────────────────────────────── */
+.mem-nav {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 20;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 28px 0;
+}
+
+.mem-nav-left {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.mem-nav-eyebrow {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(80,160,255,0.30);
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(12px);
+    color: rgba(110,175,255,0.90);
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+}
+
+.mem-nav-title {
+    font-size: clamp(26px, 3vw, 46px);
+    font-weight: 900;
+    letter-spacing: 0.01em;
+    color: #f0f8ff;
+    text-shadow: 0 0 60px rgba(40,140,255,0.45), 0 0 20px rgba(80,180,255,0.22);
+    line-height: 1;
+}
+
+.mem-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+/* ── 記憶数オーブ（画像1の球体感） ─────── */
+.mem-count-orb {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    position: relative;
+    /* 画像1スタイル：ブルーガラス球 */
+    background:
+        radial-gradient(circle at 32% 26%, rgba(80,200,255,0.35) 0%, rgba(0,80,200,0.20) 38%, rgba(0,10,60,0.88) 100%);
+    border: 1.5px solid rgba(0,200,255,0.55);
+    box-shadow:
+        0 0 0 1px rgba(0,160,255,0.18),
+        0 0 22px rgba(0,180,255,0.35),
+        0 0 50px rgba(0,100,255,0.18),
+        inset 0 1.5px 0 rgba(255,255,255,0.30),
+        inset 0 -1px 0 rgba(0,80,200,0.25);
+    backdrop-filter: blur(10px);
+}
+
+/* スペキュラ白点 */
+.mem-count-orb::before {
+    content: '';
+    position: absolute;
+    top: 16%; left: 22%;
+    width: 28%; height: 18%;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.75);
+    filter: blur(4px);
+}
+
+.mem-count-num {
+    font-size: 26px;
+    font-weight: 900;
+    color: rgba(200,240,255,0.98);
+    text-shadow: 0 0 16px rgba(0,220,255,0.60);
+    line-height: 1;
+    position: relative;
+    z-index: 1;
+}
+.mem-count-label {
+    font-size: 7.5px;
+    letter-spacing: 0.20em;
+    color: rgba(80,190,255,0.80);
+    text-transform: uppercase;
+    position: relative;
+    z-index: 1;
+}
+
+/* ── ガラスピルボタン（画像4スタイル） ──── */
+.mem-glass-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    white-space: nowrap;
+    transition: transform 0.18s, box-shadow 0.18s;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 内部の光沢ライン（画像4の上縁ハイライト） */
+.mem-glass-pill::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 40%;
+    border-radius: 0 0 50% 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.22) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.mem-glass-pill--blue {
+    background:
+        linear-gradient(160deg, rgba(0,100,220,0.70) 0%, rgba(0,40,130,0.90) 100%);
+    color: rgba(210,238,255,0.97);
+    box-shadow:
+        0 0 0 1.5px rgba(0,180,255,0.55),
+        0 0 20px rgba(0,140,255,0.30),
+        0 0 50px rgba(0,80,255,0.15),
+        inset 0 1px 0 rgba(255,255,255,0.20),
+        inset 0 -1px 0 rgba(0,60,180,0.40);
+}
+
+.mem-glass-pill--purple {
+    background:
+        linear-gradient(160deg, rgba(90,0,200,0.65) 0%, rgba(40,0,110,0.90) 100%);
+    color: rgba(220,200,255,0.97);
+    box-shadow:
+        0 0 0 1.5px rgba(140,60,255,0.55),
+        0 0 20px rgba(100,0,220,0.30),
+        0 0 50px rgba(60,0,180,0.15),
+        inset 0 1px 0 rgba(255,255,255,0.18),
+        inset 0 -1px 0 rgba(60,0,160,0.40);
+}
+
+.mem-glass-pill:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow:
+        0 0 0 1.5px rgba(80,220,255,0.80),
+        0 0 32px rgba(0,180,255,0.50),
+        0 0 70px rgba(0,100,255,0.25),
+        inset 0 1px 0 rgba(255,255,255,0.28),
+        inset 0 -1px 0 rgba(0,60,180,0.40);
+}
+
+.mem-glass-pill::-webkit-details-marker { display: none; }
+
+.mem-chevron {
+    width: 10px; height: 6px;
+    color: rgba(180,220,255,0.85);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+details[open] .mem-chevron { transform: rotate(180deg); }
+
+/* ── ドロップダウン ──────────────────────── */
+.mem-details { position: relative; }
+
+.mem-dropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    z-index: 30;
+    min-width: 200px;
+    padding: 10px;
+    border-radius: 18px;
+    /* 画像4のカードスタイル */
+    background:
+        linear-gradient(145deg, rgba(8,18,60,0.96) 0%, rgba(4,10,36,0.98) 100%);
+    border: 1px solid rgba(0,160,255,0.28);
+    box-shadow:
+        0 0 0 1px rgba(0,100,200,0.12),
+        0 30px 60px rgba(0,0,0,0.75),
+        0 0 30px rgba(0,80,200,0.18),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+    backdrop-filter: blur(28px) saturate(1.5);
+}
+
+.mem-drop-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    color: rgba(200,228,255,0.92);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.16s, transform 0.14s;
+    cursor: pointer;
+}
+.mem-drop-item:hover {
+    background: rgba(0,100,255,0.18);
+    transform: translateX(3px);
+}
+.mem-drop-item--dim { opacity: 0.38; pointer-events: none; }
+
+.mem-drop-icon {
+    display: grid;
+    place-items: center;
+    width: 30px; height: 30px;
+    border-radius: 9px;
+    background: rgba(0,80,200,0.28);
+    border: 1px solid rgba(0,150,255,0.22);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+/* フィルターチップ */
+.mem-dropdown--filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 280px;
+}
+
+.mem-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(60,130,255,0.28);
+    background: rgba(0,16,60,0.65);
+    color: rgba(150,205,255,0.88);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.16s;
+}
+.mem-filter-chip:hover {
+    border-color: rgba(0,200,255,0.60);
+    background: rgba(0,60,180,0.55);
+    color: #fff;
+}
+.mem-filter-chip.is-on {
+    border-color: rgba(0,210,255,0.80);
+    background: linear-gradient(135deg, rgba(0,100,220,0.55), rgba(0,60,180,0.65));
+    color: #fff;
+    box-shadow: 0 0 18px rgba(0,180,255,0.35);
+}
+
+/* ── 階層ナビ ───────────────────────────── */
+.mem-layer-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(60,110,220,0.28);
+    background: rgba(0,8,36,0.65);
+    backdrop-filter: blur(12px);
+    font-size: 11px;
+    color: rgba(120,175,255,0.82);
+}
+.mem-layer-btn {
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,150,255,0.32);
+    background: rgba(0,40,150,0.48);
+    color: rgba(160,215,255,0.92);
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.16s;
+}
+.mem-layer-btn:hover { border-color: rgba(0,220,255,0.60); }
+
+/* ── 期間バッジ ─────────────────────────── */
+.mem-period-badge {
+    position: absolute;
+    top: 96px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    padding: 8px 26px;
+    border-radius: 999px;
+    background: rgba(0,6,32,0.80);
+    border: 1.5px solid rgba(0,190,255,0.42);
+    color: rgba(160,230,255,0.96);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    box-shadow: 0 0 26px rgba(0,150,255,0.26);
+    backdrop-filter: blur(16px);
+}
+
+/* ── STAGE ──────────────────────────────── */
+.mem-stage {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+}
+
+.mem-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 100vh;
+    cursor: grab;
+    touch-action: none;
+}
+.mem-svg.dragging { cursor: grabbing; }
+
+/* ── ヒントチップ ───────────────────────── */
+.mem-hint {
+    position: absolute;
+    bottom: 16px; left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 10;
+}
+.mem-hint span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 16px;
+    border-radius: 999px;
+    background: rgba(0,5,24,0.82);
+    border: 1px solid rgba(0,110,220,0.22);
+    backdrop-filter: blur(14px);
+    color: rgba(130,190,255,0.85);
+    font-size: 11px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.40);
+}
+.mem-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00d4ff, #5060ff);
+    box-shadow: 0 0 10px rgba(0,200,255,0.60);
+}
+
+/* ── Empty ──────────────────────────────── */
+.mem-empty {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    z-index: 10;
+    color: rgba(140,190,255,0.80);
+    font-size: 15px;
+    text-align: center;
+}
+.mem-empty-orb {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, rgba(80,180,255,0.30), rgba(0,40,140,0.20) 60%, rgba(0,5,30,0.80));
+    border: 1.5px solid rgba(0,200,255,0.40);
+    box-shadow: 0 0 50px rgba(0,140,255,0.25);
+    animation: breathe 4s ease-in-out infinite;
+}
+
+/* ── SVG要素CSS ─────────────────────────── */
+
+/* グリッド線 */
+.mg-grid-line {
+    stroke: rgba(0,70,200,0.07);
+    stroke-width: 1;
+    stroke-dasharray: 5 18;
+}
+
+/* 年代ゾーン */
+.mg-zone { cursor: pointer; }
+.mg-zone-halo {
+    fill: rgba(0,60,180,0.04);
+    stroke: rgba(0,150,255,0.13);
+    stroke-width: 1.5;
+    stroke-dasharray: 5 12;
+    transition: fill 0.25s, stroke 0.25s;
+}
+.mg-zone.is-active .mg-zone-halo {
+    fill: rgba(0,100,240,0.08);
+    stroke: rgba(0,220,255,0.40);
+}
+.mg-zone-dot {
+    fill: rgba(0,200,255,0.80);
+    filter: drop-shadow(0 0 6px rgba(0,200,255,0.65));
+}
+.mg-zone-name {
+    fill: rgba(140,210,255,0.90);
+    font-size: 17px;
+    font-weight: 800;
+    text-anchor: middle;
+    letter-spacing: 0.05em;
+    transition: fill 0.25s;
+}
+.mg-zone.is-active .mg-zone-name { fill: rgba(180,240,255,1); }
+.mg-zone-count {
+    fill: rgba(80,150,230,0.72);
+    font-size: 11px;
+    text-anchor: middle;
+}
+
+/* バブルラッパー（出現アニメ） */
+.mg-bubble-wrap {
+    opacity: 0;
+    animation: mgReveal 0.80s cubic-bezier(0.22,0.85,0.32,1) var(--d,0s) forwards;
+}
+
+/* バブル本体（呼吸アニメ） */
+.mg-bubble-body {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: mgPulse var(--dur,6s) ease-in-out var(--delay,0s) infinite;
+    transition: transform 0.42s cubic-bezier(0.2,0.8,0.2,1), filter 0.42s;
+}
+.mg-bubble-wrap:hover .mg-bubble-body {
+    animation: none;
+    transform: scale(var(--hs,1.16));
+    filter: brightness(1.25) saturate(1.35)
+            drop-shadow(0 0 36px rgba(0,180,255,0.60));
+}
+.mg-bubble-wrap.period-hi .mg-bubble-body {
+    animation: none;
+    transform: scale(1.10);
+    filter: brightness(1.15) saturate(1.20)
+            drop-shadow(0 0 22px rgba(0,150,255,0.42));
+}
+
+/* テキストラベル */
+.mg-label {
+    fill: rgba(255,255,255,0.97);
+    font-weight: 700;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    paint-order: stroke;
+    stroke: rgba(0,0,0,0.58);
+    stroke-width: 3.5px;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+/* 衛星小バブル */
+.mg-sat {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: mgReveal 0.90s cubic-bezier(0.22,0.85,0.32,1) var(--d,0s) both,
+               satFloat var(--sd,7s) ease-in-out var(--sdly,0s) infinite;
+}
+@keyframes satFloat {
+    0%,100% { transform: translate(0px, 0px) scale(0.97); }
+    33%     { transform: translate(calc(var(--amp,6)*0.4px), calc(var(--amp,6)*-1px)) scale(1.03); }
+    66%     { transform: translate(calc(var(--amp,6)*-0.3px), calc(var(--amp,6)*-0.6px)) scale(1.01); }
+}
+
+/* シェル呼吸 */
+.mg-shell-breath {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: shellBreath var(--sd,8s) ease-in-out var(--sdelay,0s) infinite;
+}
+
+/* ── キーフレーム ────────────────────────── */
+@keyframes mgReveal {
+    0%   { opacity:0; filter:blur(14px) saturate(0.2); }
+    70%  { opacity:0.90; }
+    100% { opacity:1;  filter:blur(0)   saturate(1); }
+}
+@keyframes mgPulse {
+    0%,100% { transform: scale(var(--rs,0.95)); }
+    50%     { transform: scale(var(--rise,1.05)); }
+}
+@keyframes shellBreath {
+    0%,100% { transform:scale(0.982); opacity:0.85; }
+    50%     { transform:scale(1.018); opacity:1; }
+}
+@keyframes breathe {
+    0%,100% { transform:scale(0.94); }
+    50%     { transform:scale(1.06); }
+}
+
+/* ── レスポンシブ ────────────────────────── */
+@media(max-width:900px){
+    .mem-nav { flex-wrap:wrap; padding:16px 16px 0; }
+    .mem-nav-right { gap:8px; }
+    .mem-count-orb { width:60px; height:60px; }
+    .mem-count-num { font-size:20px; }
+    .mem-nav-title { font-size:clamp(22px,5vw,34px); }
+}
+@media(max-width:640px){
+    .mem-glass-pill { padding:8px 14px; font-size:12px; }
+    .mem-dropdown { right:-8px; }
+    .mem-count-orb { width:52px; height:52px; }
+}
+</style>
+
+{{-- =====================================================================
+     SCRIPT
+====================================================================== --}}
+@if($bubbleMemories->isNotEmpty())
+<script>
+(function(){
+"use strict";
+
+/* ===== 定数 ===== */
+const memories       = @json($bubbleMemories);
+const periods        = @json($periods);
+const selPeriod      = @json($selectedPeriod);
+const bubblesRoute   = @json($bubbleBaseRoute);
+const NS = "http://www.w3.org/2000/svg";
+const VP = { w:1400, h:900 };
+
+/* ===== DOM refs ===== */
+const svg      = document.getElementById("memSvg");
+const defs     = document.getElementById("memDefs");
+const viewport = document.getElementById("memViewport");
+const gridG    = document.getElementById("memGrid");
+const periodsG = document.getElementById("memPeriods");
+const bubblesG = document.getElementById("memBubbles");
+
+/* ===== 年代座標（幼少期・小学生→左寄り、高校生・大学生→右寄り） ===== */
+const ANCHORS = {
+    "幼少期":{ x: -320, y: 320 },
+    "小学生":{ x:  200, y: 820 },
+    "中学生":{ x:  960, y: 560 },
+    "高校生":{ x: 1880, y: 880 },
+    "大学生":{ x: 1680, y:-160 },
+    "成人期":{ x: 2380, y: 220 },
+    "不明":  { x:  820, y:-120 },
+};
+
+/* ===== パン/ズーム状態 ===== */
+const st = {
+    scale:1, tx:0, ty:0,
+    minS:0.65, maxS:1.65,
+    drag:false, started:false, pid:null,
+    sx:0, sy:0, stx:0, sty:0,
+    touch:null, pinchD:0,
+    bounds:null,
+};
+
+/* ===== SVGユーティリティ ===== */
+function el(tag, a={}){
+    const e=document.createElementNS(NS,tag);
+    for(const[k,v] of Object.entries(a)) e.setAttribute(k,v);
+    return e;
+}
+
+/* 16進→rgba */
+function rgba(hex,a){
+    if(!hex||!hex.startsWith("#")) return `rgba(80,140,255,${a})`;
+    const h=hex.length===4
+        ? hex.slice(1).split("").map(c=>c+c).join("")
+        : hex.slice(1);
+    const r=parseInt(h.slice(0,2),16);
+    const g=parseInt(h.slice(2,4),16);
+    const b=parseInt(h.slice(4,6),16);
+    return `rgba(${r},${g},${b},${a})`;
+}
+
+/* ===== グラデーション定義 =====
+   ▼ 画像1・2・3を参考に3パターン作成
+============================================= */
+function mkGrads(idx, colors){
+    const c0=colors?.[0]??"#2a6fff";
+    const c1=colors?.[1]??"#00d4ff";
+    const gId=`g${idx}`, rId=`r${idx}`, aId=`a${idx}`;
+
+    /* ① 球体グラデ（画像1・3：左上→右下の深いガラス） */
+    const grd=el("radialGradient",{id:gId,cx:"30%",cy:"26%",r:"76%",gradientUnits:"objectBoundingBox"});
+    /* 左上ハイライト〜深いブルー〜右下シアン */
+    grd.append(
+        el("stop",{offset:"0%",  "stop-color":rgba(c0,0.15)}),
+        el("stop",{offset:"22%", "stop-color":rgba(c0,0.65)}),
+        el("stop",{offset:"55%", "stop-color":rgba(c0,0.80)}),
+        el("stop",{offset:"82%", "stop-color":rgba(c1,0.78)}),
+        el("stop",{offset:"100%","stop-color":rgba(c1,0.92)}),
+    );
+    defs.append(grd);
+
+    /* ② リムライトグラデ（画像1・2のネオンリム） */
+    const rim=el("linearGradient",{id:rId,x1:"0%",y1:"0%",x2:"100%",y2:"100%"});
+    rim.append(
+        el("stop",{offset:"0%",  "stop-color":rgba(c1,1.0)}),
+        el("stop",{offset:"40%", "stop-color":rgba(c0,0.50)}),
+        el("stop",{offset:"100%","stop-color":rgba(c1,0.90)}),
+    );
+    defs.append(rim);
+
+    /* ③ オーラグラデ（画像2：外縁の発光ハロー） */
+    const aur=el("radialGradient",{id:aId,cx:"50%",cy:"50%",r:"50%",gradientUnits:"objectBoundingBox"});
+    aur.append(
+        el("stop",{offset:"0%",  "stop-color":rgba(c0,0.0)}),
+        el("stop",{offset:"55%", "stop-color":rgba(c1,0.22)}),
+        el("stop",{offset:"100%","stop-color":rgba(c1,0.50)}),
+    );
+    defs.append(aur);
+
+    return {gId,rId,aId};
+}
+
+/* ===== バブル半径 ===== */
+function ballR(i){ return [116,106,102,120,98,110,100,114,98,112,104,108][i%12]; }
+function anchor(p){ return ANCHORS[p]??{x:760,y:390}; }
+
+/* ===== 擬似乱数（シード付き再現性あり） ===== */
+function seededRand(seed){
+    let s=seed;
+    return function(){
+        s=(s*1664525+1013904223)&0xffffffff;
+        return (s>>>0)/0xffffffff;
+    };
+}
+
+/* ===== 衛星小バブル生成（記憶玉ごとにランダム） ===== */
+/* 各衛星のサイズ倍率（バリエーション豊かに） */
+const SAT_SIZE_RATIOS = [0.32, 0.18, 0.42, 0.14, 0.28, 0.38, 0.12, 0.24, 0.20, 0.35];
+const SAT_COUNT = 10;
+
+/* ===== 年代ごとの記憶数マップ ===== */
+const periodCount = new Map();
+memories.forEach(m=>periodCount.set(m.period,(periodCount.get(m.period)??0)+1));
+
+/* ===== ワールドデータ構築 ===== */
+function buildWorld(){
+    const buckets=new Map();
+    memories.forEach(m=>{
+        if(!buckets.has(m.period)) buckets.set(m.period,[]);
+        buckets.get(m.period).push(m);
+    });
+    const pNodes=[], bNodes=[], sNodes=[];
+    periods.forEach(p=>{
+        const anc=anchor(p);
+        const items=buckets.get(p)??[];
+        if(selPeriod!=="すべて"&&selPeriod!==p) return;
+        const zoneR=Math.max(260,280+items.length*12);
+        pNodes.push({ p, count:items.length, x:anc.x, y:anc.y, r:zoneR });
+        items.forEach((m,i)=>{
+            const PHI=Math.PI*(3-Math.sqrt(5));
+            const r=ballR(i);
+            const spread=150+Math.sqrt(items.length+2)*60;
+            const orbit=items.length<=1?0:Math.sqrt((i+0.5)/items.length)*spread;
+            const ang=i*PHI-Math.PI/2;
+            const bx=anc.x+Math.cos(ang)*orbit;
+            const by=anc.y+Math.sin(ang)*orbit;
+            bNodes.push({m,r,x:bx,y:by});
+            /* 衛星小バブル：各記憶玉の周囲にランダム配置 */
+            const rng = seededRand(m.id * 7919 + i * 1327);
+            for(let si=0; si<SAT_COUNT; si++){
+                const sizeRatio = SAT_SIZE_RATIOS[si % SAT_SIZE_RATIOS.length];
+                /* ランダム要素を加えてサイズにばらつき */
+                const sr = Math.max(5, Math.round(r * sizeRatio * (0.75 + rng() * 0.55)));
+                /* 角度：均等分割＋ランダムオフセットで自然な散在感 */
+                const baseAngle = (si / SAT_COUNT) * Math.PI * 2;
+                const angleJitter = (rng() - 0.5) * 0.9;
+                const angle = baseAngle + angleJitter;
+                /* 軌道距離：サイズに応じて＋ランダムばらつき */
+                const orbitBase = r * 1.45 + sr * 1.8;
+                const orbitDist = orbitBase + rng() * r * 0.55;
+                sNodes.push({
+                    x: bx + Math.cos(angle) * orbitDist,
+                    y: by + Math.sin(angle) * orbitDist,
+                    r: sr,
+                    op: 0.35 + rng() * 0.35,
+                    dur: 5.5 + rng() * 4.0,
+                    dly: -(rng() * 6.0),
+                    floatAmp: 4 + rng() * 8,
+                    colors: m.colors,
+                });
+            }
+        });
+    });
+    return {pNodes,bNodes,sNodes};
+}
+
+function buildBounds(world){
+    let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+    world.pNodes.forEach(n=>{
+        x0=Math.min(x0,n.x-n.r-60); x1=Math.max(x1,n.x+n.r+60);
+        y0=Math.min(y0,n.y-n.r-80); y1=Math.max(y1,n.y+n.r+60);
+    });
+    world.bNodes.forEach(n=>{
+        x0=Math.min(x0,n.x-n.r-50); x1=Math.max(x1,n.x+n.r+50);
+        y0=Math.min(y0,n.y-n.r-50); y1=Math.max(y1,n.y+n.r+50);
+    });
+    world.sNodes.forEach(n=>{
+        x0=Math.min(x0,n.x-n.r-20); x1=Math.max(x1,n.x+n.r+20);
+        y0=Math.min(y0,n.y-n.r-20); y1=Math.max(y1,n.y+n.r+20);
+    });
+    return {x0,y0,x1,y1,w:x1-x0,h:y1-y0};
+}
+
+/* ===== グリッド描画 ===== */
+function drawGrid(b){
+    const step=260;
+    for(let x=Math.floor(b.x0/step)*step;x<=b.x1;x+=step)
+        gridG.append(el("line",{x1:x,y1:b.y0-150,x2:x,y2:b.y1+150,class:"mg-grid-line"}));
+    for(let y=Math.floor(b.y0/step)*step;y<=b.y1;y+=step)
+        gridG.append(el("line",{x1:b.x0-150,y1:y,x2:b.x1+150,y2:y,class:"mg-grid-line"}));
+}
+
+/* ===== 年代ゾーン描画 ===== */
+const zoneEls=new Map(), ballByPeriod=new Map();
+
+function drawPeriods(world){
+    world.pNodes.forEach(n=>{
+        const g=el("g",{class:"mg-zone","data-p":n.p});
+        g.append(
+            el("circle",{cx:n.x,cy:n.y,r:n.r,class:"mg-zone-halo"}),
+            el("circle",{cx:n.x,cy:n.y,r:5,class:"mg-zone-dot"}),
+        );
+        const nm=el("text",{x:n.x,y:n.y-n.r-28,class:"mg-zone-name"});
+        nm.textContent=n.p;
+        const ct=el("text",{x:n.x,y:n.y-n.r-10,class:"mg-zone-count"});
+        ct.textContent=`${n.count} memories`;
+        g.append(nm,ct);
+        periodsG.append(g);
+        zoneEls.set(n.p,g);
+    });
+}
+
+/* ===== バブル描画 =====
+   ▼ 画像1〜3の多層構造を完全再現
+================================================ */
+function drawBubbles(world){
+    world.bNodes.forEach((node,i)=>{
+        const {gId,rId,aId}=mkGrads(i+1,node.m.colors);
+        const {x:cx,y:cy,r}=node;
+
+        const wrap=el("g",{
+            class:"mg-bubble-wrap",
+            "data-period":node.m.period,
+            style:`--d:${(i*0.04).toFixed(2)}s`,
+        });
+
+        const link=el("a",{
+            href:`/memories/${node.m.id}`,
+            class:"mg-bubble-link",
+            "data-period":node.m.period,
+            "aria-label":`${node.m.period}の記憶`,
+            style:[
+                `--rs:${(0.94+i%4*0.018).toFixed(3)}`,
+                `--rise:${(1.03+i%5*0.020).toFixed(3)}`,
+                `--hs:${(1.15+i%4*0.022).toFixed(3)}`,
+                `--dur:${(5.4+i%6*0.50).toFixed(2)}s`,
+                `--delay:${(-i*0.40).toFixed(2)}s`,
+            ].join(";"),
+        });
+
+        const body=el("g",{class:"mg-bubble-body"});
+
+        /* --- レイヤー1：外側オーラグロー（画像2のハロー） --- */
+        body.append(el("circle",{
+            cx,cy,r:r+36,
+            fill:`url(#${aId})`,
+            filter:"url(#fAura)",
+        }));
+
+        /* --- レイヤー2：多層リングシェル（画像3のシアンリング群） --- */
+        /* 外→内の6層リング */
+        [
+            {rr:r+2,  sw:14, op:0.60},
+            {rr:r-6,  sw:10, op:0.50},
+            {rr:r*0.88,sw:7, op:0.40},
+            {rr:r*0.76,sw:5, op:0.28},
+            {rr:r*0.64,sw:4, op:0.18},
+            {rr:r*0.52,sw:3, op:0.10},
+        ].forEach(({rr,sw,op})=>{
+            body.append(el("circle",{
+                cx,cy,r:rr,fill:"none",
+                stroke:`url(#${rId})`,
+                "stroke-width":sw,
+                opacity:op,
+                filter:"url(#fRimGlow)",
+            }));
+        });
+
+        /* --- レイヤー3：ガラス球本体（画像1・3の深いブルーガラス） --- */
+        body.append(el("circle",{
+            cx,cy,r,
+            fill:`url(#${gId})`,
+            filter:"url(#fShadow)",
+            opacity:"0.95",
+        }));
+
+        /* --- レイヤー4：内部暗領域（画像3中央の黒い虚空感） --- */
+        body.append(el("circle",{
+            cx,cy,r:r*0.58,
+            fill:"rgba(0,2,20,0.08)",
+        }));
+
+        /* --- レイヤー5：メインスペキュラ（画像1の強い白光点） --- */
+        body.append(el("circle",{
+            cx:cx-r*0.27, cy:cy-r*0.28,
+            r:Math.max(6,r*0.20),
+            fill:"rgba(255,255,255,0.88)",
+            filter:"url(#fSpec)",
+        }));
+
+        /* --- レイヤー6：サブスペキュラ楕円（表面の光の伸び） --- */
+        body.append(el("ellipse",{
+            cx:cx-r*0.15, cy:cy-r*0.21,
+            rx:Math.max(9,r*0.30), ry:Math.max(4,r*0.12),
+            fill:"rgba(255,255,255,0.28)",
+            transform:`rotate(-26 ${cx-r*0.15} ${cy-r*0.21})`,
+        }));
+
+        /* --- レイヤー7：右下副反射（画像1のガラスの厚み感） --- */
+        body.append(el("circle",{
+            cx:cx+r*0.28, cy:cy+r*0.30,
+            r:Math.max(4,r*0.11),
+            fill:"rgba(255,255,255,0.18)",
+        }));
+
+        /* --- レイヤー8：ネオンリムアーク（画像2の輝くリング縁） --- */
+        const arcR=r+4;
+        const a1={x:cx+arcR*Math.cos(Math.PI*1.25),y:cy+arcR*Math.sin(Math.PI*1.25)};
+        const a2={x:cx+arcR*Math.cos(Math.PI*1.80),y:cy+arcR*Math.sin(Math.PI*1.80)};
+        body.append(el("path",{
+            d:`M${a1.x} ${a1.y} A${arcR} ${arcR} 0 0 1 ${a2.x} ${a2.y}`,
+            fill:"none",stroke:`url(#${rId})`,
+            "stroke-width":"4","stroke-linecap":"round",opacity:"0.80",
+        }));
+
+        /* --- ヒットエリア --- */
+        body.append(el("circle",{
+            cx,cy,r:r+20,
+            fill:"rgba(255,255,255,0.001)",
+            "pointer-events":"all",
+        }));
+
+        /* --- ラベル（記憶数） --- */
+        const lbl=el("text",{x:cx,y:cy-r*0.08,class:"mg-label","font-size":Math.max(22,r*0.38),"font-weight":"800"});
+        lbl.textContent=periodCount.get(node.m.period)??1;
+        body.append(lbl);
+        const lbl2=el("text",{x:cx,y:cy+r*0.30,class:"mg-label","font-size":Math.max(9,r*0.14),"font-weight":"400",opacity:"0.72"});
+        lbl2.textContent="memories";
+        body.append(lbl2);
+
+        /* --- title（アクセシビリティ） --- */
+        const ttl=el("title",{});
+        ttl.textContent=`${node.m.period} / ${node.m.emotion}`;
+        link.append(ttl);
+
+        link.append(body);
+        wrap.append(link);
+        bubblesG.append(wrap);
+
+        if(!ballByPeriod.has(node.m.period)) ballByPeriod.set(node.m.period,[]);
+        ballByPeriod.get(node.m.period).push(wrap);
+    });
+}
+
+/* ===== ホバー連動 ===== */
+function setActive(p){
+    zoneEls.forEach((z,k)=>z.classList.toggle("is-active",k===p));
+    ballByPeriod.forEach((ws,k)=>ws.forEach(w=>w.classList.toggle("period-hi",k===p)));
+}
+function clearActive(){
+    zoneEls.forEach(z=>z.classList.remove("is-active"));
+    ballByPeriod.forEach(ws=>ws.forEach(w=>w.classList.remove("period-hi")));
+}
+
+/* ===== ズーム/パン ===== */
+function svgPt(cx,cy){
+    const rc=svg.getBoundingClientRect();
+    return{x:(cx-rc.left)/rc.width*VP.w,y:(cy-rc.top)/rc.height*VP.h};
+}
+function clamp(){
+    const b=st.bounds,m=140;
+    const sw=b.w*st.scale,sh=b.h*st.scale;
+    if(sw<=VP.w-m*2) st.tx=(VP.w-sw)/2-b.x0*st.scale;
+    else st.tx=Math.min(m-b.x0*st.scale,Math.max(VP.w-(b.x1*st.scale+m),st.tx));
+    if(sh<=VP.h-m*2) st.ty=(VP.h-sh)/2-b.y0*st.scale;
+    else st.ty=Math.min(m-b.y0*st.scale,Math.max(VP.h-(b.y1*st.scale+m),st.ty));
+}
+function apply(){
+    clamp();
+    viewport.setAttribute("transform",`matrix(${st.scale} 0 0 ${st.scale} ${st.tx} ${st.ty})`);
+}
+function frame(){
+    const b=st.bounds,px=200,py=200;
+    st.scale=Math.min(st.maxS,Math.max(0.45,Math.min(VP.w/(b.w+px),VP.h/(b.h+py))));
+    st.tx=(VP.w/2)-((b.x0+b.x1)/2*st.scale);
+    st.ty=(VP.h/2)-((b.y0+b.y1)/2*st.scale);
+    apply();
+}
+function zoom(ns,pt){
+    const s=Math.min(st.maxS,Math.max(st.minS,ns));
+    const wx=(pt.x-st.tx)/st.scale,wy=(pt.y-st.ty)/st.scale;
+    st.tx=pt.x-wx*s; st.ty=pt.y-wy*s; st.scale=s;
+    apply();
+}
+function dragStart(pt,pid=null){
+    st.drag=true;st.started=false;st.pid=pid;
+    st.sx=pt.x;st.sy=pt.y;st.stx=st.tx;st.sty=st.ty;
+    svg.classList.add("dragging");
+}
+function dragMove(pt){
+    if(!st.drag) return;
+    const dx=pt.x-st.sx,dy=pt.y-st.sy;
+    if(Math.abs(dx)>2||Math.abs(dy)>2) st.started=true;
+    st.tx=st.stx+dx; st.ty=st.sty+dy; apply();
+}
+function dragEnd(){ st.drag=false;st.pid=null;svg.classList.remove("dragging"); }
+
+/* ===== 衛星小バブル描画 ===== */
+function drawSatellites(world){
+    world.sNodes.forEach((s,i)=>{
+        const sid=`sat${i}`;
+        const c0=s.colors?.[0]??"#2a6fff";
+        const c1=s.colors?.[1]??"#00d4ff";
+
+        /* サイズに応じてグラデの鮮やかさを変える */
+        const vividness = Math.min(1, s.r / 30);
+        const sg=el("radialGradient",{id:sid,cx:"32%",cy:"28%",r:"72%",gradientUnits:"objectBoundingBox"});
+        sg.append(
+            el("stop",{offset:"0%",  "stop-color":rgba(c0, 0.05 + vividness*0.12)}),
+            el("stop",{offset:"40%", "stop-color":rgba(c0, 0.40 + vividness*0.25)}),
+            el("stop",{offset:"100%","stop-color":rgba(c1, 0.60 + vividness*0.22)}),
+        );
+        defs.append(sg);
+
+        const g=el("g",{
+            class:"mg-sat",
+            style:[
+                `--sd:${s.dur.toFixed(1)}s`,
+                `--sdly:${s.dly.toFixed(1)}s`,
+                `--amp:${s.floatAmp.toFixed(1)}`,
+                `--d:${(i*0.018).toFixed(2)}s`,
+            ].join(";"),
+            opacity:s.op,
+        });
+
+        /* オーラ（大きな玉は強め） */
+        if(s.r > 12){
+            g.append(el("circle",{
+                cx:s.x,cy:s.y,r:s.r+s.r*0.9,
+                fill:rgba(c1, 0.12 + vividness*0.10),
+                filter:"url(#fAura)",
+            }));
+        }
+        /* リム */
+        g.append(el("circle",{
+            cx:s.x,cy:s.y,r:s.r,fill:"none",
+            stroke:rgba(c1,0.65+vividness*0.25),
+            "stroke-width": s.r > 20 ? 2.0 : s.r > 12 ? 1.5 : 1.0,
+            filter:"url(#fRimGlow)",
+        }));
+        /* 球体 */
+        g.append(el("circle",{
+            cx:s.x,cy:s.y,r:s.r,
+            fill:`url(#${sid})`,opacity:"0.92",
+        }));
+        /* スペキュラ（大きめの玉のみ） */
+        if(s.r > 10){
+            g.append(el("circle",{
+                cx:s.x-s.r*0.28, cy:s.y-s.r*0.28,
+                r:Math.max(1.5, s.r*0.24),
+                fill:"rgba(255,255,255,0.85)",
+                filter:"url(#fSpec)",
+            }));
+        }
+
+        bubblesG.insertBefore(g, bubblesG.firstChild);
+    });
+}
+
+/* ===== 初期化 ===== */
+const world=buildWorld();
+st.bounds=buildBounds(world);
+drawGrid(st.bounds);
+drawPeriods(world);
+drawSatellites(world);   /* 先に描画（記憶玉の下に重なるように） */
+drawBubbles(world);
+frame();
+if(selPeriod!=="すべて") setActive(selPeriod);
+
+/* ===== イベント ===== */
+/* ===== ダブルクリック：年代フィルター ===== */
+function goToPeriod(p){
+    const url=new URL(bubblesRoute,location.origin);
+    url.searchParams.set("period",p);
+    location.href=url.toString();
+}
+
+/* 各バブルリンクのダブルクリック検出 */
+/* シングルクリック → show画面へ（デフォルト a タグ動作）  */
+/* ダブルクリック → その年代のみ表示（フィルター遷移）     */
+const dblMap=new Map(); /* period → 最終クリック時刻 */
+svg.addEventListener("click",e=>{
+    const link=e.target.closest(".mg-bubble-link");
+    if(!link) return;
+    const p=link.dataset.period;
+    const now=Date.now();
+    const last=dblMap.get(p)??0;
+    if(now-last<400){
+        /* ダブルクリック：年代フィルター遷移 */
+        e.preventDefault();
+        e.stopPropagation();
+        dblMap.delete(p);
+        goToPeriod(p);
+    } else {
+        /* シングルクリック：1発目として記録。a タグ遷移を一旦止めて待機 */
+        e.preventDefault();
+        e.stopPropagation();
+        dblMap.set(p,now);
+        setTimeout(()=>{
+            /* 400ms 以内に2発目がなければ show 画面へ */
+            if(dblMap.get(p)===now){
+                dblMap.delete(p);
+                location.href=link.href;
+            }
+        },400);
+    }
+},true);
+
+zoneEls.forEach((z,p)=>{
+    z.addEventListener("mouseenter",()=>setActive(p));
+    z.addEventListener("mouseleave",()=>clearActive());
+    z.addEventListener("dblclick",()=>goToPeriod(p));
+});
+
+svg.addEventListener("wheel",e=>{
+    e.preventDefault();
+    zoom(st.scale*(e.deltaY<0?1.12:0.90),svgPt(e.clientX,e.clientY));
+},{passive:false});
+
+svg.addEventListener("pointerdown",e=>{
+    if(e.target.closest(".mg-bubble-link")||e.target.closest(".mg-zone")) return;
+    dragStart(svgPt(e.clientX,e.clientY),e.pointerId);
+});
+svg.addEventListener("pointermove",e=>{
+    if(!st.drag||st.pid!==e.pointerId) return;
+    dragMove(svgPt(e.clientX,e.clientY));
+});
+svg.addEventListener("pointerup",()=>dragEnd());
+svg.addEventListener("pointerleave",()=>dragEnd());
+
+svg.addEventListener("touchstart",e=>{
+    if(e.touches.length===2){
+        const a=svgPt(e.touches[0].clientX,e.touches[0].clientY);
+        const b=svgPt(e.touches[1].clientX,e.touches[1].clientY);
+        st.touch="pinch"; st.pinchD=Math.hypot(a.x-b.x,a.y-b.y); return;
+    }
+    if(e.touches.length===1&&!e.target.closest(".mg-bubble-link")&&!e.target.closest(".mg-zone")){
+        st.touch="drag"; dragStart(svgPt(e.touches[0].clientX,e.touches[0].clientY));
+    }
+},{passive:true});
+
+svg.addEventListener("touchmove",e=>{
+    if(st.touch==="pinch"&&e.touches.length===2){
+        const a=svgPt(e.touches[0].clientX,e.touches[0].clientY);
+        const b=svgPt(e.touches[1].clientX,e.touches[1].clientY);
+        const nd=Math.hypot(a.x-b.x,a.y-b.y);
+        if(st.pinchD>0) zoom(st.scale*nd/st.pinchD,{x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+        st.pinchD=nd; return;
+    }
+    if(st.touch==="drag"&&e.touches.length===1)
+        dragMove(svgPt(e.touches[0].clientX,e.touches[0].clientY));
+},{passive:true});
+
+svg.addEventListener("touchend",()=>{ st.touch=null;st.pinchD=0;dragEnd(); });
+
+/* ===== Details 排他 ===== */
+["detAction","detFilter"].forEach(id=>{
+    const d=document.getElementById(id);
+    if(!d) return;
+    d.addEventListener("toggle",()=>{
+        if(!d.open) return;
+        ["detAction","detFilter"].forEach(oid=>{
+            const o=document.getElementById(oid);
+            if(o&&o!==d) o.removeAttribute("open");
+        });
+    });
+});
+document.addEventListener("click",e=>{
+    ["detAction","detFilter"].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el&&!el.contains(e.target)) el.removeAttribute("open");
+    });
+});
+
+/* ===== 星パーティクル（Canvas） ===== */
+(function(){
+    const c=document.getElementById("starCanvas");
+    if(!c) return;
+    const ctx=c.getContext("2d");
+    function resize(){ c.width=window.innerWidth; c.height=window.innerHeight; }
+    resize();
+    window.addEventListener("resize",resize);
+    const stars=Array.from({length:160},()=>({
+        x:Math.random(),y:Math.random(),
+        r:Math.random()*1.5+0.3,
+        a:Math.random()*0.8+0.2,
+        speed:Math.random()*0.0004+0.0001,
+        phase:Math.random()*Math.PI*2,
+    }));
+    function draw(t){
+        ctx.clearRect(0,0,c.width,c.height);
+        stars.forEach(s=>{
+            const alpha=s.a*(0.6+0.4*Math.sin(t*s.speed*1000+s.phase));
+            ctx.beginPath();
+            ctx.arc(s.x*c.width,s.y*c.height,s.r,0,Math.PI*2);
+            ctx.fillStyle=`rgba(200,225,255,${alpha})`;
+            ctx.fill();
+        });
+        requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+})();
+
+})();
+</script>
+@endif
 @endsection

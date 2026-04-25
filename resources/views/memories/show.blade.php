@@ -58,6 +58,8 @@
                         <div class="memory-focus-orbit memory-focus-orbit-front"></div>
                         <div class="memory-focus-bubble" style="--bubble-start: {{ $colors[0] }}; --bubble-end: {{ $colors[1] }};">
                             <div class="memory-focus-aura"></div>
+                            <div class="memory-focus-prism"></div>
+                            <div class="memory-focus-shadow-ring"></div>
                             <div class="memory-focus-core">
                                 <span class="memory-focus-period">{{ $memory->period }}</span>
                                 <strong>{{ $theme }}</strong>
@@ -415,23 +417,25 @@
 
         .memory-focus-orbit {
             position: absolute;
-            inset: 6%;
+            inset: 4%;
             border-radius: 50%;
-            background: rgba(143, 201, 255, 0.05);
-            filter: blur(42px);
+            background: rgba(143, 201, 255, 0.07);
+            filter: blur(50px);
             animation: focusShellPulse 8.4s ease-in-out infinite;
         }
 
         .memory-focus-orbit-back {
-            transform: translate(28px, -18px) scale(0.9);
-            opacity: 0.44;
+            transform: translate(32px, -22px) scale(0.92);
+            opacity: 0.52;
+            background: rgba(180, 210, 255, 0.08);
         }
 
         .memory-focus-orbit-front {
-            transform: translate(-16px, 18px) scale(0.82);
-            opacity: 0.24;
+            transform: translate(-20px, 22px) scale(0.84);
+            opacity: 0.30;
             animation-duration: 9.2s;
             animation-delay: -1.6s;
+            background: rgba(120, 190, 255, 0.06);
         }
 
         .memory-focus-bubble {
@@ -441,19 +445,51 @@
             display: grid;
             place-items: center;
             border-radius: 50%;
+
+            /* ── ガラス本体：屈折感のある多層グラデーション ── */
             background:
-                radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.78), transparent 18%),
-                radial-gradient(circle at 24% 22%, rgba(255, 255, 255, 0.26), transparent 30%),
-                radial-gradient(circle at 52% 56%, color-mix(in srgb, var(--bubble-start) 58%, white 42%) 0%, color-mix(in srgb, var(--bubble-start) 28%, transparent 72%) 38%, color-mix(in srgb, var(--bubble-end) 52%, transparent 48%) 72%, rgba(255,255,255,0.06) 100%);
+                /* 左上のブライトスペキュラ（ハイライト核） */
+                radial-gradient(circle at 28% 24%, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.62) 6%, transparent 20%),
+                /* サブハイライト */
+                radial-gradient(circle at 20% 18%, rgba(255,255,255,0.38) 0%, transparent 26%),
+                /* 右下リム反射 */
+                radial-gradient(circle at 74% 78%, rgba(255,255,255,0.22) 0%, transparent 18%),
+                /* 虹色プリズムフリンジ（左下） */
+                radial-gradient(circle at 18% 82%, rgba(120,220,255,0.28) 0%, rgba(160,100,255,0.18) 12%, transparent 26%),
+                /* 虹色プリズムフリンジ（右上） */
+                radial-gradient(circle at 82% 18%, rgba(255,200,120,0.22) 0%, rgba(255,120,180,0.14) 12%, transparent 24%),
+                /* カラー本体（中央〜下） */
+                radial-gradient(circle at 52% 58%,
+                    color-mix(in srgb, var(--bubble-start) 55%, white 45%) 0%,
+                    color-mix(in srgb, var(--bubble-start) 32%, transparent 68%) 35%,
+                    color-mix(in srgb, var(--bubble-end) 48%, transparent 52%) 68%,
+                    rgba(255,255,255,0.04) 100%);
+
+            /* ── 立体ガラスのシャドウ＆グロー ── */
             box-shadow:
-                inset -30px -38px 90px rgba(13, 22, 48, 0.18),
-                inset 30px 34px 76px rgba(255, 255, 255, 0.14),
-                0 0 90px color-mix(in srgb, var(--bubble-end) 24%, transparent 76%),
-                0 0 40px color-mix(in srgb, var(--bubble-start) 18%, transparent 82%);
-            filter: saturate(1.06);
+                /* 内側：下部の暗い影（厚みの演出） */
+                inset 0 -40px 80px rgba(8, 14, 36, 0.28),
+                inset -20px -28px 60px rgba(10, 18, 42, 0.20),
+                /* 内側：上部の白い反射光 */
+                inset 0 28px 56px rgba(255,255,255,0.20),
+                inset 18px 22px 50px rgba(255,255,255,0.12),
+                /* ガラスのリム（縁の明るいハイライト） */
+                inset 0 0 0 1.5px rgba(255,255,255,0.52),
+                inset 0 0 0 3px rgba(255,255,255,0.12),
+                /* 外側アウターグロー */
+                0 0 60px color-mix(in srgb, var(--bubble-end) 30%, transparent 70%),
+                0 0 120px color-mix(in srgb, var(--bubble-start) 20%, transparent 80%),
+                /* ドロップシャドウ（浮遊感） */
+                0 40px 80px rgba(4, 8, 22, 0.38),
+                0 16px 32px rgba(4, 8, 22, 0.22);
+
+            backdrop-filter: blur(2px) saturate(1.6);
+            -webkit-backdrop-filter: blur(2px) saturate(1.6);
+            filter: saturate(1.12);
             animation: focusBubblePulse 6.8s ease-in-out infinite;
         }
 
+        /* ── ガラス球の多層擬似要素 ── */
         .memory-focus-bubble::before,
         .memory-focus-bubble::after {
             content: "";
@@ -462,31 +498,81 @@
             pointer-events: none;
         }
 
+        /* 内側のリング：ガラスの「厚み」ライン */
         .memory-focus-bubble::before {
-            inset: 2%;
-            border: 1px solid rgba(235, 244, 255, 0.18);
-            filter: blur(8px);
+            inset: 3%;
+            border: 1.5px solid rgba(255,255,255,0.28);
+            box-shadow:
+                inset 0 0 24px rgba(255,255,255,0.10),
+                0 0 12px rgba(255,255,255,0.08);
+            /* 上部だけ明るくするグラデーションボーダー */
+            -webkit-mask: linear-gradient(160deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.5) 40%, rgba(255,255,255,0.12) 80%);
+            mask: linear-gradient(160deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.5) 40%, rgba(255,255,255,0.12) 80%);
         }
 
+        /* トップスペキュラ反射（レンズフレア的楕円光） */
         .memory-focus-bubble::after {
-            width: 38%;
-            height: 20%;
-            top: 11%;
-            left: 16%;
-            background: rgba(255, 255, 255, 0.18);
-            filter: blur(20px);
-            transform: rotate(-18deg);
+            width: 44%;
+            height: 18%;
+            top: 9%;
+            left: 14%;
+            background: linear-gradient(180deg,
+                rgba(255,255,255,0.88) 0%,
+                rgba(255,255,255,0.44) 40%,
+                rgba(255,255,255,0.06) 80%,
+                transparent 100%);
+            filter: blur(6px);
+            transform: rotate(-22deg);
+            border-radius: 999px;
+            opacity: 0.82;
+        }
+
+        /* ── プリズムフリンジレイヤー（::before の追加装飾） ── */
+        .memory-focus-prism {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            /* 虹色の縁取り */
+            background:
+                conic-gradient(from 200deg at 50% 50%,
+                    rgba(120,210,255,0.14) 0deg,
+                    rgba(160,100,255,0.12) 60deg,
+                    rgba(255,120,160,0.10) 120deg,
+                    rgba(255,200,80,0.12) 180deg,
+                    rgba(80,220,160,0.10) 240deg,
+                    rgba(120,210,255,0.14) 360deg);
+            -webkit-mask: radial-gradient(circle at 50% 50%, transparent 82%, rgba(0,0,0,0.6) 88%, rgba(0,0,0,0.9) 92%, transparent 97%);
+            mask: radial-gradient(circle at 50% 50%, transparent 82%, rgba(0,0,0,0.6) 88%, rgba(0,0,0,0.9) 92%, transparent 97%);
+            mix-blend-mode: screen;
+            opacity: 0.9;
+            animation: prismRotate 12s linear infinite;
+        }
+
+        /* ── 下部の影リフレクション ── */
+        .memory-focus-shadow-ring {
+            position: absolute;
+            bottom: -8%;
+            left: 10%;
+            width: 80%;
+            height: 16%;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at 50% 50%,
+                color-mix(in srgb, var(--bubble-end) 28%, transparent 72%) 0%,
+                transparent 70%);
+            filter: blur(18px);
+            opacity: 0.7;
         }
 
         .memory-focus-aura {
             position: absolute;
-            inset: -10%;
+            inset: -12%;
             border-radius: 50%;
             background:
-                radial-gradient(circle at 50% 54%, color-mix(in srgb, var(--bubble-end) 22%, transparent 78%) 0%, transparent 56%),
-                radial-gradient(circle at 42% 44%, color-mix(in srgb, var(--bubble-start) 18%, transparent 82%) 0%, transparent 50%);
-            filter: blur(52px);
-            opacity: 0.92;
+                radial-gradient(circle at 50% 56%, color-mix(in srgb, var(--bubble-end) 26%, transparent 74%) 0%, transparent 52%),
+                radial-gradient(circle at 40% 42%, color-mix(in srgb, var(--bubble-start) 22%, transparent 78%) 0%, transparent 48%);
+            filter: blur(48px);
+            opacity: 0.88;
         }
 
         .memory-focus-core {
@@ -500,17 +586,23 @@
 
         .memory-focus-period,
         .memory-focus-emotion {
-            color: rgba(242, 247, 255, 0.82);
+            color: rgba(242, 247, 255, 0.92);
             font-size: clamp(12px, 1.2vw, 16px);
             letter-spacing: 0.16em;
             text-transform: uppercase;
+            text-shadow:
+                0 2px 12px rgba(6, 10, 24, 0.72),
+                0 0 24px rgba(6, 10, 24, 0.48);
         }
 
         .memory-focus-core strong {
             font-size: clamp(22px, 2.4vw, 34px);
             line-height: 1.14;
-            color: rgba(250, 252, 255, 0.98);
-            text-shadow: 0 12px 34px rgba(6, 10, 24, 0.32);
+            color: rgba(255, 255, 255, 1);
+            text-shadow:
+                0 2px 4px rgba(4, 8, 22, 0.80),
+                0 8px 28px rgba(4, 8, 22, 0.56),
+                0 0 48px rgba(4, 8, 22, 0.36);
         }
 
         .memory-status-info-strip {
@@ -707,9 +799,15 @@
         }
 
         @keyframes focusBubblePulse {
-            0% { transform: scale(0.98); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(0.98); }
+            0%   { transform: scale(0.98) rotate(0deg); }
+            50%  { transform: scale(1.02) rotate(1deg); }
+            100% { transform: scale(0.98) rotate(0deg); }
+        }
+
+        @keyframes prismRotate {
+            0%   { transform: rotate(0deg); opacity: 0.9; }
+            50%  { opacity: 1; }
+            100% { transform: rotate(360deg); opacity: 0.9; }
         }
 
         @keyframes focusShellPulse {
