@@ -14,48 +14,17 @@
             <span class="memory-index-grid"></span>
         </div>
 
-        <section class="memory-index-top">
-            <div class="memory-index-hero-panel">
-                <div class="memory-index-hero-copy">
-                    <span class="memory-index-kicker">MEMORY COSMOS INDEX</span>
-                    <h1>全記憶一覧</h1>
-                    <p>
-                        記憶玉のアーカイブを俯瞰しながら、検索、年代切り替え、修正、削除まで一気に行える一覧画面です。
-                        記憶ステータス画面と同じトーンで、よりダイナミックに全体を見渡せるように整えています。
-                    </p>
-
-                    <div class="memory-index-hero-actions">
-                        <a class="btn btn-primary" href="{{ route('memories.create') }}">新しい記憶を追加</a>
-                        <a class="btn btn-secondary" href="{{ route('memories.create.preview') }}">新UI Preview</a>
-                        <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">記憶の玉へ戻る</a>
-                    </div>
-                </div>
-
-                <div class="memory-index-hero-orbit" aria-hidden="true">
-                    <span class="memory-index-hero-ring ring-outer"></span>
-                    <span class="memory-index-hero-ring ring-middle"></span>
-                    <span class="memory-index-hero-ring ring-inner"></span>
-                    <span class="memory-index-hero-core"></span>
-                </div>
+        <section class="memory-index-topbar">
+            <div class="memory-index-topbar-main">
+                <h1>全記憶一覧</h1>
+                <span class="memory-index-count-pill">保存数 <strong>{{ $allCount }}</strong></span>
             </div>
 
-            <aside class="memory-index-status-panel">
-                <article class="memory-index-status-card memory-index-status-total">
-                    <span class="memory-index-status-label">TOTAL MEMORIES</span>
-                    <strong>{{ $allCount }}</strong>
-                    <small>保存済みの記憶玉</small>
-                </article>
-
-                <article class="memory-index-status-card memory-index-status-search">
-                    <span class="memory-index-status-label">SEARCH MODE</span>
-                    <strong>{{ $searchQuery === '' ? 'ALL' : 'FILTERED' }}</strong>
-                    <small>{{ $searchQuery === '' ? '全件を表示中' : '絞り込み中' }}</small>
-                </article>
-
-                <article class="memory-index-status-note">
-                    <p>一覧カードは新しい順です。カードを選ぶと、修正と削除がそのまま使えます。</p>
-                </article>
-            </aside>
+            <div class="memory-index-topbar-actions">
+                <a class="btn btn-primary" href="{{ route('memories.create') }}">新しい記憶を追加</a>
+                <a class="btn btn-secondary" href="{{ route('memories.create.preview') }}">新UI Preview</a>
+                <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">記憶の玉へ戻る</a>
+            </div>
         </section>
 
         <section class="memory-index-panel">
@@ -170,13 +139,13 @@
             padding: 22px;
             border-radius: 34px;
             overflow: hidden;
-            color: rgba(238, 245, 255, 0.94);
+            color: #283142;
             background:
-                radial-gradient(circle at 16% 16%, rgba(89, 143, 255, 0.18), transparent 22%),
-                radial-gradient(circle at 82% 14%, rgba(102, 228, 255, 0.16), transparent 18%),
-                radial-gradient(circle at 72% 84%, rgba(255, 139, 181, 0.12), transparent 20%),
-                linear-gradient(160deg, #02040b 0%, #040916 42%, #0a1124 100%);
-            box-shadow: 0 30px 80px rgba(6, 10, 24, 0.36);
+                radial-gradient(circle at 12% 16%, rgba(90, 171, 255, 0.24), transparent 20%),
+                radial-gradient(circle at 88% 10%, rgba(255, 182, 102, 0.22), transparent 18%),
+                radial-gradient(circle at 72% 80%, rgba(128, 232, 214, 0.2), transparent 22%),
+                linear-gradient(180deg, rgba(251, 248, 241, 0.96), rgba(238, 240, 246, 0.94));
+            box-shadow: 0 24px 60px rgba(112, 132, 168, 0.22);
             isolation: isolate;
         }
 
@@ -186,14 +155,14 @@
             position: absolute;
             inset: 14px;
             border-radius: 26px;
-            border: 1px solid rgba(138, 190, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.42);
             pointer-events: none;
         }
 
         .memory-index-cosmos::after {
             inset: 0;
             border-radius: inherit;
-            border-color: rgba(170, 214, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.28);
         }
 
         .memory-index-decor {
@@ -219,7 +188,7 @@
             height: 280px;
             left: -90px;
             top: 32%;
-            background: radial-gradient(circle, rgba(105, 172, 255, 0.24), transparent 68%);
+            background: radial-gradient(circle, rgba(105, 172, 255, 0.18), transparent 68%);
         }
 
         .memory-index-orb.orb-b {
@@ -227,7 +196,7 @@
             height: 360px;
             right: -100px;
             top: -80px;
-            background: radial-gradient(circle, rgba(92, 226, 255, 0.18), transparent 70%);
+            background: radial-gradient(circle, rgba(255, 196, 108, 0.18), transparent 70%);
         }
 
         .memory-index-orb.orb-c {
@@ -235,13 +204,13 @@
             height: 260px;
             right: 20%;
             bottom: -140px;
-            background: radial-gradient(circle, rgba(255, 145, 188, 0.16), transparent 72%);
+            background: radial-gradient(circle, rgba(104, 222, 193, 0.16), transparent 72%);
         }
 
         .memory-index-ring {
             border-radius: 50%;
-            border: 1px solid rgba(131, 186, 255, 0.12);
-            opacity: 0.62;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            opacity: 0.52;
         }
 
         .memory-index-ring.ring-a {
@@ -270,194 +239,95 @@
             mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.84), transparent 88%);
         }
 
-        .memory-index-top,
+        .memory-index-topbar,
         .memory-index-panel {
             position: relative;
             z-index: 1;
         }
 
-        .memory-index-top {
-            display: grid;
-            grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.82fr);
-            gap: 18px;
-            margin-bottom: 18px;
-        }
-
-        .memory-index-hero-panel,
-        .memory-index-status-panel,
-        .memory-index-panel {
-            border-radius: 30px;
-            border: 1px solid rgba(150, 191, 255, 0.1);
-            background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02) 14%, transparent 28%),
-                rgba(6, 12, 27, 0.74);
-            box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.08),
-                0 24px 58px rgba(2, 6, 18, 0.28);
-            backdrop-filter: blur(16px);
-        }
-
-        .memory-index-hero-panel {
-            position: relative;
-            min-height: 286px;
-            padding: 28px;
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) 240px;
-            gap: 18px;
-            overflow: hidden;
-        }
-
-        .memory-index-kicker {
-            display: inline-flex;
-            margin-bottom: 10px;
-            color: rgba(131, 209, 255, 0.84);
-            font-size: 11px;
-            letter-spacing: 0.32em;
-            text-transform: uppercase;
-        }
-
-        .memory-index-hero-panel h1 {
-            margin: 0 0 14px;
-            font-size: clamp(42px, 5vw, 72px);
-            line-height: 0.94;
-            letter-spacing: 0.04em;
-            color: rgba(248, 251, 255, 0.98);
-        }
-
-        .memory-index-hero-panel p {
-            margin: 0;
-            max-width: 760px;
-            color: rgba(193, 214, 244, 0.8);
-            line-height: 1.9;
-            font-size: 16px;
-        }
-
-        .memory-index-hero-actions {
+        .memory-index-topbar {
             display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .memory-index-topbar,
+        .memory-index-panel {
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.24) 18%, rgba(255, 255, 255, 0.16) 100%),
+                rgba(255, 255, 255, 0.18);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.76),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.2),
+                0 18px 40px rgba(131, 146, 175, 0.18);
+            backdrop-filter: blur(22px) saturate(1.2);
+        }
+
+        .memory-index-topbar {
+            padding: 14px 18px;
+        }
+
+        .memory-index-topbar-main,
+        .memory-index-topbar-actions {
+            display: flex;
+            align-items: center;
             flex-wrap: wrap;
             gap: 12px;
-            margin-top: 24px;
         }
 
-        .memory-index-hero-orbit {
-            position: relative;
-            display: grid;
-            place-items: center;
-            min-height: 220px;
-        }
-
-        .memory-index-hero-ring,
-        .memory-index-hero-core {
-            position: absolute;
-            border-radius: 50%;
-        }
-
-        .memory-index-hero-ring {
-            border: 1px solid rgba(136, 194, 255, 0.18);
-        }
-
-        .memory-index-hero-ring.ring-outer {
-            width: 220px;
-            height: 220px;
-            transform: rotate(22deg);
-        }
-
-        .memory-index-hero-ring.ring-middle {
-            width: 176px;
-            height: 176px;
-            transform: rotate(64deg);
-            opacity: 0.7;
-        }
-
-        .memory-index-hero-ring.ring-inner {
-            width: 122px;
-            height: 122px;
-            transform: rotate(-18deg);
-            opacity: 0.52;
-        }
-
-        .memory-index-hero-core {
-            width: 128px;
-            height: 128px;
-            background:
-                radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.9), transparent 18%),
-                radial-gradient(circle at 56% 58%, rgba(255, 182, 124, 0.84), rgba(118, 170, 255, 0.26) 74%, transparent 100%);
-            box-shadow:
-                inset -20px -22px 58px rgba(6, 14, 30, 0.26),
-                inset 18px 18px 44px rgba(255, 255, 255, 0.16),
-                0 0 64px rgba(118, 170, 255, 0.28);
-        }
-
-        .memory-index-status-panel {
-            padding: 22px;
-            display: grid;
-            gap: 16px;
-            align-content: start;
-        }
-
-        .memory-index-status-card,
-        .memory-index-status-note {
-            border-radius: 24px;
-            border: 1px solid rgba(145, 189, 255, 0.08);
-            background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015)),
-                rgba(9, 16, 32, 0.54);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-
-        .memory-index-status-card {
-            min-height: 132px;
-            padding: 18px;
-            display: grid;
-            align-content: center;
-            justify-items: start;
-        }
-
-        .memory-index-status-label {
-            color: rgba(159, 196, 240, 0.7);
-            font-size: 11px;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-        }
-
-        .memory-index-status-card strong {
-            margin-top: 8px;
-            color: rgba(249, 251, 255, 0.98);
-            font-size: 42px;
-            line-height: 1;
-        }
-
-        .memory-index-status-card small,
-        .memory-index-status-note p {
-            margin-top: 8px;
-            color: rgba(190, 212, 241, 0.72);
-            font-size: 14px;
-            line-height: 1.7;
-        }
-
-        .memory-index-status-note {
-            padding: 18px;
-        }
-
-        .memory-index-status-note p {
+        .memory-index-topbar h1 {
             margin: 0;
+            font-size: clamp(28px, 3vw, 42px);
+            line-height: 1;
+            letter-spacing: 0.03em;
+            color: #273244;
+        }
+
+        .memory-index-count-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 48px;
+            padding: 0 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.48);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.28)),
+                rgba(255, 255, 255, 0.22);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.88),
+                inset 0 -1px 0 rgba(146, 178, 220, 0.26),
+                0 14px 28px rgba(124, 140, 170, 0.18);
+            color: #56627a;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .memory-index-count-pill strong {
+            color: #283142;
+            font-size: 24px;
         }
 
         .memory-index-panel {
-            padding: 20px;
+            padding: 18px;
             display: grid;
-            gap: 16px;
+            gap: 14px;
         }
 
         .memory-index-panel .flash {
-            background: rgba(102, 195, 255, 0.12);
-            border: 1px solid rgba(139, 206, 255, 0.16);
-            color: rgba(222, 240, 255, 0.92);
+            background: rgba(255, 255, 255, 0.46);
+            border: 1px solid rgba(255, 255, 255, 0.48);
+            color: #30405a;
         }
 
         .memory-index-toolbar {
             display: grid;
-            gap: 14px;
+            gap: 12px;
         }
 
         .memory-index-toolbar-main {
@@ -481,12 +351,14 @@
             min-height: 44px;
             padding: 0 16px;
             border-radius: 999px;
-            border: 1px solid rgba(153, 203, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-                rgba(9, 16, 32, 0.74);
-            color: rgba(239, 245, 255, 0.94);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+                linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.3)),
+                rgba(255, 255, 255, 0.18);
+            color: #2d384c;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.92),
+                inset 0 -1px 0 rgba(140, 174, 219, 0.18);
         }
 
         .memory-index-toolbar-actions,
@@ -524,39 +396,40 @@
             min-height: 42px;
             padding: 0 16px;
             border-radius: 999px;
-            border: 1px solid rgba(166, 204, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-                rgba(12, 20, 40, 0.7);
-            color: rgba(232, 241, 255, 0.92);
+                linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.28)),
+                rgba(255, 255, 255, 0.18);
+            color: #324055;
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                0 10px 24px rgba(6, 10, 24, 0.18);
+                inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                inset 0 -1px 0 rgba(140, 174, 219, 0.2),
+                0 10px 24px rgba(124, 140, 170, 0.14);
             transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
             white-space: nowrap;
         }
 
         .memory-index-cosmos .btn-primary {
             background:
-                linear-gradient(135deg, rgba(129, 214, 255, 0.28), rgba(89, 132, 255, 0.86)),
-                rgba(12, 20, 40, 0.7);
-            color: rgba(248, 251, 255, 0.98);
+                linear-gradient(135deg, rgba(120, 203, 255, 0.72), rgba(89, 132, 255, 0.86)),
+                rgba(255, 255, 255, 0.3);
+            color: #ffffff;
         }
 
         .memory-index-cosmos .btn:hover,
         .memory-index-period-btn:hover {
             transform: translateY(-1px);
-            border-color: rgba(196, 224, 255, 0.28);
+            border-color: rgba(255, 255, 255, 0.7);
             background:
-                linear-gradient(135deg, rgba(88, 150, 255, 0.3), rgba(34, 73, 171, 0.82)),
-                rgba(12, 20, 40, 0.7);
+                linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.38)),
+                rgba(255, 255, 255, 0.22);
         }
 
         .memory-index-period-btn.is-active {
             background:
-                linear-gradient(135deg, rgba(111, 224, 255, 0.3), rgba(76, 126, 255, 0.9)),
-                rgba(12, 20, 40, 0.7);
-            color: rgba(250, 252, 255, 0.98);
+                linear-gradient(135deg, rgba(120, 203, 255, 0.54), rgba(92, 170, 255, 0.72)),
+                rgba(255, 255, 255, 0.28);
+            color: #2a3550;
         }
 
         .memory-index-toolbar-actions .is-disabled {
@@ -593,30 +466,31 @@
             align-items: center;
             padding: 18px 20px;
             border-radius: 28px;
-            border: 1px solid rgba(150, 193, 255, 0.09);
+            border: 1px solid rgba(255, 255, 255, 0.44);
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015)),
-                rgba(9, 15, 30, 0.72);
+                linear-gradient(180deg, rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.26)),
+                rgba(255, 255, 255, 0.18);
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                0 18px 40px rgba(4, 10, 22, 0.18);
+                inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                inset 0 -1px 0 rgba(146, 178, 220, 0.18),
+                0 18px 40px rgba(124, 140, 170, 0.14);
             transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
         }
 
         .memory-entry:hover .memory-entry-shell {
             transform: translateY(-2px);
-            border-color: rgba(174, 214, 255, 0.24);
-            box-shadow: 0 22px 46px rgba(4, 10, 22, 0.24);
+            border-color: rgba(255, 255, 255, 0.68);
+            box-shadow: 0 22px 46px rgba(124, 140, 170, 0.18);
         }
 
         .memory-select:checked + .memory-entry-shell {
-            border-color: rgba(157, 214, 255, 0.28);
+            border-color: rgba(140, 196, 255, 0.62);
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.06),
-                0 24px 58px rgba(20, 54, 120, 0.26);
+                inset 0 1px 0 rgba(255, 255, 255, 0.94),
+                0 24px 58px rgba(108, 144, 205, 0.24);
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
-                rgba(10, 18, 35, 0.82);
+                linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.34)),
+                rgba(255, 255, 255, 0.22);
         }
 
         .memory-entry-orb-wrap {
@@ -681,7 +555,7 @@
         }
 
         .memory-entry-head strong {
-            color: rgba(247, 250, 255, 0.98);
+            color: #2a3550;
             font-size: 24px;
             line-height: 1.1;
         }
@@ -699,37 +573,29 @@
             min-height: 32px;
             padding: 0 12px;
             border-radius: 999px;
-            background: rgba(118, 173, 255, 0.08);
-            border: 1px solid rgba(140, 198, 255, 0.1);
-            color: rgba(232, 242, 255, 0.84);
+            background: rgba(255, 255, 255, 0.42);
+            border: 1px solid rgba(255, 255, 255, 0.54);
+            color: #42526b;
             font-size: 13px;
             font-weight: 700;
         }
 
         .memory-entry-content {
             margin: 0;
-            color: rgba(228, 236, 251, 0.92);
+            color: #38465d;
             font-size: 18px;
             line-height: 1.72;
         }
 
         .memory-index-empty {
-            background: rgba(10, 18, 35, 0.44);
-            border: 1px dashed rgba(152, 197, 255, 0.16);
-            color: rgba(214, 231, 252, 0.8);
+            background: rgba(255, 255, 255, 0.36);
+            border: 1px dashed rgba(255, 255, 255, 0.48);
+            color: #50607a;
         }
 
         @media (max-width: 1180px) {
-            .memory-index-top {
-                grid-template-columns: 1fr;
-            }
-
-            .memory-index-hero-panel {
-                grid-template-columns: 1fr;
-            }
-
-            .memory-index-hero-orbit {
-                min-height: 180px;
+            .memory-index-topbar {
+                align-items: flex-start;
             }
         }
 
@@ -745,13 +611,8 @@
             }
 
             .memory-index-panel,
-            .memory-index-status-panel,
-            .memory-index-hero-panel {
+            .memory-index-topbar {
                 border-radius: 22px;
-            }
-
-            .memory-index-hero-panel h1 {
-                font-size: 42px;
             }
 
             .memory-index-toolbar-main {
