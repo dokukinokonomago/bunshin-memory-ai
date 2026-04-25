@@ -141,21 +141,6 @@
 
             <aside class="memory-index-sidebar">
                 <section class="memory-side-monitor">
-                    <div class="memory-side-monitor-top">
-                        <article class="memory-side-monitor-stat">
-                            <span>TIME</span>
-                            <strong>{{ $dashboardNow->format('H:i:s') }}</strong>
-                        </article>
-                        <article class="memory-side-monitor-stat">
-                            <span>MODE</span>
-                            <strong>{{ $searchQuery === '' ? 'ALL' : 'SEARCH' }}</strong>
-                        </article>
-                        <article class="memory-side-monitor-stat">
-                            <span>COUNT</span>
-                            <strong>{{ $memories->count() }}</strong>
-                        </article>
-                    </div>
-
                     <div class="memory-side-block">
                         <div class="memory-side-heading">
                             <span class="memory-side-icon">◔</span>
@@ -680,34 +665,6 @@
                 0 18px 48px rgba(2, 6, 18, 0.36);
         }
 
-        .memory-side-monitor-top {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 10px;
-        }
-
-        .memory-side-monitor-stat {
-            display: grid;
-            gap: 6px;
-            padding: 10px;
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(136, 182, 255, 0.08);
-        }
-
-        .memory-side-monitor-stat span {
-            color: rgba(168, 190, 226, 0.58);
-            font-size: 10px;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-        }
-
-        .memory-side-monitor-stat strong {
-            color: rgba(246, 249, 255, 0.98);
-            font-size: 20px;
-            line-height: 1;
-        }
-
         .memory-side-block {
             display: grid;
             gap: 12px;
@@ -917,9 +874,6 @@
                 font-size: 16px;
             }
 
-            .memory-side-monitor-top {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 
