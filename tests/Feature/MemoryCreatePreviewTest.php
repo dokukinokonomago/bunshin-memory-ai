@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -14,15 +15,23 @@ class MemoryCreatePreviewTest extends TestCase
         parent::setUp();
 
         $this->withoutVite();
+        $this->actingAs(User::factory()->create());
     }
 
-    public function test_create_preview_page_is_available(): void
+    public function test_create_route_uses_the_new_ui(): void
     {
-        $response = $this->get(route('memories.create.preview'));
+        $response = $this->get(route('memories.create'));
 
         $response->assertOk();
         $response->assertSee('記憶を保存する');
         $response->assertSee('action="' . route('memories.store') . '"', false);
+    }
+
+    public function test_create_preview_route_redirects_to_create(): void
+    {
+        $response = $this->get(route('memories.create.preview'));
+
+        $response->assertRedirect(route('memories.create'));
     }
 
     public function test_preview_form_values_can_be_posted_to_store(): void

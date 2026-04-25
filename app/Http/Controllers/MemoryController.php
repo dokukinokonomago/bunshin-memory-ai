@@ -13,8 +13,7 @@ use Illuminate\View\View;
 class MemoryController extends Controller
 {
     private const BUBBLE_LAYER_SIZE = 100;
-    private const ACTIVE_CREATE_VIEW = 'memories.create';
-    private const PREVIEW_CREATE_VIEW = 'memories.create_v2';
+    private const ACTIVE_CREATE_VIEW = 'memories.create_v2';
     private const PERIODS = ['幼少期', '小学生', '中学生', '高校生', '大学生', '成人期', '不明'];
     private const CREATE_COMPOSER_GROUP_META = [
         'warm' => [
@@ -75,11 +74,6 @@ class MemoryController extends Controller
         'ネガティブ（強め）' => ['不安', '悲しい', 'イライラ', '怒り', '落ち込み', '孤独', '無力感', '自信がない'],
     ];
 
-    public function home(): \Illuminate\Http\RedirectResponse
-    {
-        return redirect()->route('memories.bubbles');
-    }
-
     public function index(Request $request): View
     {
         $keyword = trim($request->string('q')->toString());
@@ -116,9 +110,9 @@ class MemoryController extends Controller
         return $this->renderCreateView($request, self::ACTIVE_CREATE_VIEW);
     }
 
-    public function createPreview(Request $request): View
+    public function createPreview(): RedirectResponse
     {
-        return $this->renderCreateView($request, self::PREVIEW_CREATE_VIEW);
+        return redirect()->route('memories.create');
     }
 
     public function edit(Memory $memory): View

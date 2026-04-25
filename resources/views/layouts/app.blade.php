@@ -59,6 +59,45 @@
             padding: 0;
         }
 
+        .app-auth-dock {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 186, 255, 0.16);
+            background: rgba(7, 12, 25, 0.7);
+            backdrop-filter: blur(14px);
+            box-shadow: 0 16px 34px rgba(0, 0, 0, 0.24);
+        }
+
+        .app-auth-user {
+            color: rgba(235, 243, 255, 0.78);
+            font-size: 12px;
+            letter-spacing: 0.06em;
+        }
+
+        .app-auth-link,
+        .app-auth-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 0 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 186, 255, 0.16);
+            color: rgba(244, 248, 255, 0.94);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .app-auth-button {
+            cursor: pointer;
+        }
+
         .hero {
             display: grid;
             grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.95fr);
@@ -298,12 +337,28 @@
             .hero-card, .side-card, .panel { padding: 18px; }
             .panel-header { flex-direction: column; }
             h1 { font-size: 30px; }
+            .app-auth-dock {
+                left: 12px;
+                right: 12px;
+                top: 12px;
+                justify-content: space-between;
+            }
         }
     </style>
     @stack('head')
     @stack('styles')
 </head>
 <body class="@yield('body_class')">
+    @auth
+        <div class="app-auth-dock">
+            <span class="app-auth-user">{{ auth()->user()->email }}</span>
+            <a class="app-auth-link" href="{{ route('memories.bubbles') }}">記憶の玉</a>
+            <form method="post" action="{{ route('logout') }}">
+                @csrf
+                <button class="app-auth-button" type="submit">ログアウト</button>
+            </form>
+        </div>
+    @endauth
     <div class="page @yield('page_class')">
         @yield('content')
     </div>
