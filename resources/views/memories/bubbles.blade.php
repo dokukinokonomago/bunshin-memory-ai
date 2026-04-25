@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'YOUの記憶 | 分身AI MVP')
+@section('page_class', 'page-bubbles-full')
 
 @section('content')
     <section class="panel bubble-stage-panel">
@@ -17,22 +18,66 @@
         @else
             @php
                 $bubbleBaseParams = $selectedPeriod !== 'すべて' ? ['period' => $selectedPeriod] : [];
+                $bubbleBaseRoute = route('memories.bubbles');
             @endphp
-            <div class="bubble-stage-copy">
-                <span class="eyebrow">PERSONAL MEMORY ARCHIVE</span>
-                <h1>YOUの記憶</h1>
-                <div class="hero-actions">
-                    <a class="btn btn-secondary" href="{{ route('memories.index') }}">一覧へ戻る</a>
+            <div class="bubble-stage-top">
+                <div class="bubble-stage-copy">
+                    <span class="eyebrow">PERSONAL MEMORY ARCHIVE</span>
+                    <h1>YOUの記憶</h1>
+                </div>
+
+                <div class="bubble-stage-hub">
+                    <details class="bubble-stage-hub-card bubble-stage-actions">
+                        <summary class="btn btn-secondary bubble-stage-actions-trigger">
+                            <span class="bubble-stage-actions-trigger-label">今日は<br>何をする？</span>
+                        </summary>
+                        <div class="bubble-stage-actions-menu">
+                            <div class="bubble-stage-actions-row">
+                                <a class="bubble-menu-orb" href="#" aria-disabled="true">
+                                    <span class="bubble-orb-label">記憶を<br>追加</span>
+                                </a>
+                                <a class="bubble-menu-orb" href="#" aria-disabled="true">
+                                    <span class="bubble-orb-label">記憶と<br>話す</span>
+                                </a>
+                                <a class="bubble-menu-orb" href="{{ route('memories.index') }}">
+                                    <span class="bubble-orb-label">記憶一覧を<br>見る</span>
+                                </a>
+                                <div class="bubble-inline-filter" id="bubbleInlineFilter">
+                                    <button
+                                        type="button"
+                                        class="bubble-menu-orb bubble-filter-launch"
+                                        id="bubbleInlineFilterToggle"
+                                        aria-expanded="false"
+                                        aria-controls="bubbleInlineFilterMenu"
+                                    >
+                                        <span class="bubble-orb-label">年代別で<br>表示</span>
+                                    </button>
+                                    <div class="bubble-inline-filter-menu" id="bubbleInlineFilterMenu" hidden>
+                                        <div class="bubble-stage-filter-row">
+                                            <a class="bubble-filter-orb {{ $selectedPeriod === 'すべて' ? 'is-active' : '' }}" href="{{ route('memories.bubbles') }}">すべて</a>
+                                            @foreach ($periods as $period)
+                                                <a
+                                                    class="bubble-filter-orb {{ $selectedPeriod === $period ? 'is-active' : '' }}"
+                                                    href="{{ route('memories.bubbles', ['period' => $period]) }}"
+                                                >{{ $period }}</a>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
                 </div>
             </div>
 
+            <section class="bubble-stage-count bubble-stage-count-floating" aria-label="全記憶数">
+                <span class="bubble-side-label">全記憶数</span>
+                <strong>{{ $matchingCount }}</strong>
+                <span class="bubble-stage-count-caption">memories drifting now</span>
+            </section>
+
             <div class="bubble-stage-rail">
                 <div class="bubble-stage-side bubble-stage-rail-card">
-                    <section class="bubble-rail-section bubble-stage-count">
-                        <span class="bubble-side-label">全記憶数</span>
-                        <strong>{{ $matchingCount }}</strong>
-                    </section>
-
                     @if ($layerCount > 1)
                         <section class="bubble-rail-section bubble-stage-nav">
                             <span class="bubble-side-label">表示階層</span>
@@ -55,46 +100,16 @@
                         </section>
                     @endif
 
-                    <section class="bubble-rail-section">
-                        <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶を追加</a>
-                    </section>
-
-                    <details class="bubble-rail-section bubble-stage-filter">
-                        <summary class="btn btn-secondary">年代別で表示</summary>
-                        <form method="get" action="{{ route('memories.bubbles') }}" class="bubble-filter-form">
-                            <label for="period" class="bubble-side-label">年代を選択</label>
-                            <select id="period" name="period" class="bubble-select">
-                                <option value="すべて" {{ $selectedPeriod === 'すべて' ? 'selected' : '' }}>すべて</option>
-                                @foreach ($periods as $period)
-                                    <option value="{{ $period }}" {{ $selectedPeriod === $period ? 'selected' : '' }}>{{ $period }}</option>
-                                @endforeach
-                            </select>
-                            <div class="bubble-filter-actions">
-                                <button type="submit" class="btn btn-primary">表示する</button>
-                                @if ($selectedPeriod !== 'すべて')
-                                    <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">解除</a>
-                                @endif
-                            </div>
-                        </form>
-                    </details>
-
-                    <section class="bubble-rail-section">
-                        <a class="btn btn-secondary bubble-rail-btn" href="#" aria-disabled="true">記憶と話す</a>
-                    </section>
-
-                    <section class="bubble-rail-section">
-                        <a class="btn btn-secondary bubble-rail-btn" href="{{ route('memories.index') }}">一覧を見る</a>
-                    </section>
                 </div>
             </div>
 
             <div class="bubble-stage-shell">
-                <div class="bubble-caption">MEMORY BUBBLE / CLICK A MEMORY</div>
+                <div class="bubble-caption">MEMORY BUBBLE / DRAG TO MOVE / SCROLL OR PINCH TO ZOOM</div>
                 @if ($selectedPeriod !== 'すべて')
                     <div class="bubble-period-banner">{{ $selectedPeriod }}</div>
                 @endif
                 <svg id="bubbleStage" viewBox="0 0 1400 920" xmlns="http://www.w3.org/2000/svg" aria-label="YOUの記憶">
-                    <defs>
+                    <defs id="bubbleDefs">
                         <filter id="shellGlow" x="-80%" y="-80%" width="260%" height="260%">
                             <feGaussianBlur stdDeviation="44"></feGaussianBlur>
                         </filter>
@@ -200,16 +215,37 @@
                         class="bubble-shell-breath"
                         style="--shell-duration: 7.6s; --shell-delay: -0.4s;"
                     ></circle>
-                    <g id="bubbleLayer"></g>
+
+                    <g id="bubbleMapViewport" class="bubble-map-viewport">
+                        <g id="bubbleMapGrid"></g>
+                        <g id="bubbleMapPeriods"></g>
+                        <g id="bubbleLayer"></g>
+                    </g>
                 </svg>
+                <div class="bubble-gesture-guide" aria-hidden="true">
+                    <span class="bubble-gesture-chip">
+                        <i></i>
+                        ふわっとドラッグで移動
+                    </span>
+                    <span class="bubble-gesture-chip">
+                        <i></i>
+                        ホイール / ピンチで拡大縮小
+                    </span>
+                </div>
             </div>
         @endif
     </section>
 
     <style>
+        .page.page-bubbles-full {
+            width: calc(100vw - 12px);
+            max-width: none;
+            padding: 8px 0 14px;
+        }
+
         .bubble-stage-panel {
             position: relative;
-            min-height: min(920px, calc(100vh - 72px));
+            min-height: calc(100vh - 22px);
             padding: 0;
             overflow: hidden;
             background:
@@ -220,12 +256,91 @@
             color: rgba(238, 245, 255, 0.94);
         }
 
-        .bubble-stage-copy {
+        .bubble-stage-top {
             position: absolute;
-            top: 28px;
-            left: 28px;
+            top: 24px;
+            left: 50%;
+            z-index: 4;
+            transform: translateX(-50%);
+            display: grid;
+            justify-items: center;
+            gap: 12px;
+            width: min(760px, calc(100% - 360px));
+        }
+
+        .bubble-stage-copy {
+            position: relative;
+            z-index: 1;
+            max-width: 420px;
+            text-align: center;
+        }
+
+        .bubble-stage-hub {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .bubble-stage-hub-card {
+            border-radius: 18px;
+            border: 1px solid rgba(171, 205, 255, 0.12);
+            background: linear-gradient(180deg, rgba(12, 21, 42, 0.92), rgba(10, 18, 39, 0.82));
+            box-shadow: 0 14px 28px rgba(6, 10, 24, 0.24);
+            backdrop-filter: blur(12px);
+        }
+
+        .bubble-stage-count-floating {
+            position: absolute;
+            top: clamp(58px, 6vw, 82px);
+            left: clamp(108px, 12vw, 210px);
             z-index: 3;
-            max-width: 280px;
+            width: clamp(220px, 19vw, 252px);
+            height: clamp(220px, 19vw, 252px);
+            padding: 22px 18px 18px;
+            border-radius: 50%;
+            border: 1px solid rgba(186, 220, 255, 0.18);
+            background:
+                radial-gradient(circle at 24% 24%, rgba(201, 239, 255, 0.34), transparent 26%),
+                radial-gradient(circle at 76% 22%, rgba(255, 203, 230, 0.2), transparent 24%),
+                radial-gradient(circle at 50% 78%, rgba(167, 219, 255, 0.16), transparent 32%),
+                linear-gradient(155deg, rgba(13, 22, 42, 0.78), rgba(8, 14, 30, 0.56));
+            box-shadow:
+                0 24px 54px rgba(4, 8, 20, 0.28),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .bubble-stage-count-floating::before,
+        .bubble-stage-count-floating::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(8px);
+        }
+
+        .bubble-stage-count-floating::before {
+            width: 148px;
+            height: 148px;
+            top: -28px;
+            left: -6px;
+            background: radial-gradient(circle, rgba(162, 223, 255, 0.28), transparent 68%);
+        }
+
+        .bubble-stage-count-floating::after {
+            width: 122px;
+            height: 122px;
+            right: -22px;
+            bottom: -26px;
+            background: radial-gradient(circle, rgba(255, 191, 226, 0.2), transparent 70%);
         }
 
         .bubble-stage-copy h1 {
@@ -233,7 +348,6 @@
             font-size: clamp(30px, 3.4vw, 50px);
             color: rgba(245, 249, 255, 0.96);
             letter-spacing: 0.03em;
-            white-space: nowrap;
         }
 
         .bubble-stage-copy .eyebrow {
@@ -287,15 +401,16 @@
             position: relative;
             width: 100%;
             height: 100%;
+            padding-bottom: 58px;
+            overflow: hidden;
         }
 
         .bubble-stage-rail {
             position: absolute;
-            top: 184px;
+            top: 164px;
             right: 24px;
             z-index: 3;
-            width: min(236px, 24vw);
-            height: min(430px, calc(100% - 240px));
+            width: min(236px, 22vw);
         }
 
         .bubble-stage-side {
@@ -327,19 +442,42 @@
         }
 
         .bubble-stage-count {
-            text-align: right;
-            padding-top: 0;
+            min-width: 132px;
         }
 
         .bubble-stage-count strong {
+            position: relative;
+            z-index: 1;
             display: block;
             color: rgba(245, 249, 255, 0.98);
-            font-size: clamp(24px, 2.1vw, 32px);
-            line-height: 1.05;
+            font-size: clamp(60px, 6.4vw, 84px);
+            line-height: 0.84;
+            letter-spacing: -0.04em;
+            text-shadow: 0 0 34px rgba(155, 214, 255, 0.12);
         }
 
-        .bubble-stage-filter {
-            padding-bottom: 0;
+        .bubble-stage-count-caption {
+            position: relative;
+            z-index: 1;
+            display: block;
+            margin-top: 8px;
+            color: rgba(192, 215, 246, 0.74);
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .bubble-stage-actions {
+            position: relative;
+            width: clamp(188px, 18vw, 220px);
+            min-width: 0;
+            overflow: visible;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+            backdrop-filter: none;
+            display: flex;
+            justify-content: center;
         }
 
         .bubble-rail-btn {
@@ -386,58 +524,305 @@
             pointer-events: none;
         }
 
-        .bubble-stage-filter summary {
+        .bubble-stage-actions summary {
             list-style: none;
             width: 100%;
         }
 
-        .bubble-stage-rail .btn {
+        .bubble-stage-rail .btn,
+        .bubble-stage-hub .btn:not(.bubble-stage-actions-trigger) {
             padding: 9px 12px;
             font-size: 11px;
             border-radius: 11px;
         }
 
-        .bubble-stage-rail .bubble-side-label {
+        .bubble-stage-rail .bubble-side-label,
+        .bubble-stage-hub .bubble-side-label {
             font-size: 11px;
             margin-bottom: 5px;
         }
 
-        .bubble-stage-rail .bubble-select {
+        .bubble-stage-rail .bubble-select,
+        .bubble-stage-hub .bubble-select {
             padding: 10px 12px;
             font-size: 12px;
         }
 
-        .bubble-stage-rail .bubble-filter-actions {
+        .bubble-stage-rail .bubble-filter-actions,
+        .bubble-stage-hub .bubble-filter-actions {
             gap: 8px;
         }
 
-        .bubble-stage-filter summary::-webkit-details-marker {
+        .bubble-stage-actions summary::-webkit-details-marker {
             display: none;
         }
 
-        .bubble-stage-filter[open] {
-            width: 100%;
-        }
-
-        .bubble-filter-form {
+        .bubble-stage-actions-menu {
             display: grid;
+            gap: 14px;
+            position: absolute;
+            top: calc(100% + 16px);
+            left: 50%;
+            width: min(452px, calc(100vw - 48px));
+            margin-top: 0;
+            padding: 16px;
+            border-radius: 24px;
+            background:
+                radial-gradient(circle at top left, rgba(185, 236, 255, 0.18), transparent 34%),
+                radial-gradient(circle at top right, rgba(255, 197, 228, 0.14), transparent 30%),
+                rgba(18, 27, 50, 0.42);
+            border: 1px solid rgba(224, 243, 255, 0.16);
+            box-shadow:
+                0 18px 38px rgba(8, 14, 30, 0.16),
+                inset 0 1px 0 rgba(255,255,255,0.09);
+            backdrop-filter: blur(18px);
+            transform: translateX(-50%);
+        }
+
+        .bubble-inline-filter-menu {
+            position: absolute;
+            top: calc(100% + 16px);
+            left: 50%;
+            width: min(540px, calc(100vw - 48px));
+            padding: 16px;
+            border-radius: 28px;
+            background:
+                radial-gradient(circle at top left, rgba(185, 236, 255, 0.18), transparent 34%),
+                radial-gradient(circle at top right, rgba(255, 197, 228, 0.14), transparent 30%),
+                rgba(18, 27, 50, 0.42);
+            border: 1px solid rgba(224, 243, 255, 0.16);
+            box-shadow:
+                0 18px 38px rgba(8, 14, 30, 0.16),
+                inset 0 1px 0 rgba(255,255,255,0.09);
+            backdrop-filter: blur(18px);
+            transform: translateX(-50%);
+        }
+
+        .bubble-stage-actions-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            flex-wrap: nowrap;
             gap: 12px;
-            margin-top: 14px;
         }
 
-        .bubble-select {
-            width: 100%;
-            padding: 12px 14px;
-            border-radius: 14px;
-            border: 1px solid rgba(171, 205, 255, 0.2);
-            background: rgba(14, 22, 43, 0.88);
-            color: rgba(239, 245, 255, 0.94);
-        }
-
-        .bubble-filter-actions {
+        .bubble-stage-filter-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .bubble-inline-filter {
+            position: relative;
+            flex: 0 0 auto;
+        }
+
+        .bubble-inline-filter-menu[hidden] {
+            display: none;
+        }
+
+        .bubble-stage-actions .bubble-stage-actions-trigger {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: clamp(188px, 18vw, 220px);
+            height: clamp(188px, 18vw, 220px);
+            min-height: 0;
+            padding: 22px;
+            border-radius: 50%;
+            border: 1px solid rgba(220, 243, 255, 0.22);
+            background:
+                radial-gradient(circle at 26% 30%, rgba(212, 246, 255, 0.74), rgba(212, 246, 255, 0) 30%),
+                radial-gradient(circle at 74% 26%, rgba(255, 206, 233, 0.44), rgba(255, 206, 233, 0) 26%),
+                radial-gradient(circle at 52% 70%, rgba(166, 219, 255, 0.24), rgba(166, 219, 255, 0) 36%),
+                linear-gradient(135deg, rgba(217, 245, 255, 0.24), rgba(142, 191, 255, 0.16));
+            color: rgba(248, 252, 255, 0.98);
+            box-shadow:
+                0 22px 42px rgba(34, 64, 118, 0.18),
+                inset 0 1px 0 rgba(255,255,255,0.28),
+                inset 0 -10px 26px rgba(126, 185, 255, 0.08);
+            backdrop-filter: blur(18px) saturate(130%);
+            overflow: hidden;
+            isolation: isolate;
+            text-shadow: 0 1px 10px rgba(100, 140, 210, 0.16);
+            text-align: center;
+            flex: 0 0 auto;
+        }
+
+        .bubble-menu-orb {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 88px;
+            height: 88px;
+            padding: 12px;
+            border-radius: 50%;
+            border: 1px solid rgba(223, 244, 255, 0.18);
+            background:
+                radial-gradient(circle at 28% 26%, rgba(219, 248, 255, 0.72), rgba(219, 248, 255, 0) 28%),
+                radial-gradient(circle at 74% 24%, rgba(255, 211, 236, 0.44), rgba(255, 211, 236, 0) 24%),
+                linear-gradient(145deg, rgba(226, 246, 255, 0.22), rgba(137, 188, 255, 0.14));
+            color: rgba(246, 251, 255, 0.98);
+            box-shadow:
+                0 18px 30px rgba(33, 62, 114, 0.16),
+                inset 0 1px 0 rgba(255,255,255,0.22),
+                inset 0 -10px 24px rgba(126, 185, 255, 0.08);
+            backdrop-filter: blur(18px) saturate(130%);
+            text-decoration: none;
+            text-align: center;
+            flex: 0 0 auto;
+            cursor: pointer;
+            list-style: none;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .bubble-stage-actions-trigger::after {
+            content: "";
+            position: absolute;
+            right: 50%;
+            top: auto;
+            bottom: 24px;
+            z-index: 2;
+            width: 10px;
+            height: 10px;
+            margin-right: -5px;
+            border-right: 2px solid rgba(246, 251, 255, 0.96);
+            border-bottom: 2px solid rgba(246, 251, 255, 0.96);
+            transform: rotate(45deg);
+            transition: transform 0.2s ease, bottom 0.2s ease;
+        }
+
+        .bubble-stage-actions .bubble-stage-actions-trigger::before {
+            content: "";
+            position: absolute;
+            inset: -10px;
+            z-index: -1;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 20% 24%, rgba(216, 248, 255, 0.56), transparent 24%),
+                radial-gradient(circle at 40% 74%, rgba(189, 234, 255, 0.3), transparent 28%),
+                radial-gradient(circle at 78% 32%, rgba(255, 206, 232, 0.4), transparent 24%);
+            filter: blur(12px);
+            opacity: 0.96;
+        }
+
+        .bubble-menu-orb::before {
+            content: "";
+            position: absolute;
+            inset: -10px;
+            z-index: -1;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 20% 24%, rgba(216, 248, 255, 0.56), transparent 24%),
+                radial-gradient(circle at 40% 74%, rgba(189, 234, 255, 0.3), transparent 28%),
+                radial-gradient(circle at 78% 32%, rgba(255, 206, 232, 0.4), transparent 24%);
+            filter: blur(12px);
+            opacity: 0.96;
+        }
+
+        .bubble-stage-actions:hover .bubble-stage-actions-trigger,
+        .bubble-stage-actions[open] .bubble-stage-actions-trigger {
+            transform: translateY(-2px) scale(1.01);
+            border-color: rgba(239, 248, 255, 0.34);
+            background:
+                radial-gradient(circle at 24% 28%, rgba(222, 249, 255, 0.82), rgba(222, 249, 255, 0) 30%),
+                radial-gradient(circle at 76% 24%, rgba(255, 213, 236, 0.5), rgba(255, 213, 236, 0) 28%),
+                radial-gradient(circle at 52% 72%, rgba(173, 224, 255, 0.28), rgba(173, 224, 255, 0) 38%),
+                linear-gradient(135deg, rgba(225, 247, 255, 0.28), rgba(150, 197, 255, 0.2));
+            box-shadow:
+                0 28px 50px rgba(44, 86, 152, 0.22),
+                inset 0 1px 0 rgba(255,255,255,0.34),
+                inset 0 -12px 28px rgba(126, 185, 255, 0.12);
+        }
+
+        .bubble-stage-actions[open] .bubble-stage-actions-trigger::after {
+            transform: rotate(-135deg);
+            bottom: 29px;
+        }
+
+        .bubble-menu-orb:hover,
+        .bubble-inline-filter:hover .bubble-filter-launch,
+        .bubble-inline-filter.is-open .bubble-filter-launch {
+            transform: translateY(-2px) scale(1.03);
+            border-color: rgba(241, 249, 255, 0.28);
+            background:
+                radial-gradient(circle at 28% 26%, rgba(227, 250, 255, 0.84), rgba(227, 250, 255, 0) 30%),
+                radial-gradient(circle at 74% 24%, rgba(255, 219, 240, 0.52), rgba(255, 219, 240, 0) 26%),
+                linear-gradient(145deg, rgba(233, 249, 255, 0.28), rgba(151, 199, 255, 0.18));
+        }
+
+        .bubble-stage-actions-trigger-label {
+            position: relative;
+            z-index: 1;
+            display: block;
+            color: rgba(247, 251, 255, 0.98);
+            font-size: clamp(20px, 1.8vw, 24px);
+            font-weight: 700;
+            line-height: 1.4;
+            letter-spacing: 0.05em;
+        }
+
+        .bubble-menu-orb[aria-disabled="true"] {
+            opacity: 1;
+        }
+
+        .bubble-orb-label {
+            position: relative;
+            z-index: 1;
+            display: block;
+            color: rgba(247, 251, 255, 0.98);
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.35;
+            letter-spacing: 0.04em;
+            text-align: center;
+        }
+
+        .bubble-filter-orb {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 84px;
+            height: 84px;
+            padding: 10px;
+            border-radius: 50%;
+            border: 1px solid rgba(223, 244, 255, 0.18);
+            background:
+                radial-gradient(circle at 28% 26%, rgba(219, 248, 255, 0.64), rgba(219, 248, 255, 0) 28%),
+                radial-gradient(circle at 74% 24%, rgba(255, 211, 236, 0.38), rgba(255, 211, 236, 0) 24%),
+                linear-gradient(145deg, rgba(226, 246, 255, 0.18), rgba(137, 188, 255, 0.12));
+            color: rgba(246, 251, 255, 0.98);
+            text-align: center;
+            line-height: 1.3;
+            font-size: 12px;
+            text-decoration: none;
+            box-shadow:
+                0 16px 28px rgba(33, 62, 114, 0.14),
+                inset 0 1px 0 rgba(255,255,255,0.2),
+                inset 0 -10px 24px rgba(126, 185, 255, 0.08);
+            backdrop-filter: blur(18px) saturate(130%);
+            flex: 0 0 auto;
+        }
+
+        .bubble-filter-orb:hover {
+            transform: translateY(-2px) scale(1.03);
+            border-color: rgba(241, 249, 255, 0.28);
+        }
+
+        .bubble-filter-orb.is-active {
+            border-color: rgba(245, 250, 255, 0.36);
+            background:
+                radial-gradient(circle at 28% 26%, rgba(232, 250, 255, 0.84), rgba(232, 250, 255, 0) 30%),
+                radial-gradient(circle at 74% 24%, rgba(255, 222, 241, 0.5), rgba(255, 222, 241, 0) 26%),
+                linear-gradient(145deg, rgba(236, 249, 255, 0.28), rgba(163, 206, 255, 0.18));
+            box-shadow:
+                0 18px 30px rgba(46, 88, 156, 0.2),
+                inset 0 1px 0 rgba(255,255,255,0.28),
+                inset 0 -10px 24px rgba(126, 185, 255, 0.1);
         }
 
         .bubble-side-label {
@@ -449,13 +834,22 @@
             text-transform: uppercase;
         }
 
+        .bubble-stage-count-floating .bubble-side-label {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 10px;
+            color: rgba(208, 229, 255, 0.82);
+            font-size: 11px;
+            letter-spacing: 0.2em;
+        }
+
         .bubble-caption {
             position: absolute;
             left: 28px;
-            bottom: 22px;
+            bottom: 44px;
             z-index: 2;
             color: rgba(176, 202, 245, 0.58);
-            font-size: 12px;
+            font-size: 11px;
             letter-spacing: 0.14em;
         }
 
@@ -482,6 +876,12 @@
             height: auto;
             max-height: min(920px, calc(100vh - 72px));
             display: block;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        #bubbleStage.is-dragging {
+            cursor: grabbing;
         }
 
         .bubble-shell-breath {
@@ -493,6 +893,64 @@
 
         .bubble-shell-main {
             animation-duration: var(--shell-duration, 7.6s);
+        }
+
+        .bubble-map-grid-line {
+            stroke: rgba(192, 220, 255, 0.08);
+            stroke-width: 1;
+            stroke-dasharray: 10 12;
+        }
+
+        .bubble-period-halo {
+            fill: rgba(167, 213, 255, 0.075);
+            stroke: rgba(175, 212, 255, 0.18);
+            stroke-width: 1.2;
+        }
+
+        .bubble-period-zone {
+            cursor: pointer;
+        }
+
+        .bubble-period-zone .bubble-period-halo,
+        .bubble-period-zone .bubble-period-anchor,
+        .bubble-period-zone .bubble-period-name,
+        .bubble-period-zone .bubble-period-count {
+            transition: transform 0.24s ease, opacity 0.24s ease, filter 0.24s ease, fill 0.24s ease, stroke 0.24s ease;
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+
+        .bubble-period-zone.is-active .bubble-period-halo,
+        .bubble-period-zone.is-active .bubble-period-anchor,
+        .bubble-period-zone.is-active .bubble-period-name,
+        .bubble-period-zone.is-active .bubble-period-count {
+            transform: scale(1.06);
+        }
+
+        .bubble-period-zone.is-active .bubble-period-name {
+            fill: rgba(250, 252, 255, 0.98);
+        }
+
+        .bubble-period-zone.is-active .bubble-period-count {
+            fill: rgba(214, 232, 255, 0.88);
+        }
+
+        .bubble-period-anchor {
+            fill: rgba(243, 249, 255, 0.88);
+        }
+
+        .bubble-period-name {
+            fill: rgba(244, 248, 255, 0.94);
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-anchor: middle;
+        }
+
+        .bubble-period-count {
+            fill: rgba(188, 214, 255, 0.68);
+            font-size: 12px;
+            text-anchor: middle;
         }
 
         .memory-ball-wrap {
@@ -513,12 +971,66 @@
             filter: brightness(1.12) saturate(1.12) drop-shadow(0 26px 34px rgba(108, 127, 169, 0.2));
         }
 
+        .memory-ball.is-period-hovered .memory-ball-body {
+            animation: none;
+            transform: scale(1.14);
+            filter: brightness(1.16) saturate(1.14) drop-shadow(0 22px 30px rgba(104, 140, 182, 0.28));
+        }
+
         .memory-ball-body {
             transform-box: fill-box;
             transform-origin: center;
             will-change: transform, filter;
             animation: bubblePulse var(--bubble-duration, 6.8s) ease-in-out var(--bubble-delay, 0s) infinite;
             transition: transform 0.42s cubic-bezier(0.2, 0.7, 0.2, 1), filter 0.42s cubic-bezier(0.2, 0.7, 0.2, 1);
+        }
+
+        .memory-label {
+            fill: white;
+            font-weight: 700;
+            font-size: 12px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            paint-order: stroke;
+            stroke: rgba(0, 0, 0, 0.12);
+            stroke-width: 2px;
+            stroke-linejoin: round;
+            pointer-events: none;
+        }
+
+        .bubble-gesture-guide {
+            position: absolute;
+            left: 50%;
+            bottom: 10px;
+            z-index: 2;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: min(720px, calc(100% - 60px));
+        }
+
+        .bubble-gesture-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(9, 17, 36, 0.74);
+            border: 1px solid rgba(175, 212, 255, 0.12);
+            color: rgba(228, 239, 255, 0.88);
+            font-size: 11px;
+            box-shadow: 0 12px 24px rgba(6, 10, 24, 0.18);
+            backdrop-filter: blur(10px);
+        }
+
+        .bubble-gesture-chip i {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(166, 215, 255, 0.98), rgba(255, 200, 222, 0.94));
+            box-shadow: 0 0 10px rgba(166, 215, 255, 0.38);
         }
 
         @keyframes bubblePulse {
@@ -564,28 +1076,30 @@
             }
         }
 
-        .memory-label {
-            fill: white;
-            font-weight: 700;
-            font-size: 12px;
-            text-anchor: middle;
-            dominant-baseline: middle;
-            paint-order: stroke;
-            stroke: rgba(0, 0, 0, 0.12);
-            stroke-width: 2px;
-            stroke-linejoin: round;
-            pointer-events: none;
-        }
-
         @media (max-width: 980px) {
+            .page.page-bubbles-full {
+                width: calc(100vw - 8px);
+            }
+
             .bubble-stage-panel {
                 min-height: 760px;
             }
 
+            .bubble-stage-top {
+                width: min(660px, calc(100% - 280px));
+            }
+
+            .bubble-stage-count-floating {
+                top: 82px;
+                left: 86px;
+                width: 210px;
+                height: 210px;
+                padding: 20px 16px 16px;
+            }
+
             .bubble-stage-rail {
-                top: 170px;
+                top: 176px;
                 width: min(220px, 27vw);
-                height: min(408px, calc(100% - 224px));
             }
         }
 
@@ -595,27 +1109,82 @@
                 padding-top: 156px;
             }
 
-            .bubble-stage-copy,
+            .bubble-stage-top,
+            .bubble-stage-count-floating,
             .bubble-stage-rail {
                 position: static;
                 width: auto;
                 margin: 0 18px 14px;
+                transform: none;
+            }
+
+            .bubble-stage-copy,
+            .bubble-stage-hub {
+                width: auto;
+                margin: 0;
             }
 
             .bubble-stage-side {
                 width: auto;
             }
 
-            .bubble-stage-count {
-                text-align: left;
+            .bubble-stage-hub {
+                display: grid;
+                gap: 10px;
             }
 
-            .bubble-stage-filter[open] {
-                width: auto;
+            .bubble-stage-count {
+                text-align: center;
+            }
+
+            .bubble-stage-count-floating {
+                max-width: none;
+                width: min(72vw, 240px);
+                height: min(72vw, 240px);
+                padding: 18px 18px 16px;
+            }
+
+            .bubble-stage-count strong {
+                font-size: clamp(44px, 16vw, 68px);
+            }
+
+            .bubble-stage-actions {
+                width: min(68vw, 240px);
+                justify-self: center;
+            }
+
+            .bubble-stage-actions .bubble-stage-actions-trigger {
+                width: min(68vw, 240px);
+                height: min(68vw, 240px);
+            }
+
+            .bubble-stage-actions-row {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .bubble-stage-filter-row {
+                gap: 10px;
+            }
+
+            .bubble-menu-orb {
+                width: 76px;
+                height: 76px;
+            }
+
+            .bubble-inline-filter .bubble-filter-launch {
+                width: 76px;
+                height: 76px;
+            }
+
+            .bubble-filter-orb {
+                width: 72px;
+                height: 72px;
+                font-size: 11px;
             }
 
             .bubble-stage-shell {
-                padding-bottom: 16px;
+                padding-bottom: 76px;
             }
 
             #bubbleStage {
@@ -624,7 +1193,8 @@
 
             .bubble-caption {
                 left: 18px;
-                bottom: 18px;
+                bottom: 58px;
+                max-width: calc(100% - 36px);
             }
 
             .bubble-period-banner {
@@ -632,42 +1202,66 @@
                 max-width: calc(100% - 136px);
                 text-align: center;
             }
+
+            .bubble-gesture-guide {
+                width: calc(100% - 24px);
+                bottom: 12px;
+            }
         }
     </style>
 
     @if ($bubbleMemories->isNotEmpty())
         <script>
             const memories = @json($bubbleMemories);
+            const periods = @json($periods);
+            const selectedPeriod = @json($selectedPeriod);
+            const bubblesRoute = @json($bubbleBaseRoute);
             const svgNS = "http://www.w3.org/2000/svg";
+            const defs = document.getElementById("bubbleDefs");
             const bubbleLayer = document.getElementById("bubbleLayer");
-            const stage = {
-                x: 700,
-                y: 470,
-                r: 362
+            const bubbleMapGrid = document.getElementById("bubbleMapGrid");
+            const bubbleMapPeriods = document.getElementById("bubbleMapPeriods");
+            const bubbleMapViewport = document.getElementById("bubbleMapViewport");
+            const bubbleStage = document.getElementById("bubbleStage");
+            const inlineFilter = document.getElementById("bubbleInlineFilter");
+            const inlineFilterToggle = document.getElementById("bubbleInlineFilterToggle");
+            const inlineFilterMenu = document.getElementById("bubbleInlineFilterMenu");
+            const periodZones = new Map();
+            const memoryGroupsByPeriod = new Map();
+            const viewport = { width: 1400, height: 920 };
+            const state = {
+                scale: 1,
+                minScale: 0.72,
+                maxScale: 1.58,
+                tx: 0,
+                ty: 0,
+                dragging: false,
+                dragStarted: false,
+                pointerId: null,
+                startX: 0,
+                startY: 0,
+                startTx: 0,
+                startTy: 0,
+                touchMode: null,
+                pinchDistance: 0,
+                pinchMidpoint: null,
+                worldBounds: null,
+            };
+
+            const periodAnchors = {
+                "幼少期": { x: -280, y: 150 },
+                "小学生": { x: 130, y: 810 },
+                "中学生": { x: 760, y: 960 },
+                "高校生": { x: 1380, y: 740 },
+                "大学生": { x: 1820, y: 360 },
+                "成人期": { x: 2280, y: 780 },
+                "不明": { x: 2220, y: -40 },
             };
 
             function createSvg(tag, attrs = {}) {
                 const element = document.createElementNS(svgNS, tag);
                 Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
                 return element;
-            }
-
-            function addGradient(index, colors) {
-                const defs = document.querySelector("#bubbleStage defs");
-                const id = `memGrad${index}`;
-                const gradient = createSvg("radialGradient", {
-                    id,
-                    cx: "30%",
-                    cy: "28%",
-                    r: "70%"
-                });
-
-                gradient.appendChild(createSvg("stop", { offset: "0%", "stop-color": toRgba(colors[0], 0.96) }));
-                gradient.appendChild(createSvg("stop", { offset: "55%", "stop-color": toRgba(colors[0], 0.54) }));
-                gradient.appendChild(createSvg("stop", { offset: "100%", "stop-color": toRgba(colors[1], 0.74) }));
-                defs.appendChild(gradient);
-
-                return id;
             }
 
             function toRgba(color, alpha) {
@@ -685,17 +1279,183 @@
                 return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
             }
 
-            function getPosition(index, total, radius) {
-                const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-                const t = (index + 0.5) / total;
-                const spread = stage.r - radius - 16;
-                const radial = Math.sqrt(t) * spread * 0.99;
-                const angle = index * goldenAngle - Math.PI / 2;
+            function addGradient(index, colors) {
+                const id = `memGrad${index}`;
+                const gradient = createSvg("radialGradient", {
+                    id,
+                    cx: "30%",
+                    cy: "28%",
+                    r: "70%",
+                    "data-memory-gradient": "true",
+                });
+
+                gradient.appendChild(createSvg("stop", { offset: "0%", "stop-color": toRgba(colors[0], 0.96) }));
+                gradient.appendChild(createSvg("stop", { offset: "55%", "stop-color": toRgba(colors[0], 0.54) }));
+                gradient.appendChild(createSvg("stop", { offset: "100%", "stop-color": toRgba(colors[1], 0.74) }));
+                defs.appendChild(gradient);
+
+                return id;
+            }
+
+            function radiusFor(index) {
+                const pattern = [118, 108, 104, 122, 100, 112, 102, 116, 100, 114, 106, 110];
+                return pattern[index % pattern.length];
+            }
+
+            function getAnchor(period) {
+                return periodAnchors[period] ?? { x: 900, y: 470 };
+            }
+
+            function buildWorldData() {
+                const buckets = new Map();
+
+                memories.forEach((memory) => {
+                    if (!buckets.has(memory.period)) {
+                        buckets.set(memory.period, []);
+                    }
+
+                    buckets.get(memory.period).push(memory);
+                });
+
+                const periodNodes = [];
+                const memoryNodes = [];
+
+                periods.forEach((period) => {
+                    const anchor = getAnchor(period);
+                    const items = buckets.get(period) ?? [];
+
+                    if (selectedPeriod !== "すべて" && selectedPeriod !== period) {
+                        return;
+                    }
+
+                    periodNodes.push({
+                        period,
+                        count: items.length,
+                        x: anchor.x,
+                        y: anchor.y,
+                        radius: Math.max(228, 244 + (items.length * 8)),
+                    });
+
+                    items.forEach((memory, index) => {
+                        const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+                        const bubbleRadius = radiusFor(index);
+                        const spread = 112 + Math.sqrt(items.length + 2) * 52;
+                        const orbit = items.length <= 1
+                            ? 0
+                            : Math.sqrt((index + 0.5) / items.length) * spread;
+                        const angle = index * goldenAngle - Math.PI / 2;
+                        const x = anchor.x + Math.cos(angle) * orbit;
+                        const y = anchor.y + Math.sin(angle) * orbit;
+
+                        memoryNodes.push({
+                            memory,
+                            x,
+                            y,
+                            radius: bubbleRadius,
+                        });
+                    });
+                });
 
                 return {
-                    x: stage.x + Math.cos(angle) * radial,
-                    y: stage.y + Math.sin(angle) * radial
+                    periodNodes,
+                    memoryNodes,
                 };
+            }
+
+            function buildBounds(world) {
+                let minX = Infinity;
+                let maxX = -Infinity;
+                let minY = Infinity;
+                let maxY = -Infinity;
+
+                world.periodNodes.forEach((node) => {
+                    minX = Math.min(minX, node.x - node.radius - 60);
+                    maxX = Math.max(maxX, node.x + node.radius + 60);
+                    minY = Math.min(minY, node.y - node.radius - 80);
+                    maxY = Math.max(maxY, node.y + node.radius + 40);
+                });
+
+                world.memoryNodes.forEach((node) => {
+                    minX = Math.min(minX, node.x - node.radius - 40);
+                    maxX = Math.max(maxX, node.x + node.radius + 40);
+                    minY = Math.min(minY, node.y - node.radius - 40);
+                    maxY = Math.max(maxY, node.y + node.radius + 40);
+                });
+
+                return {
+                    minX,
+                    minY,
+                    maxX,
+                    maxY,
+                    width: maxX - minX,
+                    height: maxY - minY,
+                };
+            }
+
+            function renderGrid(bounds) {
+                const step = 240;
+
+                for (let x = Math.floor(bounds.minX / step) * step; x <= bounds.maxX; x += step) {
+                    bubbleMapGrid.appendChild(createSvg("line", {
+                        x1: x,
+                        y1: bounds.minY - 120,
+                        x2: x,
+                        y2: bounds.maxY + 120,
+                        class: "bubble-map-grid-line",
+                    }));
+                }
+
+                for (let y = Math.floor(bounds.minY / step) * step; y <= bounds.maxY; y += step) {
+                    bubbleMapGrid.appendChild(createSvg("line", {
+                        x1: bounds.minX - 120,
+                        y1: y,
+                        x2: bounds.maxX + 120,
+                        y2: y,
+                        class: "bubble-map-grid-line",
+                    }));
+                }
+            }
+
+            function renderPeriods(world) {
+                world.periodNodes.forEach((node) => {
+                    const zone = createSvg("g", {
+                        class: "bubble-period-zone",
+                        "data-period-zone": node.period,
+                    });
+
+                    zone.appendChild(createSvg("circle", {
+                        cx: node.x,
+                        cy: node.y,
+                        r: node.radius,
+                        class: "bubble-period-halo",
+                    }));
+
+                    zone.appendChild(createSvg("circle", {
+                        cx: node.x,
+                        cy: node.y,
+                        r: 4.5,
+                        class: "bubble-period-anchor",
+                    }));
+
+                    const periodName = createSvg("text", {
+                        x: node.x,
+                        y: node.y - node.radius - 26,
+                        class: "bubble-period-name",
+                    });
+                    periodName.textContent = node.period;
+
+                    const periodCount = createSvg("text", {
+                        x: node.x,
+                        y: node.y - node.radius - 8,
+                        class: "bubble-period-count",
+                    });
+                    periodCount.textContent = `${node.count} memories`;
+
+                    zone.appendChild(periodName);
+                    zone.appendChild(periodCount);
+                    bubbleMapPeriods.appendChild(zone);
+                    periodZones.set(node.period, zone);
+                });
             }
 
             function createLabel(x, y, text, radius) {
@@ -703,126 +1463,389 @@
                     x,
                     y,
                     class: "memory-label",
-                    "font-size": Math.max(10, radius * 0.2)
+                    "font-size": Math.max(10, radius * 0.2),
                 });
 
                 node.textContent = text;
                 return node;
             }
 
-            function getRadius(index) {
-                const pattern = [108, 96, 92, 112, 86, 98, 90, 104, 88, 100, 91, 95];
-                return pattern[index % pattern.length];
+            function renderMemories(world) {
+                world.memoryNodes.forEach((node, index) => {
+                    const gradientId = addGradient(index + 1, node.memory.colors);
+                    const wrapper = createSvg("g", {
+                        class: "memory-ball-wrap",
+                        "data-period-memory": node.memory.period,
+                        style: `--bubble-appear-delay:${(0.03 * index).toFixed(2)}s`,
+                    });
+                    const group = createSvg("a", {
+                        href: `/memories/${node.memory.id}`,
+                        class: "memory-ball",
+                        "data-period": node.memory.period,
+                        "data-emotion": node.memory.emotion,
+                        "data-tags": node.memory.tags.join(","),
+                        "aria-label": `${node.memory.period}の記憶`,
+                        style: [
+                            `--bubble-rest-scale:${(0.93 + (index % 4) * 0.02).toFixed(2)}`,
+                            `--bubble-rise-scale:${(1.02 + (index % 5) * 0.025).toFixed(2)}`,
+                            `--bubble-hover-scale:${(1.12 + (index % 4) * 0.025).toFixed(2)}`,
+                            `--bubble-duration:${(5.2 + (index % 5) * 0.55).toFixed(2)}s`,
+                            `--bubble-delay:${(-index * 0.45).toFixed(2)}s`,
+                        ].join(";"),
+                    });
+                    const body = createSvg("g", {
+                        class: "memory-ball-body",
+                    });
+
+                    const hitArea = createSvg("circle", {
+                        cx: node.x,
+                        cy: node.y,
+                        r: node.radius + 18,
+                        fill: "rgba(255,255,255,0.001)",
+                        "pointer-events": "all",
+                    });
+
+                    const aura = createSvg("circle", {
+                        cx: node.x,
+                        cy: node.y,
+                        r: node.radius + 20,
+                        fill: toRgba(node.memory.colors[1], 0.2),
+                        filter: "url(#ballAura)",
+                    });
+
+                    const glow = createSvg("circle", {
+                        cx: node.x,
+                        cy: node.y,
+                        r: node.radius + 11,
+                        fill: "rgba(255,255,255,0.1)",
+                        filter: "url(#ballAura)",
+                    });
+
+                    const circle = createSvg("circle", {
+                        cx: node.x,
+                        cy: node.y,
+                        r: node.radius,
+                        fill: `url(#${gradientId})`,
+                        filter: "url(#ballShadow)",
+                        opacity: "0.88",
+                    });
+
+                    const inner = createSvg("circle", {
+                        cx: node.x - node.radius * 0.25,
+                        cy: node.y - node.radius * 0.28,
+                        r: Math.max(10, node.radius * 0.26),
+                        fill: "rgba(255,255,255,0.30)",
+                    });
+
+                    const rim = createSvg("circle", {
+                        cx: node.x,
+                        cy: node.y,
+                        r: node.radius - 1,
+                        fill: "none",
+                        stroke: "rgba(255,255,255,0.1)",
+                        "stroke-width": "0.9",
+                        filter: "url(#ballAura)",
+                    });
+
+                    const core = createSvg("circle", {
+                        cx: node.x + node.radius * 0.2,
+                        cy: node.y + node.radius * 0.14,
+                        r: Math.max(10, node.radius * 0.42),
+                        fill: toRgba(node.memory.colors[0], 0.12),
+                    });
+
+                    group.appendChild(hitArea);
+                    body.appendChild(aura);
+                    body.appendChild(glow);
+                    body.appendChild(circle);
+                    body.appendChild(core);
+                    body.appendChild(inner);
+                    body.appendChild(rim);
+                    body.appendChild(createLabel(node.x, node.y, node.memory.label, node.radius));
+                    group.appendChild(body);
+                    group.appendChild(createSvg("title", {})).textContent = `${node.memory.period} / ${node.memory.emotion}\n${node.memory.content}`;
+
+                    wrapper.appendChild(group);
+                    wrapper.addEventListener("mouseenter", () => {
+                        group.classList.add("is-hovered");
+                    });
+                    wrapper.addEventListener("mouseleave", () => {
+                        group.classList.remove("is-hovered");
+                    });
+                    bubbleLayer.appendChild(wrapper);
+
+                    if (!memoryGroupsByPeriod.has(node.memory.period)) {
+                        memoryGroupsByPeriod.set(node.memory.period, []);
+                    }
+
+                    memoryGroupsByPeriod.get(node.memory.period).push(group);
+                });
             }
 
-            memories.forEach((memory, index) => {
-                const radius = getRadius(index);
-                const position = getPosition(index, memories.length, radius);
-                const gradientId = addGradient(index + 1, memory.colors);
-
-                const wrapper = createSvg("g", {
-                    class: "memory-ball-wrap",
-                    style: [
-                        `--bubble-appear-delay:${(0.06 * index).toFixed(2)}s`
-                    ].join(";")
+            function setActivePeriod(period) {
+                periodZones.forEach((zone, zonePeriod) => {
+                    zone.classList.toggle("is-active", zonePeriod === period);
                 });
 
-                const group = createSvg("a", {
-                    href: `/memories/${memory.id}`,
-                    class: "memory-ball",
-                    "data-period": memory.period,
-                    "data-emotion": memory.emotion,
-                    "data-tags": memory.tags.join(","),
-                    "aria-label": `${memory.period}の記憶`,
-                    style: [
-                        `--bubble-rest-scale:${(0.93 + (index % 4) * 0.02).toFixed(2)}`,
-                        `--bubble-rise-scale:${(1.02 + (index % 5) * 0.025).toFixed(2)}`,
-                        `--bubble-hover-scale:${(1.12 + (index % 4) * 0.025).toFixed(2)}`,
-                        `--bubble-duration:${(5.2 + (index % 5) * 0.55).toFixed(2)}s`,
-                        `--bubble-delay:${(-index * 0.45).toFixed(2)}s`
-                    ].join(";")
+                memoryGroupsByPeriod.forEach((groups, groupPeriod) => {
+                    groups.forEach((group) => {
+                        group.classList.toggle("is-period-hovered", groupPeriod === period);
+                    });
+                });
+            }
+
+            function clearActivePeriod() {
+                periodZones.forEach((zone) => zone.classList.remove("is-active"));
+                memoryGroupsByPeriod.forEach((groups) => {
+                    groups.forEach((group) => group.classList.remove("is-period-hovered"));
+                });
+            }
+
+            function jumpToPeriod(period) {
+                const url = new URL(bubblesRoute, window.location.origin);
+                url.searchParams.set("period", period);
+                window.location.href = url.toString();
+            }
+
+            function svgPointFromClient(clientX, clientY) {
+                const rect = bubbleStage.getBoundingClientRect();
+                return {
+                    x: ((clientX - rect.left) / rect.width) * viewport.width,
+                    y: ((clientY - rect.top) / rect.height) * viewport.height,
+                };
+            }
+
+            function clampTranslation(scale, tx, ty) {
+                const bounds = state.worldBounds;
+                const marginX = 120;
+                const marginY = 120;
+                const scaledWidth = bounds.width * scale;
+                const scaledHeight = bounds.height * scale;
+
+                if (scaledWidth <= viewport.width - (marginX * 2)) {
+                    tx = (viewport.width - scaledWidth) / 2 - (bounds.minX * scale);
+                } else {
+                    const minTx = viewport.width - ((bounds.maxX * scale) + marginX);
+                    const maxTx = marginX - (bounds.minX * scale);
+                    tx = Math.min(maxTx, Math.max(minTx, tx));
+                }
+
+                if (scaledHeight <= viewport.height - (marginY * 2)) {
+                    ty = (viewport.height - scaledHeight) / 2 - (bounds.minY * scale);
+                } else {
+                    const minTy = viewport.height - ((bounds.maxY * scale) + marginY);
+                    const maxTy = marginY - (bounds.minY * scale);
+                    ty = Math.min(maxTy, Math.max(minTy, ty));
+                }
+
+                return { tx, ty };
+            }
+
+            function applyTransform() {
+                const clamped = clampTranslation(state.scale, state.tx, state.ty);
+                state.tx = clamped.tx;
+                state.ty = clamped.ty;
+                bubbleMapViewport.setAttribute("transform", `matrix(${state.scale} 0 0 ${state.scale} ${state.tx} ${state.ty})`);
+            }
+
+            function frameInitialView() {
+                const bounds = state.worldBounds;
+                const paddingX = 420;
+                const paddingY = 320;
+                const scaleX = viewport.width / (bounds.width + paddingX);
+                const scaleY = viewport.height / (bounds.height + paddingY);
+                state.scale = Math.min(state.maxScale, Math.max(0.9, Math.min(scaleX, scaleY)));
+                state.tx = (viewport.width / 2) - (((bounds.minX + bounds.maxX) / 2) * state.scale);
+                state.ty = (viewport.height / 2) - (((bounds.minY + bounds.maxY) / 2) * state.scale);
+                applyTransform();
+            }
+
+            function zoomTo(nextScale, point) {
+                const clampedScale = Math.min(state.maxScale, Math.max(state.minScale, nextScale));
+                const worldX = (point.x - state.tx) / state.scale;
+                const worldY = (point.y - state.ty) / state.scale;
+                state.tx = point.x - (worldX * clampedScale);
+                state.ty = point.y - (worldY * clampedScale);
+                state.scale = clampedScale;
+                applyTransform();
+            }
+
+            function startDrag(point, pointerId = null) {
+                state.dragging = true;
+                state.dragStarted = false;
+                state.pointerId = pointerId;
+                state.startX = point.x;
+                state.startY = point.y;
+                state.startTx = state.tx;
+                state.startTy = state.ty;
+                bubbleStage.classList.add("is-dragging");
+            }
+
+            function updateDrag(point) {
+                if (!state.dragging) {
+                    return;
+                }
+
+                const dx = point.x - state.startX;
+                const dy = point.y - state.startY;
+
+                if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+                    state.dragStarted = true;
+                }
+
+                state.tx = state.startTx + dx;
+                state.ty = state.startTy + dy;
+                applyTransform();
+            }
+
+            function endDrag() {
+                state.dragging = false;
+                state.pointerId = null;
+                bubbleStage.classList.remove("is-dragging");
+            }
+
+            function closeInlineFilter() {
+                if (!inlineFilter || !inlineFilterToggle || !inlineFilterMenu) {
+                    return;
+                }
+
+                inlineFilter.classList.remove("is-open");
+                inlineFilterToggle.setAttribute("aria-expanded", "false");
+                inlineFilterMenu.hidden = true;
+            }
+
+            if (inlineFilter && inlineFilterToggle && inlineFilterMenu) {
+                inlineFilterToggle.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    const willOpen = !inlineFilter.classList.contains("is-open");
+
+                    if (!willOpen) {
+                        closeInlineFilter();
+                        return;
+                    }
+
+                    inlineFilter.classList.add("is-open");
+                    inlineFilterToggle.setAttribute("aria-expanded", "true");
+                    inlineFilterMenu.hidden = false;
                 });
 
-                const body = createSvg("g", {
-                    class: "memory-ball-body"
+                document.addEventListener("click", (event) => {
+                    if (!inlineFilter.contains(event.target)) {
+                        closeInlineFilter();
+                    }
                 });
 
-                const hitArea = createSvg("circle", {
-                    cx: position.x,
-                    cy: position.y,
-                    r: radius + 18,
-                    fill: "rgba(255,255,255,0.001)",
-                    "pointer-events": "all"
+                document.addEventListener("keydown", (event) => {
+                    if (event.key === "Escape") {
+                        closeInlineFilter();
+                    }
+                });
+            }
+
+            const world = buildWorldData();
+            state.worldBounds = buildBounds(world);
+            renderGrid(state.worldBounds);
+            renderPeriods(world);
+            renderMemories(world);
+            frameInitialView();
+            if (selectedPeriod !== "すべて") {
+                setActivePeriod(selectedPeriod);
+            }
+
+            periodZones.forEach((zone, period) => {
+                zone.addEventListener("mouseenter", () => {
+                    setActivePeriod(period);
                 });
 
-                const aura = createSvg("circle", {
-                    cx: position.x,
-                    cy: position.y,
-                    r: radius + 20,
-                    fill: toRgba(memory.colors[1], 0.2),
-                    filter: "url(#ballAura)"
+                zone.addEventListener("mouseleave", () => {
+                    clearActivePeriod();
                 });
 
-                const glow = createSvg("circle", {
-                    cx: position.x,
-                    cy: position.y,
-                    r: radius + 11,
-                    fill: "rgba(255,255,255,0.1)",
-                    filter: "url(#ballAura)"
+                zone.addEventListener("click", () => {
+                    jumpToPeriod(period);
                 });
+            });
 
-                const circle = createSvg("circle", {
-                    cx: position.x,
-                    cy: position.y,
-                    r: radius,
-                    fill: `url(#${gradientId})`,
-                    filter: "url(#ballShadow)",
-                    opacity: "0.88"
-                });
+            bubbleStage.addEventListener("wheel", (event) => {
+                event.preventDefault();
+                const point = svgPointFromClient(event.clientX, event.clientY);
+                const factor = event.deltaY < 0 ? 1.12 : 0.9;
+                zoomTo(state.scale * factor, point);
+            }, { passive: false });
 
-                const inner = createSvg("circle", {
-                    cx: position.x - radius * 0.25,
-                    cy: position.y - radius * 0.28,
-                    r: Math.max(10, radius * 0.26),
-                    fill: "rgba(255,255,255,0.30)"
-                });
+            bubbleStage.addEventListener("pointerdown", (event) => {
+                if (event.target.closest(".memory-ball") || event.target.closest(".bubble-period-zone")) {
+                    return;
+                }
 
-                const rim = createSvg("circle", {
-                    cx: position.x,
-                    cy: position.y,
-                    r: radius - 1,
-                    fill: "none",
-                    stroke: "rgba(255,255,255,0.1)",
-                    "stroke-width": "0.9",
-                    filter: "url(#ballAura)"
-                });
+                const point = svgPointFromClient(event.clientX, event.clientY);
+                startDrag(point, event.pointerId);
+            });
 
-                const core = createSvg("circle", {
-                    cx: position.x + radius * 0.2,
-                    cy: position.y + radius * 0.14,
-                    r: Math.max(10, radius * 0.42),
-                    fill: toRgba(memory.colors[0], 0.12)
-                });
+            bubbleStage.addEventListener("pointermove", (event) => {
+                if (!state.dragging || state.pointerId !== event.pointerId) {
+                    return;
+                }
 
-                group.appendChild(hitArea);
-                body.appendChild(aura);
-                body.appendChild(glow);
-                body.appendChild(circle);
-                body.appendChild(core);
-                body.appendChild(inner);
-                body.appendChild(rim);
-                body.appendChild(createLabel(position.x, position.y, memory.label, radius));
-                group.appendChild(body);
-                group.appendChild(createSvg("title", {})).textContent = `${memory.period} / ${memory.emotion}\n${memory.content}`;
+                updateDrag(svgPointFromClient(event.clientX, event.clientY));
+            });
 
-                wrapper.appendChild(group);
-                wrapper.addEventListener("mouseenter", () => {
-                    group.classList.add("is-hovered");
-                });
-                wrapper.addEventListener("mouseleave", () => {
-                    group.classList.remove("is-hovered");
-                });
-                bubbleLayer.appendChild(wrapper);
+            bubbleStage.addEventListener("pointerup", () => {
+                endDrag();
+            });
+
+            bubbleStage.addEventListener("pointerleave", () => {
+                endDrag();
+            });
+
+            bubbleStage.addEventListener("touchstart", (event) => {
+                if (event.touches.length === 2) {
+                    const first = svgPointFromClient(event.touches[0].clientX, event.touches[0].clientY);
+                    const second = svgPointFromClient(event.touches[1].clientX, event.touches[1].clientY);
+                    state.touchMode = "pinch";
+                    state.pinchDistance = Math.hypot(first.x - second.x, first.y - second.y);
+                    state.pinchMidpoint = {
+                        x: (first.x + second.x) / 2,
+                        y: (first.y + second.y) / 2,
+                    };
+                    return;
+                }
+
+                if (event.touches.length === 1 && !event.target.closest(".memory-ball") && !event.target.closest(".bubble-period-zone")) {
+                    state.touchMode = "drag";
+                    startDrag(svgPointFromClient(event.touches[0].clientX, event.touches[0].clientY));
+                }
+            }, { passive: true });
+
+            bubbleStage.addEventListener("touchmove", (event) => {
+                if (state.touchMode === "pinch" && event.touches.length === 2) {
+                    const first = svgPointFromClient(event.touches[0].clientX, event.touches[0].clientY);
+                    const second = svgPointFromClient(event.touches[1].clientX, event.touches[1].clientY);
+                    const nextDistance = Math.hypot(first.x - second.x, first.y - second.y);
+                    const midpoint = {
+                        x: (first.x + second.x) / 2,
+                        y: (first.y + second.y) / 2,
+                    };
+
+                    if (state.pinchDistance > 0) {
+                        const factor = nextDistance / state.pinchDistance;
+                        zoomTo(state.scale * factor, midpoint);
+                    }
+
+                    state.pinchDistance = nextDistance;
+                    state.pinchMidpoint = midpoint;
+                    return;
+                }
+
+                if (state.touchMode === "drag" && event.touches.length === 1) {
+                    updateDrag(svgPointFromClient(event.touches[0].clientX, event.touches[0].clientY));
+                }
+            }, { passive: true });
+
+            bubbleStage.addEventListener("touchend", () => {
+                state.touchMode = null;
+                state.pinchDistance = 0;
+                endDrag();
             });
         </script>
     @endif
