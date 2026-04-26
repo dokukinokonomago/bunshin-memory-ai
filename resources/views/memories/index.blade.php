@@ -139,8 +139,12 @@
                                 @endphp
                                 <article class="memory-entry">
                                     <div class="memory-entry-shell">
-                                        <div class="memory-entry-orb-wrap">
-                                            <span class="memory-entry-orb" style="--orb-a: {{ $orbColors[0] }}; --orb-b: {{ $orbColors[1] }};"></span>
+                                        <div class="memory-entry-orb-wrap" style="--orb-a: {{ $orbColors[0] }}; --orb-b: {{ $orbColors[1] }};">
+                                            <span class="memory-entry-orb-satellite sat-a"></span>
+                                            <span class="memory-entry-orb-satellite sat-b"></span>
+                                            <span class="memory-entry-orb-satellite sat-c"></span>
+                                            <span class="memory-entry-orb-ring"></span>
+                                            <span class="memory-entry-orb"></span>
                                         </div>
 
                                         <div class="memory-entry-body">
@@ -671,34 +675,94 @@
             place-items: center;
             position: relative;
             z-index: 1;
+            width: 124px;
+            height: 124px;
+        }
+
+        .memory-entry-orb-ring {
+            position: absolute;
+            inset: 8px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 58%, transparent 72%);
+            box-shadow:
+                0 0 0 1px rgba(146, 196, 255, 0.06),
+                0 0 44px color-mix(in srgb, var(--orb-a) 18%, transparent);
+            opacity: 0.55;
         }
 
         .memory-entry-orb {
             position: relative;
-            width: 66px;
-            height: 66px;
+            width: 74px;
+            height: 74px;
             border-radius: 50%;
             box-shadow:
-                inset -14px -16px 30px rgba(5, 12, 24, 0.24),
-                inset 10px 10px 24px rgba(255, 255, 255, 0.18),
-                0 0 18px color-mix(in srgb, var(--orb-b) 34%, transparent),
-                0 0 42px color-mix(in srgb, var(--orb-a) 22%, transparent);
+                inset -16px -18px 30px rgba(5, 12, 24, 0.28),
+                inset 12px 12px 28px rgba(255, 255, 255, 0.18),
+                0 0 22px color-mix(in srgb, var(--orb-b) 42%, transparent),
+                0 0 54px color-mix(in srgb, var(--orb-a) 28%, transparent),
+                0 0 92px color-mix(in srgb, var(--orb-a) 14%, transparent);
             background:
-                radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.92), transparent 18%),
-                radial-gradient(circle at 56% 58%, color-mix(in srgb, var(--orb-a) 94%, white 6%), color-mix(in srgb, var(--orb-b) 48%, transparent) 72%, transparent 100%);
+                radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 0.98), transparent 16%),
+                radial-gradient(circle at 42% 38%, rgba(255,255,255,0.20), transparent 24%),
+                radial-gradient(circle at 56% 58%, color-mix(in srgb, var(--orb-a) 94%, white 6%), color-mix(in srgb, var(--orb-b) 52%, transparent) 72%, transparent 100%);
         }
 
         .memory-entry-orb::before {
             content: "";
             position: absolute;
-            width: 20px;
-            height: 12px;
-            left: 12px;
-            top: 10px;
+            width: 26px;
+            height: 16px;
+            left: 14px;
+            top: 12px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            filter: blur(4px);
+            background: rgba(255, 255, 255, 0.48);
+            filter: blur(5px);
             transform: rotate(-18deg);
+        }
+
+        .memory-entry-orb::after {
+            content: "";
+            position: absolute;
+            inset: -10px;
+            border-radius: 50%;
+            background: radial-gradient(circle, color-mix(in srgb, var(--orb-a) 28%, transparent) 0%, color-mix(in srgb, var(--orb-b) 16%, transparent) 44%, transparent 72%);
+            filter: blur(8px);
+            z-index: -1;
+        }
+
+        .memory-entry-orb-satellite {
+            position: absolute;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 30% 26%, rgba(255,255,255,0.82), transparent 18%),
+                radial-gradient(circle at 56% 58%, color-mix(in srgb, var(--orb-a) 90%, white 10%), color-mix(in srgb, var(--orb-b) 46%, transparent) 72%, transparent 100%);
+            box-shadow:
+                inset -8px -10px 18px rgba(5, 12, 24, 0.24),
+                0 0 14px color-mix(in srgb, var(--orb-a) 26%, transparent),
+                0 0 28px color-mix(in srgb, var(--orb-b) 18%, transparent);
+            opacity: 0.92;
+        }
+
+        .memory-entry-orb-satellite.sat-a {
+            width: 28px;
+            height: 28px;
+            left: 8px;
+            bottom: 22px;
+        }
+
+        .memory-entry-orb-satellite.sat-b {
+            width: 16px;
+            height: 16px;
+            right: 18px;
+            top: 24px;
+        }
+
+        .memory-entry-orb-satellite.sat-c {
+            width: 12px;
+            height: 12px;
+            right: 10px;
+            bottom: 18px;
+            opacity: 0.78;
         }
 
         .memory-entry-body {
@@ -1083,6 +1147,8 @@
 
             .memory-entry-orb-wrap {
                 justify-items: start;
+                width: 112px;
+                height: 112px;
             }
 
             .memory-entry-shell::before,
