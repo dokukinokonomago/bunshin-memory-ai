@@ -5,16 +5,26 @@
 
 @php
     $dashboardNow = now('Asia/Tokyo');
+    $periodShortLabels = [
+        '幼少期' => '幼少',
+        '小学生' => '小学',
+        '中学生' => '中学',
+        '高校生' => '高校',
+        '大学生' => '大学',
+        '成人期' => '成人',
+        '不明' => '不明',
+    ];
     $distribution = collect($periods)
-        ->map(function ($period) use ($memories) {
+        ->map(function ($period) use ($memories, $periodShortLabels) {
             return [
-                'label' => $period,
+                'label' => $periodShortLabels[$period] ?? $period,
                 'count' => $memories->where('period', $period)->count(),
             ];
         })
         ->values();
     $distributionMax = max(1, (int) $distribution->max('count'));
     $detailRows = $memories->take(8)->values();
+    $selectedPeriodShort = $periodShortLabels[$selectedPeriod] ?? $selectedPeriod;
 @endphp
 
 @section('content')
@@ -28,13 +38,9 @@
 
         <section class="memory-index-headerbar">
             <div class="memory-index-header-main">
+                <span class="memory-index-kicker">PERSONAL MEMORY ARCHIVE</span>
                 <h1>全記憶一覧</h1>
                 <span class="memory-index-count">保存数 <strong>{{ $allCount }}</strong></span>
-            </div>
-
-            <div class="memory-index-header-actions">
-                <a class="btn btn-primary" href="{{ route('memories.create') }}">新しい記憶を追加</a>
-                <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">記憶の玉へ戻る</a>
             </div>
         </section>
 
@@ -53,6 +59,23 @@
                 @endif
 
                 <div class="memory-index-toolbar">
+                    <div class="memory-index-toolbar-top">
+                        <div class="memory-index-toolbar-copy">
+                            <span class="memory-index-toolbar-label">ARCHIVE FILTER</span>
+                            <strong>{{ $selectedPeriod === 'すべて' ? '全記憶を横断表示' : $selectedPeriodShort . 'の記憶を表示中' }}</strong>
+                            <p>{{ $memories->count() }}件の記憶を、検索と年代条件で絞り込みできます。</p>
+                        </div>
+
+                        <div class="memory-index-toolbar-actions">
+                            <a id="editMemoryButton" class="btn btn-secondary is-disabled" href="#" aria-disabled="true">修正</a>
+                            <form id="deleteMemoryForm" method="post" action="#" onsubmit="return confirm('この記憶を削除しますか？');">
+                                @csrf
+                                @method('DELETE')
+                                <button id="deleteMemoryButton" class="btn btn-secondary btn-danger" type="submit" disabled>削除</button>
+                            </form>
+                        </div>
+                    </div>
+
                     <div class="memory-index-toolbar-main">
                         <form method="get" action="{{ route('memories.index') }}" class="memory-index-search-form">
                             @if ($selectedPeriod !== 'すべて')
@@ -64,15 +87,6 @@
                                 <a class="btn btn-secondary" href="{{ route('memories.index') }}">解除</a>
                             @endif
                         </form>
-
-                        <div class="memory-index-toolbar-actions">
-                            <a id="editMemoryButton" class="btn btn-secondary is-disabled" href="#" aria-disabled="true">修正</a>
-                            <form id="deleteMemoryForm" method="post" action="#" onsubmit="return confirm('この記憶を削除しますか？');">
-                                @csrf
-                                @method('DELETE')
-                                <button id="deleteMemoryButton" class="btn btn-secondary btn-danger" type="submit" disabled>削除</button>
-                            </form>
-                        </div>
                     </div>
 
                     <div class="memory-index-period-filter" aria-label="年代で検索">
@@ -120,15 +134,21 @@
                                         </div>
 
                                         <div class="memory-entry-body">
+                                            <div class="memory-entry-meta">
+                                                <span class="memory-entry-kicker-chip">ARCHIVE {{ str_pad((string) $memory->id, 3, '0', STR_PAD_LEFT) }}</span>
+                                                <span class="memory-entry-time">{{ $memory->created_at->timezone('Asia/Tokyo')->format('Y.m.d H:i') }}</span>
+                                            </div>
+
                                             <div class="memory-entry-head">
-                                                <strong>{{ $memory->created_at->timezone('Asia/Tokyo')->format('Y.m.d H:i') }}</strong>
                                                 <div class="memory-entry-chips">
-                                                    <span class="memory-entry-period">{{ $memory->period }}</span>
+                                                    <span class="memory-entry-period">{{ $periodShortLabels[$memory->period] ?? $memory->period }}</span>
                                                     <span class="badge {{ $badgeClass }}">{{ $memory->emotion }}</span>
                                                 </div>
                                             </div>
 
-                                            <p class="memory-entry-content">{{ $memory->content }}</p>
+                                            <div class="memory-entry-story">
+                                                <p class="memory-entry-content">{{ $memory->content }}</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </label>
@@ -157,15 +177,15 @@
                         <div class="memory-side-chart">
                             @foreach ($distribution as $item)
                                 @php
-                                    $height = max(8, (int) round(($item['count'] / $distributionMax) * 140));
+                                    $width = max(8, (int) round(($item['count'] / $distributionMax) * 100));
                                     $barClass = $loop->iteration % 3 === 1 ? 'is-cyan' : ($loop->iteration % 3 === 2 ? 'is-orange' : 'is-blue');
                                 @endphp
-                                <div class="memory-side-bar-col">
-                                    <span class="memory-side-bar-count">{{ $item['count'] }}</span>
-                                    <div class="memory-side-bar-track">
-                                        <span class="memory-side-bar {{ $barClass }}" style="height: {{ $height }}px;"></span>
-                                    </div>
+                                <div class="memory-side-bar-row">
                                     <span class="memory-side-bar-label">{{ $item['label'] }}</span>
+                                    <div class="memory-side-bar-track">
+                                        <span class="memory-side-bar {{ $barClass }}" style="width: {{ $width }}%;"></span>
+                                    </div>
+                                    <span class="memory-side-bar-count">{{ $item['count'] }}</span>
                                 </div>
                             @endforeach
                         </div>
@@ -192,7 +212,7 @@
                                 @foreach ($detailRows as $memory)
                                     <div class="memory-side-row">
                                         <span>{{ $memory->created_at->timezone('Asia/Tokyo')->format('m.d') }}</span>
-                                        <span>{{ $memory->period }}</span>
+                                        <span>{{ $periodShortLabels[$memory->period] ?? $memory->period }}</span>
                                         <span>{{ \Illuminate\Support\Str::limit($memory->content, 16, '…') }}</span>
                                         <span>{{ $memory->emotion }}</span>
                                     </div>
@@ -214,16 +234,18 @@
 
         .memory-index-command {
             position: relative;
-            padding: 22px;
-            border-radius: 34px;
+            padding: 24px;
+            border-radius: 36px;
             overflow: hidden;
             color: rgba(238, 245, 255, 0.94);
             background:
-                radial-gradient(circle at 16% 16%, rgba(89, 143, 255, 0.16), transparent 22%),
-                radial-gradient(circle at 84% 20%, rgba(102, 228, 255, 0.12), transparent 18%),
-                radial-gradient(circle at 72% 84%, rgba(255, 139, 181, 0.08), transparent 20%),
-                linear-gradient(160deg, #01040c 0%, #060b17 42%, #0a1124 100%);
-            box-shadow: 0 28px 72px rgba(6, 10, 24, 0.42);
+                radial-gradient(circle at 10% 12%, rgba(110, 161, 255, 0.22), transparent 20%),
+                radial-gradient(circle at 82% 16%, rgba(77, 230, 255, 0.14), transparent 18%),
+                radial-gradient(circle at 70% 84%, rgba(255, 160, 118, 0.10), transparent 20%),
+                linear-gradient(160deg, rgba(5, 10, 24, 0.98) 0%, rgba(8, 16, 38, 0.98) 46%, rgba(5, 11, 26, 0.98) 100%);
+            box-shadow:
+                0 34px 88px rgba(5, 10, 24, 0.44),
+                inset 0 1px 0 rgba(255, 255, 255, 0.04);
             isolation: isolate;
         }
 
@@ -302,56 +324,74 @@
 
         .memory-index-headerbar {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            align-items: flex-start;
+            justify-content: flex-start;
             gap: 14px;
-            flex-wrap: wrap;
-            padding: 14px 16px;
-            margin-bottom: 16px;
-            border-radius: 24px;
-            border: 1px solid rgba(139, 188, 255, 0.12);
+            padding: 18px 20px;
+            margin-bottom: 18px;
+            border-radius: 28px;
+            border: 1px solid rgba(139, 188, 255, 0.14);
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-                rgba(8, 15, 31, 0.7);
+                linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02) 52%, rgba(255, 255, 255, 0.01)),
+                linear-gradient(135deg, rgba(17, 32, 72, 0.88), rgba(8, 16, 38, 0.86));
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.06),
-                0 16px 36px rgba(2, 7, 18, 0.24);
+                inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                0 20px 46px rgba(2, 7, 18, 0.28);
         }
 
-        .memory-index-header-main,
-        .memory-index-header-actions {
+        .memory-index-header-main {
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            align-items: flex-start;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
+        }
+
+        .memory-index-kicker {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 196, 255, 0.14);
+            background: rgba(12, 22, 48, 0.64);
+            color: rgba(174, 210, 255, 0.72);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.24em;
         }
 
         .memory-index-headerbar h1 {
             margin: 0;
-            font-size: clamp(30px, 3.2vw, 42px);
+            font-size: clamp(32px, 3.4vw, 46px);
             line-height: 1;
-            letter-spacing: 0.03em;
+            letter-spacing: 0.05em;
             color: rgba(247, 250, 255, 0.98);
+            text-shadow: 0 0 24px rgba(120, 170, 255, 0.16);
         }
 
         .memory-index-count {
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            min-height: 42px;
-            padding: 0 16px;
+            min-height: 46px;
+            padding: 0 18px;
             border-radius: 999px;
-            border: 1px solid rgba(139, 188, 255, 0.14);
-            background: rgba(13, 22, 44, 0.84);
+            border: 1px solid rgba(139, 188, 255, 0.18);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01)),
+                rgba(10, 19, 40, 0.84);
             color: rgba(171, 197, 236, 0.8);
             font-size: 14px;
             font-weight: 600;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.05),
+                0 12px 28px rgba(6, 12, 28, 0.18);
         }
 
         .memory-index-count strong {
             color: rgba(246, 249, 255, 0.98);
-            font-size: 24px;
+            font-size: 26px;
         }
 
         .memory-index-layout {
@@ -375,22 +415,55 @@
 
         .memory-index-toolbar {
             display: grid;
-            gap: 12px;
-            padding: 16px;
-            border-radius: 24px;
-            border: 1px solid rgba(139, 188, 255, 0.1);
+            gap: 14px;
+            padding: 18px;
+            border-radius: 28px;
+            border: 1px solid rgba(139, 188, 255, 0.14);
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015)),
-                rgba(8, 14, 28, 0.68);
+                linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.015) 46%, rgba(255, 255, 255, 0.02)),
+                linear-gradient(140deg, rgba(9, 18, 44, 0.88), rgba(6, 12, 28, 0.86));
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                0 16px 36px rgba(2, 7, 18, 0.2);
+                inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                0 20px 48px rgba(2, 7, 18, 0.24);
+        }
+
+        .memory-index-toolbar-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .memory-index-toolbar-copy {
+            display: grid;
+            gap: 6px;
+        }
+
+        .memory-index-toolbar-label {
+            color: rgba(143, 206, 255, 0.78);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.24em;
+        }
+
+        .memory-index-toolbar-copy strong {
+            color: rgba(246, 249, 255, 0.98);
+            font-size: 22px;
+            line-height: 1.2;
+        }
+
+        .memory-index-toolbar-copy p {
+            margin: 0;
+            color: rgba(184, 205, 238, 0.78);
+            font-size: 13px;
+            line-height: 1.6;
         }
 
         .memory-index-toolbar-main {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
             gap: 12px;
             flex-wrap: wrap;
         }
@@ -404,14 +477,18 @@
         }
 
         .memory-index-search-form input {
-            width: clamp(240px, 22vw, 360px);
-            min-height: 44px;
-            padding: 0 16px;
+            width: clamp(260px, 24vw, 380px);
+            min-height: 46px;
+            padding: 0 18px;
             border-radius: 999px;
-            border: 1px solid rgba(160, 203, 255, 0.14);
-            background: rgba(12, 20, 40, 0.92);
+            border: 1px solid rgba(160, 203, 255, 0.18);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01)),
+                rgba(12, 20, 40, 0.92);
             color: rgba(239, 245, 255, 0.94);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.05),
+                0 10px 22px rgba(5, 10, 24, 0.16);
         }
 
         .memory-index-toolbar-actions,
@@ -448,17 +525,17 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-height: 42px;
-            padding: 0 16px;
+            min-height: 44px;
+            padding: 0 18px;
             border-radius: 999px;
-            border: 1px solid rgba(166, 204, 255, 0.14);
+            border: 1px solid rgba(166, 204, 255, 0.18);
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-                rgba(12, 20, 40, 0.7);
+                linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.02)),
+                rgba(12, 20, 40, 0.76);
             color: rgba(232, 241, 255, 0.92);
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                0 10px 24px rgba(6, 10, 24, 0.18);
+                inset 0 1px 0 rgba(255, 255, 255, 0.06),
+                0 12px 28px rgba(6, 10, 24, 0.22);
             transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
             white-space: nowrap;
         }
@@ -499,7 +576,7 @@
 
         .memory-index-timeline {
             display: grid;
-            gap: 14px;
+            gap: 16px;
         }
 
         .memory-entry {
@@ -515,51 +592,74 @@
 
         .memory-entry-shell {
             display: grid;
-            grid-template-columns: 88px minmax(0, 1fr);
-            gap: 18px;
+            grid-template-columns: 92px minmax(0, 1fr);
+            gap: 20px;
             align-items: center;
-            padding: 18px 20px;
-            border-radius: 28px;
-            border: 1px solid rgba(150, 193, 255, 0.09);
+            padding: 20px 22px;
+            border-radius: 30px;
+            border: 1px solid rgba(150, 193, 255, 0.12);
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015)),
-                rgba(9, 15, 30, 0.72);
+                linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.02) 36%, rgba(255, 255, 255, 0.01)),
+                linear-gradient(145deg, rgba(12, 24, 56, 0.78), rgba(8, 15, 34, 0.84));
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                0 18px 40px rgba(4, 10, 22, 0.18);
+                inset 0 1px 0 rgba(255, 255, 255, 0.09),
+                inset 0 -16px 28px rgba(0, 0, 0, 0.14),
+                0 22px 52px rgba(4, 10, 22, 0.22);
             transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .memory-entry-shell::before {
+            content: "";
+            position: absolute;
+            inset: 1px 1px auto;
+            height: 48%;
+            border-radius: 28px 28px 18px 18px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02));
+            pointer-events: none;
+        }
+
+        .memory-entry-shell::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 88% 14%, rgba(108, 189, 255, 0.12), transparent 26%);
+            pointer-events: none;
         }
 
         .memory-entry:hover .memory-entry-shell {
             transform: translateY(-2px);
-            border-color: rgba(174, 214, 255, 0.24);
-            box-shadow: 0 22px 46px rgba(4, 10, 22, 0.24);
+            border-color: rgba(174, 214, 255, 0.28);
+            box-shadow: 0 28px 60px rgba(4, 10, 22, 0.28);
         }
 
         .memory-select:checked + .memory-entry-shell {
-            border-color: rgba(157, 214, 255, 0.28);
+            border-color: rgba(157, 214, 255, 0.34);
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.06),
-                0 24px 58px rgba(20, 54, 120, 0.26);
+                inset 0 1px 0 rgba(255, 255, 255, 0.10),
+                0 28px 64px rgba(20, 54, 120, 0.34);
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
-                rgba(10, 18, 35, 0.82);
+                linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03)),
+                linear-gradient(145deg, rgba(13, 29, 68, 0.88), rgba(8, 17, 38, 0.9));
         }
 
         .memory-entry-orb-wrap {
             display: grid;
             place-items: center;
+            position: relative;
+            z-index: 1;
         }
 
         .memory-entry-orb {
             position: relative;
-            width: 62px;
-            height: 62px;
+            width: 66px;
+            height: 66px;
             border-radius: 50%;
             box-shadow:
-                inset -12px -14px 28px rgba(5, 12, 24, 0.24),
-                inset 10px 10px 24px rgba(255, 255, 255, 0.16),
-                0 0 42px rgba(116, 180, 255, 0.16);
+                inset -14px -16px 30px rgba(5, 12, 24, 0.24),
+                inset 10px 10px 24px rgba(255, 255, 255, 0.18),
+                0 0 48px rgba(116, 180, 255, 0.20);
         }
 
         .memory-entry-orb::before {
@@ -597,9 +697,11 @@
             display: grid;
             gap: 12px;
             min-width: 0;
+            position: relative;
+            z-index: 1;
         }
 
-        .memory-entry-head {
+        .memory-entry-meta {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -607,10 +709,34 @@
             flex-wrap: wrap;
         }
 
-        .memory-entry-head strong {
-            color: rgba(247, 250, 255, 0.98);
-            font-size: 24px;
-            line-height: 1.1;
+        .memory-entry-kicker-chip,
+        .memory-entry-time {
+            display: inline-flex;
+            align-items: center;
+            min-height: 30px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(152, 200, 255, 0.12);
+            background: rgba(10, 20, 44, 0.48);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+        }
+
+        .memory-entry-kicker-chip {
+            color: rgba(147, 210, 255, 0.86);
+        }
+
+        .memory-entry-time {
+            color: rgba(216, 230, 255, 0.82);
+        }
+
+        .memory-entry-head {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .memory-entry-chips {
@@ -626,16 +752,26 @@
             min-height: 32px;
             padding: 0 12px;
             border-radius: 999px;
-            background: rgba(118, 173, 255, 0.08);
-            border: 1px solid rgba(140, 198, 255, 0.1);
-            color: rgba(232, 242, 255, 0.84);
+            background: rgba(118, 173, 255, 0.10);
+            border: 1px solid rgba(140, 198, 255, 0.14);
+            color: rgba(238, 245, 255, 0.9);
             font-size: 13px;
             font-weight: 700;
         }
 
+        .memory-entry-story {
+            padding: 16px 18px;
+            border-radius: 20px;
+            border: 1px solid rgba(144, 193, 255, 0.10);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01)),
+                rgba(6, 12, 30, 0.34);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
         .memory-entry-content {
             margin: 0;
-            color: rgba(228, 236, 251, 0.92);
+            color: rgba(232, 240, 255, 0.94);
             font-size: 18px;
             line-height: 1.72;
         }
@@ -654,23 +790,25 @@
             display: grid;
             gap: 14px;
             padding: 14px;
-            border-radius: 24px;
-            border: 1px solid rgba(122, 170, 255, 0.12);
+            border-radius: 28px;
+            border: 1px solid rgba(122, 170, 255, 0.14);
             background:
-                linear-gradient(180deg, rgba(20, 25, 40, 0.98), rgba(10, 15, 28, 0.98)),
+                linear-gradient(180deg, rgba(24, 32, 54, 0.98), rgba(8, 14, 28, 0.98)),
                 #0b0f19;
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                0 18px 48px rgba(2, 6, 18, 0.36);
+                inset 0 1px 0 rgba(255, 255, 255, 0.06),
+                0 20px 54px rgba(2, 6, 18, 0.36);
         }
 
         .memory-side-block {
             display: grid;
             gap: 12px;
-            padding: 14px;
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(136, 182, 255, 0.08);
+            padding: 16px;
+            border-radius: 22px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01)),
+                rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(136, 182, 255, 0.10);
         }
 
         .memory-side-heading {
@@ -718,39 +856,44 @@
 
         .memory-side-chart {
             display: grid;
-            grid-template-columns: repeat(7, minmax(0, 1fr));
-            gap: 8px;
-            align-items: end;
-            min-height: 190px;
+            gap: 12px;
         }
 
-        .memory-side-bar-col {
+        .memory-side-bar-row {
             display: grid;
-            gap: 8px;
-            justify-items: center;
+            grid-template-columns: 36px minmax(0, 1fr) 24px;
+            gap: 10px;
+            align-items: center;
         }
 
-        .memory-side-bar-count,
         .memory-side-bar-label {
-            color: rgba(176, 198, 232, 0.72);
-            font-size: 10px;
-            letter-spacing: 0.04em;
-            text-align: center;
+            color: rgba(206, 225, 251, 0.82);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+        }
+
+        .memory-side-bar-count {
+            color: rgba(176, 198, 232, 0.76);
+            font-size: 11px;
+            text-align: right;
         }
 
         .memory-side-bar-track {
-            width: 22px;
-            height: 144px;
+            width: 100%;
+            height: 16px;
             display: flex;
-            align-items: flex-end;
-            justify-content: center;
+            align-items: center;
+            justify-content: flex-start;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.04);
         }
 
         .memory-side-bar {
             display: block;
-            width: 100%;
+            height: 100%;
             border-radius: 999px;
             box-shadow: 0 0 14px currentColor;
         }
@@ -835,6 +978,10 @@
                 border-radius: 20px;
             }
 
+            .memory-index-headerbar h1 {
+                font-size: 28px;
+            }
+
             .memory-index-toolbar-main {
                 align-items: stretch;
             }
@@ -865,12 +1012,12 @@
                 justify-items: start;
             }
 
-            .memory-entry-head strong {
-                font-size: 20px;
-            }
-
             .memory-entry-content {
                 font-size: 16px;
+            }
+
+            .memory-side-bar-row {
+                grid-template-columns: 34px minmax(0, 1fr) 20px;
             }
 
         }
