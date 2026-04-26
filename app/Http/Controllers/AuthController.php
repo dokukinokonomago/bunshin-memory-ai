@@ -12,12 +12,8 @@ use Illuminate\View\View;
 
 class AuthController extends Controller
 {
-    public function create(): View|RedirectResponse
+    public function create(): View
     {
-        if (Auth::check()) {
-            return redirect()->route('memories.bubbles');
-        }
-
         $credentials = $this->ensureDefaultUserExists();
 
         return view('auth.login', [
