@@ -163,14 +163,14 @@
                                                 </div>
                                             </div>
 
-                                            <div class="memory-entry-head">
+                                            <div class="memory-entry-inline">
                                                 <div class="memory-entry-chips">
                                                     <span class="memory-entry-period">{{ $periodShortLabels[$memory->period] ?? $memory->period }}</span>
                                                     <span class="badge {{ $badgeClass }}">{{ $memory->emotion }}</span>
                                                 </div>
-                                            </div>
 
-                                            <p class="memory-entry-content">{{ $memory->content }}</p>
+                                                <p class="memory-entry-content">{{ $memory->content }}</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </article>
@@ -835,12 +835,13 @@
             color: rgba(255, 224, 232, 0.94);
         }
 
-        .memory-entry-head {
+        .memory-entry-inline {
             display: flex;
             align-items: center;
             justify-content: flex-start;
             gap: 10px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            min-width: 0;
         }
 
         .memory-entry-chips {
@@ -866,8 +867,13 @@
         .memory-entry-content {
             margin: 0;
             color: rgba(232, 240, 255, 0.94);
-            font-size: 18px;
-            line-height: 1.72;
+            font-size: 17px;
+            line-height: 1.45;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+            flex: 1 1 auto;
         }
 
         .memory-index-empty {
@@ -1292,6 +1298,7 @@
 
             .memory-entry-content {
                 font-size: 16px;
+                white-space: normal;
             }
 
             .memory-side-bar-row {
