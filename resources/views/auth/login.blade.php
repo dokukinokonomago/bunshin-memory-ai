@@ -6,6 +6,12 @@
 
 @section('content')
     <section class="auth-login-screen">
+        <div class="auth-login-decor" aria-hidden="true">
+            <span class="auth-login-glow glow-a"></span>
+            <span class="auth-login-glow glow-b"></span>
+            <span class="auth-login-grid"></span>
+        </div>
+
         <div class="auth-login-shell">
             <section class="auth-login-copy">
                 <span class="auth-login-kicker">BUNSHIN AI LOGIN</span>
@@ -87,7 +93,9 @@
         }
 
         .auth-login-screen {
+            position: relative;
             min-height: 100vh;
+            overflow: hidden;
             padding: 40px;
             background:
                 radial-gradient(circle at 12% 16%, rgba(84, 133, 255, 0.22), transparent 22%),
@@ -97,7 +105,51 @@
             color: rgba(244, 248, 255, 0.96);
         }
 
+        .auth-login-decor,
+        .auth-login-glow,
+        .auth-login-grid {
+            position: absolute;
+        }
+
+        .auth-login-decor {
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .auth-login-glow {
+            border-radius: 50%;
+            filter: blur(18px);
+        }
+
+        .auth-login-glow.glow-a {
+            width: 340px;
+            height: 340px;
+            left: -120px;
+            top: 18%;
+            background: radial-gradient(circle, rgba(88, 136, 255, 0.28), transparent 72%);
+        }
+
+        .auth-login-glow.glow-b {
+            width: 280px;
+            height: 280px;
+            right: -90px;
+            bottom: 8%;
+            background: radial-gradient(circle, rgba(115, 226, 255, 0.18), transparent 72%);
+        }
+
+        .auth-login-grid {
+            inset: 0;
+            opacity: 0.18;
+            background-image:
+                linear-gradient(rgba(118, 160, 232, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(118, 160, 232, 0.08) 1px, transparent 1px);
+            background-size: 84px 84px;
+            mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.92), transparent 92%);
+        }
+
         .auth-login-shell {
+            position: relative;
+            z-index: 1;
             width: min(1120px, 100%);
             margin: 0 auto;
             min-height: calc(100vh - 80px);
@@ -152,6 +204,7 @@
             border-radius: 20px;
             border: 1px solid rgba(150, 192, 255, 0.12);
             background: rgba(8, 13, 26, 0.56);
+            backdrop-filter: blur(16px);
         }
 
         .auth-login-hint span {
@@ -173,6 +226,7 @@
             background:
                 linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
                 rgba(7, 12, 24, 0.72);
+            backdrop-filter: blur(18px);
             box-shadow: 0 30px 80px rgba(0, 0, 0, 0.24);
         }
 
