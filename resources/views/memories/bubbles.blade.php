@@ -280,17 +280,20 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     z-index: 20;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
     padding: 22px 28px 0;
+    min-height: 112px;
 }
 
 .mem-nav-left {
+    position: absolute;
+    left: 50%;
+    top: 22px;
+    transform: translateX(-50%);
     display: flex;
     flex-direction: column;
     gap: 7px;
+    align-items: center;
+    text-align: center;
 }
 
 .mem-nav-eyebrow {
@@ -316,6 +319,9 @@
 }
 
 .mem-nav-right {
+    position: absolute;
+    right: 28px;
+    top: 22px;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -993,7 +999,17 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 
 /* ── レスポンシブ ────────────────────────── */
 @media(max-width:900px){
-    .mem-nav { flex-wrap:wrap; padding:16px 16px 0; }
+    .mem-nav { padding:16px 16px 0; min-height: 160px; }
+    .mem-nav-left {
+        top: 16px;
+        width: calc(100% - 32px);
+    }
+    .mem-nav-right {
+        top: 92px;
+        left: 16px;
+        right: 16px;
+        justify-content: center;
+    }
     .mem-nav-right { gap:8px; }
     .mem-count-orb { width:60px; height:60px; }
     .mem-count-num { font-size:20px; }
@@ -1002,7 +1018,7 @@ details[open] .mem-chevron { transform: rotate(180deg); }
         position: static;
         width: auto;
         min-width: 0;
-        margin: 120px 16px 0;
+        margin: 168px 16px 0;
     }
     .mem-stage {
         display: grid;
