@@ -60,7 +60,6 @@
                 <section class="memory-index-headerbar">
                     <div class="memory-index-header-main">
                         <div class="memory-index-title-row">
-                            <span class="memory-index-kicker">PERSONAL MEMORY ARCHIVE</span>
                             <h1>全記憶一覧</h1>
                             <span class="memory-index-count">保存数 <strong>{{ $allCount }}</strong></span>
                             @auth
@@ -94,15 +93,6 @@
                         <div class="memory-index-toolbar-copy">
                             <span class="memory-index-toolbar-label">ARCHIVE FILTER</span>
                             <strong>{{ $selectedPeriod === 'すべて' ? '全記憶を横断表示' : $selectedPeriodShort . 'の記憶を表示中' }}</strong>
-                        </div>
-
-                        <div class="memory-index-toolbar-actions">
-                            <a id="editMemoryButton" class="btn btn-secondary is-disabled" href="#" aria-disabled="true">修正</a>
-                            <form id="deleteMemoryForm" method="post" action="#" onsubmit="return confirm('この記憶を削除しますか？');">
-                                @csrf
-                                @method('DELETE')
-                                <button id="deleteMemoryButton" class="btn btn-secondary btn-danger" type="submit" disabled>削除</button>
-                            </form>
                         </div>
                     </div>
 
@@ -147,17 +137,7 @@
                                     $badgeClass = str_contains($tone, 'ポジティブ') ? 'badge-positive' : (str_contains($tone, 'ニュートラル') ? 'badge-neutral' : 'badge-negative');
                                     $orbColors = $periodColors[$memory->period] ?? ['#dce9ff', '#63a6ff'];
                                 @endphp
-                                <label class="memory-entry">
-                                    <input
-                                        class="memory-select"
-                                        type="radio"
-                                        name="selected_memory"
-                                        value="{{ $memory->id }}"
-                                        data-edit-url="{{ route('memories.edit', $memory) }}"
-                                        data-delete-url="{{ route('memories.destroy', $memory) }}"
-                                        {{ $loop->first ? 'checked' : '' }}
-                                    >
-
+                                <article class="memory-entry">
                                     <div class="memory-entry-shell">
                                         <div class="memory-entry-orb-wrap">
                                             <span class="memory-entry-orb" style="--orb-a: {{ $orbColors[0] }}; --orb-b: {{ $orbColors[1] }};"></span>
@@ -166,7 +146,17 @@
                                         <div class="memory-entry-body">
                                             <div class="memory-entry-meta">
                                                 <span class="memory-entry-kicker-chip">ARCHIVE {{ str_pad((string) $memory->id, 3, '0', STR_PAD_LEFT) }}</span>
-                                                <span class="memory-entry-time">{{ $memory->created_at->timezone('Asia/Tokyo')->format('Y.m.d H:i') }}</span>
+                                                <div class="memory-entry-meta-right">
+                                                    <span class="memory-entry-time">{{ $memory->created_at->timezone('Asia/Tokyo')->format('Y.m.d H:i') }}</span>
+                                                    <div class="memory-entry-actions">
+                                                        <a class="memory-entry-action" href="{{ route('memories.edit', $memory) }}">修正</a>
+                                                        <form method="post" action="{{ route('memories.destroy', $memory) }}" onsubmit="return confirm('この記憶を削除しますか？');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button class="memory-entry-action is-danger" type="submit">削除</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
                                             </div>
 
                                             <div class="memory-entry-head">
@@ -179,7 +169,7 @@
                                             <p class="memory-entry-content">{{ $memory->content }}</p>
                                         </div>
                                     </div>
-                                </label>
+                                </article>
                             @endforeach
                         </div>
                     </div>
@@ -377,7 +367,6 @@
         }
 
         .memory-index-title-row > h1,
-        .memory-index-title-row > .memory-index-kicker,
         .memory-index-title-row > .memory-index-count,
         .memory-index-title-row > .memory-index-authline {
             flex: 0 0 auto;
@@ -413,20 +402,6 @@
             color: rgba(241, 246, 255, 0.92);
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
             cursor: pointer;
-        }
-
-        .memory-index-kicker {
-            display: inline-flex;
-            align-items: center;
-            min-height: 28px;
-            padding: 0 12px;
-            border-radius: 999px;
-            border: 1px solid transparent;
-            background: rgba(12, 22, 48, 0.24);
-            color: rgba(174, 210, 255, 0.72);
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.24em;
         }
 
         .memory-index-headerbar h1 {
@@ -560,13 +535,6 @@
                 0 8px 18px rgba(6, 10, 24, 0.10);
         }
 
-        .memory-index-toolbar-actions,
-        .memory-index-toolbar-actions form {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
         .memory-index-period-filter {
             display: flex;
             flex-wrap: nowrap;
@@ -642,11 +610,6 @@
                 0 8px 18px rgba(6, 10, 24, 0.10);
         }
 
-        .memory-index-toolbar-actions .is-disabled {
-            pointer-events: none;
-            opacity: 0.4;
-        }
-
         .memory-index-scroll {
             max-height: min(76vh, 980px);
             overflow-y: auto;
@@ -658,16 +621,7 @@
             gap: 2px;
         }
 
-        .memory-entry {
-            display: block;
-            cursor: pointer;
-        }
-
-        .memory-select {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-        }
+        .memory-entry { display: block; }
 
         .memory-entry-shell {
             display: grid;
@@ -710,16 +664,6 @@
 
         .memory-entry:hover .memory-entry-shell {
             transform: translateX(2px);
-        }
-
-        .memory-select:checked + .memory-entry-shell {
-            box-shadow:
-                0 0 0 1px rgba(92, 180, 255, 0.05);
-        }
-
-        .memory-select:checked + .memory-entry-shell::after {
-            background:
-                linear-gradient(90deg, rgba(86, 163, 255, 0.18), rgba(86, 163, 255, 0.04) 28%, rgba(255,255,255,0.01));
         }
 
         .memory-entry-orb-wrap {
@@ -773,6 +717,15 @@
             flex-wrap: wrap;
         }
 
+        .memory-entry-meta-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-left: auto;
+        }
+
         .memory-entry-kicker-chip,
         .memory-entry-time {
             display: inline-flex;
@@ -793,6 +746,34 @@
 
         .memory-entry-time {
             color: rgba(216, 230, 255, 0.82);
+        }
+
+        .memory-entry-actions,
+        .memory-entry-actions form {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+
+        .memory-entry-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 30px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            background: rgba(16, 28, 64, 0.42);
+            color: rgba(242, 247, 255, 0.92);
+            font-size: 12px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+            cursor: pointer;
+        }
+
+        .memory-entry-action.is-danger {
+            background: rgba(104, 28, 52, 0.34);
+            color: rgba(255, 224, 232, 0.94);
         }
 
         .memory-entry-head {
@@ -1090,14 +1071,9 @@
                 width: 100%;
             }
 
-            .memory-index-toolbar-actions,
-            .memory-index-toolbar-actions form {
-                width: 100%;
-            }
-
-            .memory-index-toolbar-actions .btn,
-            .memory-index-toolbar-actions form button {
-                flex: 1 1 0;
+            .memory-entry-meta-right {
+                margin-left: 0;
+                justify-content: flex-start;
             }
 
             .memory-entry-shell {
@@ -1125,30 +1101,4 @@
         }
     </style>
 
-    @if ($memories->isNotEmpty())
-        <script>
-            const memoryRadios = document.querySelectorAll('input[name="selected_memory"]');
-            const editButton = document.getElementById('editMemoryButton');
-            const deleteForm = document.getElementById('deleteMemoryForm');
-            const deleteButton = document.getElementById('deleteMemoryButton');
-
-            function syncMemoryActions(target) {
-                if (!target) {
-                    return;
-                }
-
-                editButton.href = target.dataset.editUrl;
-                editButton.classList.remove('is-disabled');
-                editButton.removeAttribute('aria-disabled');
-                deleteForm.action = target.dataset.deleteUrl;
-                deleteButton.disabled = false;
-            }
-
-            memoryRadios.forEach((radio) => {
-                radio.addEventListener('change', () => syncMemoryActions(radio));
-            });
-
-            syncMemoryActions(document.querySelector('input[name="selected_memory"]:checked'));
-        </script>
-    @endif
 @endsection
