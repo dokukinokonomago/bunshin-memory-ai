@@ -82,11 +82,6 @@
         $bubbleBaseRoute = route('memories.bubbles');
     @endphp
 
-    {{-- 期間バナー --}}
-    @if($selectedPeriod !== 'すべて')
-    <div class="mem-period-badge">{{ $selectedPeriod }}</div>
-    @endif
-
     <div class="mem-stage" id="memStage">
         @if($selectedPeriodStatus)
         <aside class="mem-status mem-status--left" aria-label="年代ステータス左">
