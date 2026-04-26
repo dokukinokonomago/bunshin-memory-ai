@@ -841,40 +841,41 @@ function buildWorld(){
         if(selPeriod!=="すべて"&&selPeriod!==p) return;
         const zoneR=Math.max(260,280+items.length*12);
         pNodes.push({ p, count:items.length, x:anc.x, y:anc.y, r:zoneR });
-        items.forEach((m,i)=>{
-            const PHI=Math.PI*(3-Math.sqrt(5));
-            const r=ballR(i);
-            const spread=150+Math.sqrt(items.length+2)*60;
-            const orbit=items.length<=1?0:Math.sqrt((i+0.5)/items.length)*spread;
-            const ang=i*PHI-Math.PI/2;
-            const bx=anc.x+Math.cos(ang)*orbit;
-            const by=anc.y+Math.sin(ang)*orbit;
-            bNodes.push({m,r,x:bx,y:by});
-            /* 衛星小バブル：各記憶玉の周囲にランダム配置 */
-            const rng = seededRand(m.id * 7919 + i * 1327);
-            for(let si=0; si<SAT_COUNT; si++){
-                const sizeRatio = SAT_SIZE_RATIOS[si % SAT_SIZE_RATIOS.length];
-                /* ランダム要素を加えてサイズにばらつき */
-                const sr = Math.max(5, Math.round(r * sizeRatio * (0.75 + rng() * 0.55)));
-                /* 角度：均等分割＋ランダムオフセットで自然な散在感 */
-                const baseAngle = (si / SAT_COUNT) * Math.PI * 2;
-                const angleJitter = (rng() - 0.5) * 0.9;
-                const angle = baseAngle + angleJitter;
-                /* 軌道距離：サイズに応じて＋ランダムばらつき */
-                const orbitBase = r * 1.45 + sr * 1.8;
-                const orbitDist = orbitBase + rng() * r * 0.55;
-                sNodes.push({
-                    x: bx + Math.cos(angle) * orbitDist,
-                    y: by + Math.sin(angle) * orbitDist,
-                    r: sr,
-                    op: 0.35 + rng() * 0.35,
-                    dur: 5.5 + rng() * 4.0,
-                    dly: -(rng() * 6.0),
-                    floatAmp: 4 + rng() * 8,
-                    colors: m.colors,
-                });
-            }
+        if(items.length===0) return;
+
+        const representative = items[0];
+        const r = Math.min(148, Math.max(92, 92 + Math.sqrt(items.length) * 14));
+        const bx = anc.x;
+        const by = anc.y;
+        bNodes.push({
+            m: representative,
+            r,
+            x: bx,
+            y: by,
+            count: items.length,
+            period: p,
         });
+
+        const rng = seededRand(representative.id * 7919 + items.length * 1327);
+        for(let si=0; si<SAT_COUNT; si++){
+            const sizeRatio = SAT_SIZE_RATIOS[si % SAT_SIZE_RATIOS.length];
+            const sr = Math.max(5, Math.round(r * sizeRatio * (0.75 + rng() * 0.55)));
+            const baseAngle = (si / SAT_COUNT) * Math.PI * 2;
+            const angleJitter = (rng() - 0.5) * 0.9;
+            const angle = baseAngle + angleJitter;
+            const orbitBase = r * 1.48 + sr * 1.8;
+            const orbitDist = orbitBase + rng() * r * 0.55;
+            sNodes.push({
+                x: bx + Math.cos(angle) * orbitDist,
+                y: by + Math.sin(angle) * orbitDist,
+                r: sr,
+                op: 0.35 + rng() * 0.35,
+                dur: 5.5 + rng() * 4.0,
+                dly: -(rng() * 6.0),
+                floatAmp: 4 + rng() * 8,
+                colors: representative.colors,
+            });
+        }
     });
     return {pNodes,bNodes,sNodes};
 }
@@ -935,15 +936,17 @@ function drawBubbles(world){
 
         const wrap=el("g",{
             class:"mg-bubble-wrap",
-            "data-period":node.m.period,
+            "data-period":node.period,
             style:`--d:${(i*0.04).toFixed(2)}s`,
         });
 
+        const periodUrl = new URL(bubblesRoute,location.origin);
+        periodUrl.searchParams.set("period", node.period);
         const link=el("a",{
-            href:`/memories/${node.m.id}`,
+            href:periodUrl.toString(),
             class:"mg-bubble-link",
-            "data-period":node.m.period,
-            "aria-label":`${node.m.period}の記憶`,
+            "data-period":node.period,
+            "aria-label":`${node.period}の記憶 ${node.count}件`,
             style:[
                 `--rs:${(0.94+i%4*0.018).toFixed(3)}`,
                 `--rise:${(1.03+i%5*0.020).toFixed(3)}`,
@@ -1037,7 +1040,7 @@ function drawBubbles(world){
 
         /* --- ラベル（記憶数） --- */
         const lbl=el("text",{x:cx,y:cy-r*0.08,class:"mg-label","font-size":Math.max(22,r*0.38),"font-weight":"800"});
-        lbl.textContent=periodCount.get(node.m.period)??1;
+        lbl.textContent=node.count;
         body.append(lbl);
         const lbl2=el("text",{x:cx,y:cy+r*0.30,class:"mg-label","font-size":Math.max(9,r*0.14),"font-weight":"400",opacity:"0.72"});
         lbl2.textContent="memories";
@@ -1045,15 +1048,15 @@ function drawBubbles(world){
 
         /* --- title（アクセシビリティ） --- */
         const ttl=el("title",{});
-        ttl.textContent=`${node.m.period} / ${node.m.emotion}`;
+        ttl.textContent=`${node.period} / ${node.count} memories`;
         link.append(ttl);
 
         link.append(body);
         wrap.append(link);
         bubblesG.append(wrap);
 
-        if(!ballByPeriod.has(node.m.period)) ballByPeriod.set(node.m.period,[]);
-        ballByPeriod.get(node.m.period).push(wrap);
+        if(!ballByPeriod.has(node.period)) ballByPeriod.set(node.period,[]);
+        ballByPeriod.get(node.period).push(wrap);
     });
 }
 
@@ -1189,37 +1192,6 @@ function goToPeriod(p){
     url.searchParams.set("period",p);
     location.href=url.toString();
 }
-
-/* 各バブルリンクのダブルクリック検出 */
-/* シングルクリック → show画面へ（デフォルト a タグ動作）  */
-/* ダブルクリック → その年代のみ表示（フィルター遷移）     */
-const dblMap=new Map(); /* period → 最終クリック時刻 */
-svg.addEventListener("click",e=>{
-    const link=e.target.closest(".mg-bubble-link");
-    if(!link) return;
-    const p=link.dataset.period;
-    const now=Date.now();
-    const last=dblMap.get(p)??0;
-    if(now-last<400){
-        /* ダブルクリック：年代フィルター遷移 */
-        e.preventDefault();
-        e.stopPropagation();
-        dblMap.delete(p);
-        goToPeriod(p);
-    } else {
-        /* シングルクリック：1発目として記録。a タグ遷移を一旦止めて待機 */
-        e.preventDefault();
-        e.stopPropagation();
-        dblMap.set(p,now);
-        setTimeout(()=>{
-            /* 400ms 以内に2発目がなければ show 画面へ */
-            if(dblMap.get(p)===now){
-                dblMap.delete(p);
-                location.href=link.href;
-            }
-        },400);
-    }
-},true);
 
 zoneEls.forEach((z,p)=>{
     z.addEventListener("mouseenter",()=>setActive(p));
