@@ -5,8 +5,7 @@ use App\Http\Controllers\MemoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [AuthController::class, 'create'])->name('login');
-Route::get('/login', [AuthController::class, 'create'])->name('login.alias');
-Route::get('/auth-entry', [AuthController::class, 'create'])->name('login.fresh');
+Route::get('/login', fn () => redirect()->route('login'));
 Route::post('/login', [AuthController::class, 'store'])->name('login.store');
 Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
 
