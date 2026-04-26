@@ -1083,6 +1083,145 @@
             line-height: 1.35;
         }
 
+        @media (min-width: 1181px) {
+            .page.page-memory-index-wide {
+                width: calc(100vw - 18px);
+                padding: 6px 0;
+            }
+
+            .memory-index-command {
+                padding: 18px;
+                max-height: calc(100vh - 12px);
+            }
+
+            .memory-index-headerbar h1 {
+                font-size: clamp(28px, 3vw, 40px);
+            }
+
+            .memory-index-layout {
+                grid-template-columns: minmax(0, 1fr) 296px;
+                gap: 14px;
+                align-items: stretch;
+                min-height: 0;
+            }
+
+            .memory-index-main {
+                gap: 10px;
+                min-height: 0;
+            }
+
+            .memory-index-toolbar {
+                gap: 8px;
+                padding-bottom: 4px;
+            }
+
+            .memory-index-search-form input {
+                min-height: 40px;
+                width: clamp(220px, 20vw, 320px);
+            }
+
+            .memory-index-scroll {
+                max-height: calc(100vh - 190px);
+                padding-right: 2px;
+            }
+
+            .memory-entry-shell {
+                grid-template-columns: 74px minmax(0, 1fr);
+                gap: 12px;
+                padding: 12px 0;
+            }
+
+            .memory-entry-shell::before {
+                left: 76px;
+            }
+
+            .memory-entry-shell::after {
+                left: 84px;
+                right: 18px;
+                top: 8px;
+                bottom: 8px;
+            }
+
+            .memory-entry-orb-wrap {
+                width: 88px;
+                height: 88px;
+            }
+
+            .memory-entry-orb {
+                width: 58px;
+                height: 58px;
+            }
+
+            .memory-entry-orb::before {
+                width: 20px;
+                height: 12px;
+                left: 12px;
+                top: 10px;
+            }
+
+            .memory-entry-orb-satellite.sat-a {
+                width: 18px;
+                height: 18px;
+                left: 8px;
+                bottom: 16px;
+            }
+
+            .memory-entry-orb-satellite.sat-b {
+                width: 12px;
+                height: 12px;
+                right: 14px;
+                top: 18px;
+            }
+
+            .memory-entry-orb-satellite.sat-c {
+                width: 8px;
+                height: 8px;
+                right: 10px;
+                bottom: 14px;
+            }
+
+            .memory-entry-body {
+                gap: 8px;
+            }
+
+            .memory-entry-content {
+                font-size: 16px;
+                line-height: 1.58;
+            }
+
+            .memory-index-sidebar {
+                min-height: 0;
+            }
+
+            .memory-side-monitor {
+                position: sticky;
+                top: 6px;
+                max-height: calc(100vh - 24px);
+                grid-template-rows: auto minmax(0, 1fr);
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .memory-side-block {
+                gap: 10px;
+                padding: 14px;
+            }
+
+            .memory-side-block:last-child {
+                min-height: 0;
+            }
+
+            .memory-side-table {
+                min-height: 0;
+                grid-template-rows: auto minmax(0, 1fr);
+            }
+
+            .memory-side-table-body {
+                max-height: none;
+                min-height: 0;
+            }
+        }
+
         @media (max-width: 1180px) {
             .memory-index-layout {
                 grid-template-columns: 1fr;
