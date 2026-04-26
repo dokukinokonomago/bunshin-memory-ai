@@ -629,15 +629,14 @@
 
         .memory-entry-shell {
             display: grid;
-            grid-template-columns: 92px minmax(0, 1fr);
-            gap: 20px;
+            grid-template-columns: 82px minmax(0, 1fr);
+            gap: 16px;
             align-items: center;
-            padding: 18px 6px 18px 4px;
+            padding: 16px 0 16px 0;
             border-radius: 0;
             border: 0;
             background: transparent;
             box-shadow: none;
-            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
             position: relative;
             overflow: hidden;
         }
@@ -645,7 +644,7 @@
         .memory-entry-shell::before {
             content: "";
             position: absolute;
-            left: 94px;
+            left: 84px;
             right: 0;
             bottom: 0;
             height: 1px;
@@ -657,17 +656,13 @@
         .memory-entry-shell::after {
             content: "";
             position: absolute;
-            left: 106px;
-            right: 18px;
+            left: 94px;
+            right: 32px;
             top: 10px;
             bottom: 10px;
-            border-radius: 24px;
+            border-radius: 20px;
             background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01) 18%, rgba(255,255,255,0.01));
             pointer-events: none;
-        }
-
-        .memory-entry:hover .memory-entry-shell {
-            transform: translateX(2px);
         }
 
         .memory-entry-orb-wrap {
@@ -675,8 +670,8 @@
             place-items: center;
             position: relative;
             z-index: 1;
-            width: 124px;
-            height: 124px;
+            width: 104px;
+            height: 104px;
         }
 
         .memory-entry-orb-ring {
@@ -692,8 +687,8 @@
 
         .memory-entry-orb {
             position: relative;
-            width: 74px;
-            height: 74px;
+            width: 68px;
+            height: 68px;
             border-radius: 50%;
             box-shadow:
                 inset -16px -18px 30px rgba(5, 12, 24, 0.28),
@@ -744,24 +739,24 @@
         }
 
         .memory-entry-orb-satellite.sat-a {
-            width: 28px;
-            height: 28px;
-            left: 8px;
-            bottom: 22px;
+            width: 24px;
+            height: 24px;
+            left: 10px;
+            bottom: 20px;
         }
 
         .memory-entry-orb-satellite.sat-b {
-            width: 16px;
-            height: 16px;
-            right: 18px;
-            top: 24px;
+            width: 14px;
+            height: 14px;
+            right: 16px;
+            top: 22px;
         }
 
         .memory-entry-orb-satellite.sat-c {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             right: 10px;
-            bottom: 18px;
+            bottom: 16px;
             opacity: 0.78;
         }
 
@@ -1147,8 +1142,8 @@
 
             .memory-entry-orb-wrap {
                 justify-items: start;
-                width: 112px;
-                height: 112px;
+                width: 104px;
+                height: 104px;
             }
 
             .memory-entry-shell::before,
