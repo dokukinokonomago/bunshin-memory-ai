@@ -131,20 +131,30 @@
                         @endforeach
 
                         @if(count($selectedPeriodStatus['timeline']) > 1)
-                        <details class="mem-status-logs-more">
-                            <summary>過去ログを表示</summary>
-                            <div class="mem-status-logs-stack">
-                                @foreach($selectedPeriodStatus['timeline'] as $entry)
-                                @unless($loop->first)
-                                <article class="mem-status-log">
-                                    <span class="mem-status-log-date">{{ $entry['date'] }}</span>
-                                    <strong>{{ $entry['emotion'] }}</strong>
-                                    <p>{{ $entry['excerpt'] }}</p>
-                                </article>
-                                @endunless
-                                @endforeach
+                        <button class="mem-status-modal-button" type="button" data-log-modal-open>
+                            過去ログを表示
+                        </button>
+
+                        <div class="mem-status-modal" data-log-modal hidden>
+                            <div class="mem-status-modal-backdrop" data-log-modal-close></div>
+                            <div class="mem-status-modal-dialog" role="dialog" aria-modal="true" aria-label="過去ログ">
+                                <div class="mem-status-modal-head">
+                                    <strong>過去ログ</strong>
+                                    <button class="mem-status-modal-x" type="button" data-log-modal-close>閉じる</button>
+                                </div>
+                                <div class="mem-status-logs-stack">
+                                    @foreach($selectedPeriodStatus['timeline'] as $entry)
+                                    @unless($loop->first)
+                                    <article class="mem-status-log">
+                                        <span class="mem-status-log-date">{{ $entry['date'] }}</span>
+                                        <strong>{{ $entry['emotion'] }}</strong>
+                                        <p>{{ $entry['excerpt'] }}</p>
+                                    </article>
+                                    @endunless
+                                    @endforeach
+                                </div>
                             </div>
-                        </details>
+                        </div>
                         @endif
                     </div>
                 </section>
@@ -762,31 +772,79 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     line-height: 1.6;
 }
 
-.mem-status-logs-more {
+.mem-status-modal-button {
+    min-height: 42px;
+    border: 1px solid rgba(100, 164, 255, 0.16);
     border-radius: 16px;
-    border: 1px solid rgba(100, 164, 255, 0.12);
     background: rgba(255,255,255,0.03);
-    overflow: hidden;
-}
-
-.mem-status-logs-more summary {
-    list-style: none;
-    cursor: pointer;
-    padding: 12px 14px;
     color: rgba(169, 214, 255, 0.9);
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.08em;
+    cursor: pointer;
 }
 
-.mem-status-logs-more summary::-webkit-details-marker {
+.mem-status-modal[hidden] {
     display: none;
+}
+
+.mem-status-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.mem-status-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 4, 16, 0.72);
+}
+
+.mem-status-modal-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(560px, calc(100vw - 40px));
+    max-height: min(72vh, 720px);
+    overflow: auto;
+    padding: 18px;
+    border-radius: 22px;
+    border: 1px solid rgba(100, 164, 255, 0.18);
+    background: linear-gradient(180deg, rgba(10, 20, 58, 0.98), rgba(3, 8, 28, 0.98));
+    box-shadow: 0 30px 80px rgba(0,0,0,0.46);
+}
+
+.mem-status-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.mem-status-modal-head strong {
+    color: rgba(240, 247, 255, 0.96);
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.mem-status-modal-x {
+    min-height: 34px;
+    padding: 0 12px;
+    border: 1px solid rgba(100, 164, 255, 0.16);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.04);
+    color: rgba(192, 224, 255, 0.92);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
 }
 
 .mem-status-logs-stack {
     display: grid;
     gap: 10px;
-    padding: 0 12px 12px;
 }
 
 .mem-status-bars {
@@ -1644,6 +1702,20 @@ document.addEventListener("click",e=>{
         if(el&&!el.contains(e.target)) el.removeAttribute("open");
     });
 });
+
+const logModal = document.querySelector("[data-log-modal]");
+const logModalOpen = document.querySelector("[data-log-modal-open]");
+const logModalClosers = document.querySelectorAll("[data-log-modal-close]");
+
+if(logModal && logModalOpen){
+    logModalOpen.addEventListener("click",()=>{ logModal.hidden = false; });
+    logModalClosers.forEach(btn=>{
+        btn.addEventListener("click",()=>{ logModal.hidden = true; });
+    });
+    document.addEventListener("keydown",e=>{
+        if(e.key==="Escape") logModal.hidden = true;
+    });
+}
 
 /* ===== 星パーティクル（Canvas） ===== */
 (function(){
