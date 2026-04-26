@@ -838,41 +838,33 @@ function buildWorld(){
         const anc=anchor(p);
         const items=buckets.get(p)??[];
         if(selPeriod!=="すべて"&&selPeriod!==p) return;
+        if(items.length===0) return;
         const zoneR=Math.max(260,280+items.length*12);
         pNodes.push({ p, count:items.length, x:anc.x, y:anc.y, r:zoneR });
-        items.forEach((m,i)=>{
-            const PHI=Math.PI*(3-Math.sqrt(5));
-            const r=ballR(i);
-            const spread=150+Math.sqrt(items.length+2)*60;
-            const orbit=items.length<=1?0:Math.sqrt((i+0.5)/items.length)*spread;
-            const ang=i*PHI-Math.PI/2;
-            const bx=anc.x+Math.cos(ang)*orbit;
-            const by=anc.y+Math.sin(ang)*orbit;
-            bNodes.push({m,r,x:bx,y:by});
-            /* 衛星小バブル：各記憶玉の周囲にランダム配置 */
-            const rng = seededRand(m.id * 7919 + i * 1327);
-            for(let si=0; si<SAT_COUNT; si++){
-                const sizeRatio = SAT_SIZE_RATIOS[si % SAT_SIZE_RATIOS.length];
-                /* ランダム要素を加えてサイズにばらつき */
-                const sr = Math.max(5, Math.round(r * sizeRatio * (0.75 + rng() * 0.55)));
-                /* 角度：均等分割＋ランダムオフセットで自然な散在感 */
-                const baseAngle = (si / SAT_COUNT) * Math.PI * 2;
-                const angleJitter = (rng() - 0.5) * 0.9;
-                const angle = baseAngle + angleJitter;
-                /* 軌道距離：サイズに応じて＋ランダムばらつき */
-                const orbitBase = r * 1.45 + sr * 1.8;
-                const orbitDist = orbitBase + rng() * r * 0.55;
-                sNodes.push({
-                    x: bx + Math.cos(angle) * orbitDist,
-                    y: by + Math.sin(angle) * orbitDist,
-                    r: sr,
-                    op: 0.35 + rng() * 0.35,
-                    dur: 5.5 + rng() * 4.0,
-                    dly: -(rng() * 6.0),
-                    floatAmp: 4 + rng() * 8,
-                    colors: m.colors,
-                });
-            }
+        const m=items[0];
+        const r=ballR(0);
+        bNodes.push({m,r,x:anc.x,y:anc.y,count:items.length});
+
+        /* 衛星小バブル：年代ごとに中央の代表バブルの周囲へ配置 */
+        const rng = seededRand(m.id * 7919 + items.length * 1327);
+        for(let si=0; si<SAT_COUNT; si++){
+            const sizeRatio = SAT_SIZE_RATIOS[si % SAT_SIZE_RATIOS.length];
+            const sr = Math.max(5, Math.round(r * sizeRatio * (0.75 + rng() * 0.55)));
+            const baseAngle = (si / SAT_COUNT) * Math.PI * 2;
+            const angleJitter = (rng() - 0.5) * 0.9;
+            const angle = baseAngle + angleJitter;
+            const orbitBase = r * 1.45 + sr * 1.8;
+            const orbitDist = orbitBase + rng() * r * 0.55;
+            sNodes.push({
+                x: anc.x + Math.cos(angle) * orbitDist,
+                y: anc.y + Math.sin(angle) * orbitDist,
+                r: sr,
+                op: 0.35 + rng() * 0.35,
+                dur: 5.5 + rng() * 4.0,
+                dly: -(rng() * 6.0),
+                floatAmp: 4 + rng() * 8,
+                colors: m.colors,
+            });
         });
     });
     return {pNodes,bNodes,sNodes};
@@ -916,9 +908,7 @@ function drawPeriods(world){
         );
         const nm=el("text",{x:n.x,y:n.y-n.r-28,class:"mg-zone-name"});
         nm.textContent=n.p;
-        const ct=el("text",{x:n.x,y:n.y-n.r-10,class:"mg-zone-count"});
-        ct.textContent=`${n.count} memories`;
-        g.append(nm,ct);
+        g.append(nm);
         periodsG.append(g);
         zoneEls.set(n.p,g);
     });
@@ -1036,7 +1026,7 @@ function drawBubbles(world){
 
         /* --- ラベル（記憶数） --- */
         const lbl=el("text",{x:cx,y:cy-r*0.08,class:"mg-label","font-size":Math.max(22,r*0.38),"font-weight":"800"});
-        lbl.textContent=periodCount.get(node.m.period)??1;
+        lbl.textContent=node.count??(periodCount.get(node.m.period)??1);
         body.append(lbl);
         const lbl2=el("text",{x:cx,y:cy+r*0.30,class:"mg-label","font-size":Math.max(9,r*0.14),"font-weight":"400",opacity:"0.72"});
         lbl2.textContent="memories";
