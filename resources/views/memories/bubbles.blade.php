@@ -2,9 +2,10 @@
 
 @section('title', 'YOUの記憶 | 分身AI MVP')
 @section('page_class', 'page-bubbles-full')
+@section('hide_auth_dock', '1')
 
 @section('content')
-<div class="mem-universe mem-universe--safe">
+<div class="mem-universe">
 
     {{-- ========== 背景：深宇宙パーティクル ========== --}}
     <canvas id="starCanvas" class="star-canvas" aria-hidden="true"></canvas>
@@ -163,12 +164,6 @@
 /* ── リセット ───────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-.mem-universe--safe .app-auth-dock {
-    background: rgba(7,12,25,0.92);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-}
-
 .page.page-bubbles-full {
     width: 100vw;
     max-width: none;
@@ -194,10 +189,6 @@
     height: 100%;
     pointer-events: none;
     z-index: 0;
-}
-
-.mem-universe--safe .star-canvas {
-    display: none;
 }
 
 /* ── TOP NAV ────────────────────────────── */
@@ -229,12 +220,6 @@
     font-size: 10px;
     letter-spacing: 0.24em;
     text-transform: uppercase;
-}
-
-.mem-universe--safe .mem-nav-eyebrow {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: rgba(255,255,255,0.08);
 }
 
 .mem-nav-title {
@@ -275,11 +260,6 @@
         inset 0 1.5px 0 rgba(255,255,255,0.30),
         inset 0 -1px 0 rgba(0,80,200,0.25);
     backdrop-filter: blur(10px);
-}
-
-.mem-universe--safe .mem-count-orb {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
 }
 
 /* スペキュラ白点 */
@@ -409,11 +389,6 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     backdrop-filter: blur(28px) saturate(1.5);
 }
 
-.mem-universe--safe .mem-dropdown {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-}
-
 .mem-drop-item {
     display: flex;
     align-items: center;
@@ -490,11 +465,6 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     font-size: 11px;
     color: rgba(120,175,255,0.82);
 }
-
-.mem-universe--safe .mem-layer-nav {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-}
 .mem-layer-btn {
     padding: 3px 10px;
     border-radius: 999px;
@@ -524,11 +494,6 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     letter-spacing: 0.10em;
     box-shadow: 0 0 26px rgba(0,150,255,0.26);
     backdrop-filter: blur(16px);
-}
-
-.mem-universe--safe .mem-period-badge {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
 }
 
 /* ── STAGE ──────────────────────────────── */
@@ -569,11 +534,6 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     color: rgba(130,190,255,0.85);
     font-size: 11px;
     box-shadow: 0 10px 26px rgba(0,0,0,0.40);
-}
-
-.mem-universe--safe .mem-hint span {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
 }
 .mem-dot {
     display: inline-block;
@@ -632,10 +592,6 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     fill: rgba(0,200,255,0.80);
     filter: drop-shadow(0 0 6px rgba(0,200,255,0.65));
 }
-
-.mem-universe--safe .mg-zone-dot {
-    filter: none;
-}
 .mg-zone-name {
     fill: rgba(140,210,255,0.90);
     font-size: 17px;
@@ -655,11 +611,6 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 .mg-bubble-wrap {
     opacity: 0;
     animation: mgReveal 0.80s cubic-bezier(0.22,0.85,0.32,1) var(--d,0s) forwards;
-}
-
-.mem-universe--safe .mg-bubble-wrap {
-    opacity: 1;
-    animation: none;
 }
 
 /* バブル本体（呼吸アニメ） */
@@ -682,11 +633,6 @@ details[open] .mem-chevron { transform: rotate(180deg); }
             drop-shadow(0 0 22px rgba(0,150,255,0.42));
 }
 
-.mem-universe--safe .mg-bubble-wrap:hover .mg-bubble-body,
-.mem-universe--safe .mg-bubble-wrap.period-hi .mg-bubble-body {
-    filter: brightness(1.08) saturate(1.08);
-}
-
 /* テキストラベル */
 .mg-label {
     fill: rgba(255,255,255,0.97);
@@ -706,10 +652,6 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     transform-origin: center;
     animation: mgReveal 0.90s cubic-bezier(0.22,0.85,0.32,1) var(--d,0s) both,
                satFloat var(--sd,7s) ease-in-out var(--sdly,0s) infinite;
-}
-
-.mem-universe--safe .mg-sat {
-    animation: none;
 }
 @keyframes satFloat {
     0%,100% { transform: translate(0px, 0px) scale(0.97); }
@@ -773,7 +715,6 @@ const selPeriod      = @json($selectedPeriod);
 const bubblesRoute   = @json($bubbleBaseRoute);
 const NS = "http://www.w3.org/2000/svg";
 const VP = { w:1400, h:900 };
-const SAFE_VISUALS = document.querySelector(".mem-universe")?.classList.contains("mem-universe--safe");
 
 /* ===== DOM refs ===== */
 const svg      = document.getElementById("memSvg");
@@ -1015,13 +956,11 @@ function drawBubbles(world){
         const body=el("g",{class:"mg-bubble-body"});
 
         /* --- レイヤー1：外側オーラグロー（画像2のハロー） --- */
-        if(!SAFE_VISUALS){
-            body.append(el("circle",{
-                cx,cy,r:r+36,
-                fill:`url(#${aId})`,
-                filter:"url(#fAura)",
-            }));
-        }
+        body.append(el("circle",{
+            cx,cy,r:r+36,
+            fill:`url(#${aId})`,
+            filter:"url(#fAura)",
+        }));
 
         /* --- レイヤー2：多層リングシェル（画像3のシアンリング群） --- */
         /* 外→内の6層リング */
@@ -1046,7 +985,7 @@ function drawBubbles(world){
         body.append(el("circle",{
             cx,cy,r,
             fill:`url(#${gId})`,
-            filter: SAFE_VISUALS ? "" : "url(#fShadow)",
+            filter:"url(#fShadow)",
             opacity:"0.95",
         }));
 
@@ -1061,7 +1000,7 @@ function drawBubbles(world){
             cx:cx-r*0.27, cy:cy-r*0.28,
             r:Math.max(6,r*0.20),
             fill:"rgba(255,255,255,0.88)",
-            filter: SAFE_VISUALS ? "" : "url(#fSpec)",
+            filter:"url(#fSpec)",
         }));
 
         /* --- レイヤー6：サブスペキュラ楕円（表面の光の伸び） --- */
@@ -1201,20 +1140,18 @@ function drawSatellites(world){
 
         /* オーラ（大きな玉は強め） */
         if(s.r > 12){
-            if(!SAFE_VISUALS){
-                g.append(el("circle",{
-                    cx:s.x,cy:s.y,r:s.r+s.r*0.9,
-                    fill:rgba(c1, 0.12 + vividness*0.10),
-                    filter:"url(#fAura)",
-                }));
-            }
+            g.append(el("circle",{
+                cx:s.x,cy:s.y,r:s.r+s.r*0.9,
+                fill:rgba(c1, 0.12 + vividness*0.10),
+                filter:"url(#fAura)",
+            }));
         }
         /* リム */
         g.append(el("circle",{
             cx:s.x,cy:s.y,r:s.r,fill:"none",
             stroke:rgba(c1,0.65+vividness*0.25),
             "stroke-width": s.r > 20 ? 2.0 : s.r > 12 ? 1.5 : 1.0,
-            filter: SAFE_VISUALS ? "" : "url(#fRimGlow)",
+            filter:"url(#fRimGlow)",
         }));
         /* 球体 */
         g.append(el("circle",{
@@ -1227,7 +1164,7 @@ function drawSatellites(world){
                 cx:s.x-s.r*0.28, cy:s.y-s.r*0.28,
                 r:Math.max(1.5, s.r*0.24),
                 fill:"rgba(255,255,255,0.85)",
-                filter: SAFE_VISUALS ? "" : "url(#fSpec)",
+                filter:"url(#fSpec)",
             }));
         }
 
@@ -1352,7 +1289,6 @@ document.addEventListener("click",e=>{
 
 /* ===== 星パーティクル（Canvas） ===== */
 (function(){
-    if(SAFE_VISUALS) return;
     const c=document.getElementById("starCanvas");
     if(!c) return;
     const ctx=c.getContext("2d");

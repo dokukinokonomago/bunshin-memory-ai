@@ -350,6 +350,7 @@
 </head>
 <body class="@yield('body_class')">
     @auth
+        @if (trim($__env->yieldContent('hide_auth_dock')) !== '1')
         <div class="app-auth-dock">
             <span class="app-auth-user">{{ auth()->user()->email }}</span>
             <a class="app-auth-link" href="{{ route('memories.bubbles') }}">記憶の玉</a>
@@ -358,6 +359,7 @@
                 <button class="app-auth-button" type="submit">ログアウト</button>
             </form>
         </div>
+        @endif
     @endauth
     <div class="page @yield('page_class')">
         @yield('content')
