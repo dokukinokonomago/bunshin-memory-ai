@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'YOUの記憶 | 分身AI MVP')
+@section('body_class', 'body-bubbles')
 @section('page_class', 'page-bubbles-full')
 
 @section('content')
@@ -168,6 +169,11 @@
     max-width: none;
     padding: 0;
     overflow: hidden;
+    background: transparent;
+}
+
+body.body-bubbles {
+    background: #09153f;
 }
 
 /* ── 宇宙背景 ──────────────────────────── */
@@ -175,7 +181,10 @@
     position: relative;
     width: 100vw;
     min-height: 100vh;
-    background: radial-gradient(ellipse at 30% 20%, #0a1640 0%, #04091e 40%, #000208 100%);
+    background:
+        radial-gradient(circle at 20% 18%, rgba(114, 171, 255, 0.16), transparent 24%),
+        radial-gradient(circle at 82% 22%, rgba(128, 217, 255, 0.12), transparent 20%),
+        radial-gradient(ellipse at 30% 20%, #18357e 0%, #10255f 40%, #081335 100%);
     overflow: hidden;
     color: #d4eaff;
     font-family: system-ui, sans-serif;
@@ -921,6 +930,8 @@ function drawBubbles(world){
     world.bNodes.forEach((node,i)=>{
         const {gId,rId,aId}=mkGrads(i+1,node.m.colors);
         const {x:cx,y:cy,r}=node;
+        const periodUrl = new URL(bubblesRoute, location.origin);
+        periodUrl.searchParams.set("period", node.m.period);
 
         const wrap=el("g",{
             class:"mg-bubble-wrap",
@@ -929,10 +940,10 @@ function drawBubbles(world){
         });
 
         const link=el("a",{
-            href:`/memories/${node.m.id}`,
+            href:periodUrl.toString(),
             class:"mg-bubble-link",
             "data-period":node.m.period,
-            "aria-label":`${node.m.period}の記憶`,
+            "aria-label":`${node.m.period}の記憶を表示`,
             style:[
                 `--rs:${(0.94+i%4*0.018).toFixed(3)}`,
                 `--rise:${(1.03+i%5*0.020).toFixed(3)}`,
@@ -1034,7 +1045,7 @@ function drawBubbles(world){
 
         /* --- title（アクセシビリティ） --- */
         const ttl=el("title",{});
-        ttl.textContent=`${node.m.period} / ${node.m.emotion}`;
+        ttl.textContent=`${node.m.period}の記憶を表示`;
         link.append(ttl);
 
         link.append(body);
