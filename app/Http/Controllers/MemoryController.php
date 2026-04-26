@@ -388,7 +388,7 @@ class MemoryController extends Controller
         ])->all();
 
         $oldestDate = optional($memories->sortBy('created_at')->first()?->created_at)->format('Y.m.d') ?? '--.--.--';
-        $latestDate = optional($memories->sortByDesc('created_at')->first()?->created_at)->format('Y.m.d H:i') ?? '--.--.-- --:--';
+        $latestDate = optional($memories->sortByDesc('created_at')->first()?->created_at)->format('Y.m.d') ?? '--.--.--';
         $avgLength = $total > 0
             ? (int) round($memories->avg(fn (Memory $memory): int => mb_strlen(trim($memory->content))))
             : 0;

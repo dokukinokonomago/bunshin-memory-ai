@@ -121,12 +121,31 @@
                     <div class="mem-status-block-head">最新ログ</div>
                     <div class="mem-status-timeline">
                         @foreach($selectedPeriodStatus['timeline'] as $entry)
+                        @if($loop->first)
                         <article class="mem-status-log">
                             <span class="mem-status-log-date">{{ $entry['date'] }}</span>
                             <strong>{{ $entry['emotion'] }}</strong>
                             <p>{{ $entry['excerpt'] }}</p>
                         </article>
+                        @endif
                         @endforeach
+
+                        @if(count($selectedPeriodStatus['timeline']) > 1)
+                        <details class="mem-status-logs-more">
+                            <summary>過去ログを表示</summary>
+                            <div class="mem-status-logs-stack">
+                                @foreach($selectedPeriodStatus['timeline'] as $entry)
+                                @unless($loop->first)
+                                <article class="mem-status-log">
+                                    <span class="mem-status-log-date">{{ $entry['date'] }}</span>
+                                    <strong>{{ $entry['emotion'] }}</strong>
+                                    <p>{{ $entry['excerpt'] }}</p>
+                                </article>
+                                @endunless
+                                @endforeach
+                            </div>
+                        </details>
+                        @endif
                     </div>
                 </section>
             </div>
@@ -741,6 +760,33 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     color: rgba(212, 231, 255, 0.78);
     font-size: 12px;
     line-height: 1.6;
+}
+
+.mem-status-logs-more {
+    border-radius: 16px;
+    border: 1px solid rgba(100, 164, 255, 0.12);
+    background: rgba(255,255,255,0.03);
+    overflow: hidden;
+}
+
+.mem-status-logs-more summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 12px 14px;
+    color: rgba(169, 214, 255, 0.9);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.mem-status-logs-more summary::-webkit-details-marker {
+    display: none;
+}
+
+.mem-status-logs-stack {
+    display: grid;
+    gap: 10px;
+    padding: 0 12px 12px;
 }
 
 .mem-status-bars {
