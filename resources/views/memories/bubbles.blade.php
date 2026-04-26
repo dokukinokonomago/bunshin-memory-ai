@@ -1061,6 +1061,32 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     pointer-events: none;
 }
 
+.mg-bubble-cta {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 999px;
+    border: 1px solid rgba(168, 228, 255, 0.44);
+    background: linear-gradient(180deg, rgba(12, 24, 66, 0.92), rgba(6, 12, 34, 0.92));
+    color: rgba(243, 249, 255, 0.96);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    box-shadow:
+        0 0 0 1px rgba(255,255,255,0.05) inset,
+        0 0 26px rgba(88, 181, 255, 0.22);
+    backdrop-filter: blur(8px);
+}
+
+.mg-bubble-cta:hover {
+    background: linear-gradient(180deg, rgba(20, 40, 96, 0.98), rgba(10, 22, 54, 0.96));
+    box-shadow:
+        0 0 0 1px rgba(255,255,255,0.08) inset,
+        0 0 30px rgba(104, 198, 255, 0.30);
+}
+
 /* 衛星小バブル */
 .mg-sat {
     transform-box: fill-box;
@@ -1157,6 +1183,7 @@ const memories       = @json($bubbleMemories);
 const periods        = @json($periods);
 const selPeriod      = @json($selectedPeriod);
 const bubblesRoute   = @json($bubbleBaseRoute);
+const memoriesRoute  = @json(route('memories.index'));
 const NS = "http://www.w3.org/2000/svg";
 const VP = { w:1400, h:900 };
 
@@ -1372,6 +1399,7 @@ function drawBubbles(world){
     world.bNodes.forEach((node,i)=>{
         const {gId,rId,aId}=mkGrads(i+1,node.m.colors);
         const {x:cx,y:cy,r}=node;
+        const isSelectedBubble = selPeriod !== "すべて" && selPeriod === node.period;
 
         const wrap=el("g",{
             class:"mg-bubble-wrap",
@@ -1381,8 +1409,7 @@ function drawBubbles(world){
 
         const periodUrl = new URL(bubblesRoute,location.origin);
         periodUrl.searchParams.set("period", node.period);
-        const link=el("a",{
-            href:periodUrl.toString(),
+        const bubbleAttrs={
             class:"mg-bubble-link",
             "data-period":node.period,
             "aria-label":`${node.period}の記憶 ${node.count}件`,
@@ -1393,7 +1420,8 @@ function drawBubbles(world){
                 `--dur:${(5.4+i%6*0.50).toFixed(2)}s`,
                 `--delay:${(-i*0.40).toFixed(2)}s`,
             ].join(";"),
-        });
+        };
+        const bubbleShell=isSelectedBubble ? el("g",bubbleAttrs) : el("a",{...bubbleAttrs,href:periodUrl.toString()});
 
         const body=el("g",{class:"mg-bubble-body"});
 
@@ -1482,21 +1510,46 @@ function drawBubbles(world){
         periodLabel.textContent=node.period;
         body.append(periodLabel);
 
-        const lbl=el("text",{x:cx,y:cy-r*0.02,class:"mg-label","font-size":Math.max(22,r*0.38),"font-weight":"800"});
+        const countY = isSelectedBubble ? cy-r*0.08 : cy-r*0.02;
+        const labelY = isSelectedBubble ? cy+r*0.14 : cy+r*0.28;
+        const lbl=el("text",{x:cx,y:countY,class:"mg-label","font-size":Math.max(22,r*0.38),"font-weight":"800"});
         lbl.textContent=node.count;
         body.append(lbl);
 
-        const lbl2=el("text",{x:cx,y:cy+r*0.28,class:"mg-label","font-size":Math.max(9,r*0.14),"font-weight":"400",opacity:"0.72"});
+        const lbl2=el("text",{x:cx,y:labelY,class:"mg-label","font-size":Math.max(9,r*0.14),"font-weight":"400",opacity:"0.72"});
         lbl2.textContent="memories";
         body.append(lbl2);
 
         /* --- title（アクセシビリティ） --- */
         const ttl=el("title",{});
         ttl.textContent=`${node.period} / ${node.count} memories`;
-        link.append(ttl);
+        bubbleShell.append(ttl);
+        bubbleShell.append(body);
 
-        link.append(body);
-        wrap.append(link);
+        if(isSelectedBubble){
+            const listUrl = new URL(memoriesRoute, location.origin);
+            listUrl.searchParams.set("period", node.period);
+
+            const btnWidth = Math.max(112, Math.min(140, r * 1.04));
+            const btnHeight = Math.max(30, Math.min(36, r * 0.28));
+            const btnX = cx - btnWidth / 2;
+            const btnY = cy + r * 0.28;
+
+            const fo = el("foreignObject",{
+                x:btnX,
+                y:btnY,
+                width:btnWidth,
+                height:btnHeight,
+            });
+            const btn = document.createElement("a");
+            btn.setAttribute("href", listUrl.toString());
+            btn.setAttribute("class","mg-bubble-cta");
+            btn.textContent = "記憶を見る";
+            fo.append(btn);
+            bubbleShell.append(fo);
+        }
+
+        wrap.append(bubbleShell);
         bubblesG.append(wrap);
 
         if(!ballByPeriod.has(node.period)) ballByPeriod.set(node.period,[]);
