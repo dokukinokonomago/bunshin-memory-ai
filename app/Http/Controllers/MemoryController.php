@@ -138,6 +138,7 @@ class MemoryController extends Controller
 
         $emotionToneMap = $this->emotionToneMap();
         $matchingCount = (clone $query)->count();
+        $matchingMemories = $selectedPeriod !== 'すべて' ? (clone $query)->get() : collect();
         $layerCount = max(1, (int) ceil($matchingCount / self::BUBBLE_LAYER_SIZE));
         $currentLayer = min($requestedLayer, $layerCount);
         $offset = ($currentLayer - 1) * self::BUBBLE_LAYER_SIZE;
@@ -172,6 +173,9 @@ class MemoryController extends Controller
             'layerCount' => $layerCount,
             'hasPreviousLayer' => $currentLayer > 1,
             'hasNextLayer' => $currentLayer < $layerCount,
+            'selectedPeriodStatus' => $selectedPeriod !== 'すべて'
+                ? $this->selectedPeriodStatus($matchingMemories, $emotionToneMap, $selectedPeriod, $currentLayer, $layerCount)
+                : null,
         ]);
     }
 
@@ -326,6 +330,86 @@ class MemoryController extends Controller
         }
 
         return Str::limit($content, 20, '…');
+    }
+
+    private function selectedPeriodStatus(
+        Collection $memories,
+        array $emotionToneMap,
+        string $selectedPeriod,
+        int $currentLayer,
+        int $layerCount
+    ): array {
+        $total = $memories->count();
+        $emotionCounts = $memories
+            ->countBy('emotion')
+            ->sortDesc();
+        $maxEmotionCount = max(1, (int) $emotionCounts->first());
+
+        $topEmotionBars = $emotionCounts
+            ->take(8)
+            ->map(fn (int $count, string $emotion): array => [
+                'label' => $emotion,
+                'count' => $count,
+                'ratio' => round(($count / $maxEmotionCount) * 100, 1),
+            ])
+            ->values()
+            ->all();
+
+        $toneBuckets = [
+            'ポジティブ' => 'ポジティブ',
+            'ニュートラル' => 'ニュートラル',
+            '軽い揺れ' => 'ネガティブ（軽め）',
+            '深い揺れ' => 'ネガティブ（強め）',
+        ];
+
+        $toneRings = collect($toneBuckets)
+            ->map(function (string $toneKey, string $label) use ($memories, $emotionToneMap, $total): array {
+                $count = $memories->filter(fn (Memory $memory): bool => ($emotionToneMap[$memory->emotion] ?? 'ニュートラル') === $toneKey)->count();
+
+                return [
+                    'label' => $label,
+                    'count' => $count,
+                    'ratio' => $total > 0 ? (int) round(($count / $total) * 100) : 0,
+                ];
+            })
+            ->values()
+            ->all();
+
+        $keywordCounts = $memories
+            ->map(fn (Memory $memory): string => $this->bubbleKeyword($memory))
+            ->countBy()
+            ->sortDesc();
+
+        $latest = $memories->sortByDesc('created_at')->take(3)->values();
+        $latestTimeline = $latest->map(fn (Memory $memory): array => [
+            'date' => optional($memory->created_at)->format('Y.m.d H:i') ?? '----.--.-- --:--',
+            'emotion' => $memory->emotion,
+            'excerpt' => Str::limit(trim($memory->content), 46, '…'),
+        ])->all();
+
+        $oldestDate = optional($memories->sortBy('created_at')->first()?->created_at)->format('Y.m.d') ?? '--.--.--';
+        $latestDate = optional($memories->sortByDesc('created_at')->first()?->created_at)->format('Y.m.d H:i') ?? '--.--.-- --:--';
+        $avgLength = $total > 0
+            ? (int) round($memories->avg(fn (Memory $memory): int => mb_strlen(trim($memory->content))))
+            : 0;
+        $topEmotion = (string) ($emotionCounts->keys()->first() ?? '未分類');
+        $topKeyword = (string) ($keywordCounts->keys()->first() ?? '未設定');
+
+        return [
+            'period' => $selectedPeriod,
+            'total' => $total,
+            'uniqueEmotions' => $emotionCounts->count(),
+            'avgLength' => $avgLength,
+            'topEmotion' => $topEmotion,
+            'topKeyword' => $topKeyword,
+            'latestDate' => $latestDate,
+            'oldestDate' => $oldestDate,
+            'currentLayer' => $currentLayer,
+            'layerCount' => $layerCount,
+            'topEmotionBars' => $topEmotionBars,
+            'toneRings' => $toneRings,
+            'timeline' => $latestTimeline,
+        ];
     }
 
     private function validateMemory(Request $request): array

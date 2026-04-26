@@ -88,6 +88,90 @@
     @endif
 
     <div class="mem-stage" id="memStage">
+        @if($selectedPeriodStatus)
+        <aside class="mem-status mem-status--left" aria-label="年代ステータス左">
+            <div class="mem-status-shell">
+                <div class="mem-status-title">
+                    <span class="mem-status-kicker">ERA STATUS</span>
+                    <strong>{{ $selectedPeriodStatus['period'] }} 解析</strong>
+                </div>
+
+                <section class="mem-status-block">
+                    <div class="mem-status-block-head">観測概要</div>
+                    <div class="mem-status-hero">
+                        <div>
+                            <span>記憶総数</span>
+                            <strong>{{ number_format($selectedPeriodStatus['total']) }}</strong>
+                        </div>
+                        <div>
+                            <span>感情種別</span>
+                            <strong>{{ $selectedPeriodStatus['uniqueEmotions'] }}</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="mem-status-block">
+                    <div class="mem-status-block-head">期間情報</div>
+                    <div class="mem-status-grid">
+                        <article><span>最多感情</span><strong>{{ $selectedPeriodStatus['topEmotion'] }}</strong></article>
+                        <article><span>主題語</span><strong>{{ $selectedPeriodStatus['topKeyword'] }}</strong></article>
+                        <article><span>平均文字数</span><strong>{{ $selectedPeriodStatus['avgLength'] }}</strong></article>
+                        <article><span>表示層</span><strong>{{ $selectedPeriodStatus['currentLayer'] }}/{{ $selectedPeriodStatus['layerCount'] }}</strong></article>
+                        <article><span>最初の記録</span><strong>{{ $selectedPeriodStatus['oldestDate'] }}</strong></article>
+                        <article><span>最新更新</span><strong>{{ $selectedPeriodStatus['latestDate'] }}</strong></article>
+                    </div>
+                </section>
+
+                <section class="mem-status-block">
+                    <div class="mem-status-block-head">最新ログ</div>
+                    <div class="mem-status-timeline">
+                        @foreach($selectedPeriodStatus['timeline'] as $entry)
+                        <article class="mem-status-log">
+                            <span class="mem-status-log-date">{{ $entry['date'] }}</span>
+                            <strong>{{ $entry['emotion'] }}</strong>
+                            <p>{{ $entry['excerpt'] }}</p>
+                        </article>
+                        @endforeach
+                    </div>
+                </section>
+            </div>
+        </aside>
+
+        <aside class="mem-status mem-status--right" aria-label="年代ステータス右">
+            <div class="mem-status-shell">
+                <section class="mem-status-block">
+                    <div class="mem-status-block-head">感情密度 TOP</div>
+                    <div class="mem-status-bars">
+                        @foreach($selectedPeriodStatus['topEmotionBars'] as $bar)
+                        <div class="mem-status-bar-row">
+                            <span class="mem-status-bar-label">{{ $bar['label'] }}</span>
+                            <div class="mem-status-bar-track">
+                                <div class="mem-status-bar-fill" style="width: {{ $bar['ratio'] }}%"></div>
+                            </div>
+                            <span class="mem-status-bar-value">{{ $bar['count'] }}</span>
+                        </div>
+                        @endforeach
+                    </div>
+                </section>
+
+                <section class="mem-status-block">
+                    <div class="mem-status-block-head">感情分布</div>
+                    <div class="mem-status-rings">
+                        @foreach($selectedPeriodStatus['toneRings'] as $ring)
+                        <article class="mem-status-ring">
+                            <div class="mem-status-ring-orbit" style="--pct: {{ $ring['ratio'] }};">
+                                <span>{{ $ring['ratio'] }}%</span>
+                            </div>
+                            <strong>{{ $ring['label'] }}</strong>
+                            <small>{{ $ring['count'] }}件</small>
+                        </article>
+                        @endforeach
+                    </div>
+                </section>
+            </div>
+        </aside>
+        @endif
+
         <svg id="memSvg" class="mem-svg" viewBox="0 0 1400 900"
              xmlns="http://www.w3.org/2000/svg" aria-label="記憶マップ">
             <defs id="memDefs">
@@ -503,6 +587,228 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     min-height: 100vh;
 }
 
+.mem-status {
+    position: absolute;
+    top: 124px;
+    z-index: 12;
+    width: min(290px, calc(50vw - 360px));
+    min-width: 240px;
+    pointer-events: none;
+}
+
+.mem-status--left { left: 24px; }
+.mem-status--right { right: 24px; }
+
+.mem-status-shell {
+    display: grid;
+    gap: 16px;
+    padding: 18px 16px;
+    border-radius: 22px;
+    border: 1px solid rgba(86, 160, 255, 0.2);
+    background:
+        linear-gradient(180deg, rgba(10, 20, 58, 0.92), rgba(3, 8, 28, 0.96));
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        0 24px 54px rgba(0,0,0,0.38),
+        0 0 24px rgba(0,120,255,0.14);
+    pointer-events: auto;
+}
+
+.mem-status-title {
+    display: grid;
+    gap: 4px;
+}
+
+.mem-status-kicker {
+    color: rgba(114, 196, 255, 0.82);
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+}
+
+.mem-status-title strong {
+    color: rgba(241, 248, 255, 0.96);
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+}
+
+.mem-status-block {
+    display: grid;
+    gap: 12px;
+}
+
+.mem-status-block-head {
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(52, 140, 255, 0.54), rgba(52, 140, 255, 0));
+    color: rgba(220, 239, 255, 0.95);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.mem-status-hero {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.mem-status-hero div,
+.mem-status-grid article,
+.mem-status-log {
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(100, 164, 255, 0.12);
+    background: rgba(255,255,255,0.03);
+}
+
+.mem-status-hero span,
+.mem-status-grid span,
+.mem-status-log-date,
+.mem-status-ring small {
+    display: block;
+    color: rgba(140, 186, 236, 0.72);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+}
+
+.mem-status-hero strong {
+    margin-top: 6px;
+    display: block;
+    color: #8fe8ff;
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.mem-status-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.mem-status-grid strong {
+    margin-top: 6px;
+    display: block;
+    color: rgba(244, 249, 255, 0.96);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.mem-status-timeline {
+    display: grid;
+    gap: 10px;
+}
+
+.mem-status-log {
+    position: relative;
+    padding-left: 18px;
+}
+
+.mem-status-log::before {
+    content: "";
+    position: absolute;
+    left: 7px;
+    top: 14px;
+    bottom: -10px;
+    width: 1px;
+    background: linear-gradient(180deg, rgba(87, 192, 255, 0.8), rgba(87, 192, 255, 0));
+}
+
+.mem-status-log:last-child::before {
+    display: none;
+}
+
+.mem-status-log strong {
+    display: block;
+    margin-top: 4px;
+    color: #9fe8ff;
+    font-size: 14px;
+}
+
+.mem-status-log p {
+    margin-top: 6px;
+    color: rgba(212, 231, 255, 0.78);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.mem-status-bars {
+    display: grid;
+    gap: 10px;
+}
+
+.mem-status-bar-row {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr) 28px;
+    gap: 10px;
+    align-items: center;
+}
+
+.mem-status-bar-label,
+.mem-status-bar-value {
+    color: rgba(213, 231, 255, 0.84);
+    font-size: 12px;
+}
+
+.mem-status-bar-track {
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.07);
+    overflow: hidden;
+}
+
+.mem-status-bar-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #f9c86a, #66d8ff);
+    box-shadow: 0 0 14px rgba(102, 216, 255, 0.36);
+}
+
+.mem-status-rings {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 14px;
+}
+
+.mem-status-ring {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+}
+
+.mem-status-ring-orbit {
+    --deg: calc(var(--pct) * 3.6deg);
+    width: 82px;
+    height: 82px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background:
+        radial-gradient(circle at center, rgba(2, 8, 26, 0.98) 56%, transparent 57%),
+        conic-gradient(from -90deg, #66d8ff var(--deg), rgba(255,255,255,0.08) 0);
+    box-shadow:
+        inset 0 0 0 1px rgba(118, 202, 255, 0.16),
+        0 0 20px rgba(102, 216, 255, 0.18);
+}
+
+.mem-status-ring-orbit span {
+    color: rgba(245, 250, 255, 0.96);
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.mem-status-ring strong {
+    color: rgba(228, 239, 255, 0.92);
+    font-size: 12px;
+    font-weight: 700;
+}
+
 .mem-svg {
     display: block;
     width: 100%;
@@ -692,11 +998,30 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     .mem-count-orb { width:60px; height:60px; }
     .mem-count-num { font-size:20px; }
     .mem-nav-title { font-size:clamp(22px,5vw,34px); }
+    .mem-status {
+        position: static;
+        width: auto;
+        min-width: 0;
+        margin: 120px 16px 0;
+    }
+    .mem-stage {
+        display: grid;
+        gap: 16px;
+        padding-bottom: 28px;
+    }
 }
 @media(max-width:640px){
     .mem-glass-pill { padding:8px 14px; font-size:12px; }
     .mem-dropdown { right:-8px; }
     .mem-count-orb { width:52px; height:52px; }
+    .mem-status-hero,
+    .mem-status-grid,
+    .mem-status-rings {
+        grid-template-columns: 1fr;
+    }
+    .mem-status-bar-row {
+        grid-template-columns: 62px minmax(0, 1fr) 24px;
+    }
 }
 </style>
 
