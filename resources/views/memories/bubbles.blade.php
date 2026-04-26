@@ -916,11 +916,6 @@ function drawPeriods(world){
             el("circle",{cx:n.x,cy:n.y,r:n.r,class:"mg-zone-halo"}),
             el("circle",{cx:n.x,cy:n.y,r:5,class:"mg-zone-dot"}),
         );
-        const nm=el("text",{x:n.x,y:n.y-n.r-28,class:"mg-zone-name"});
-        nm.textContent=n.p;
-        const ct=el("text",{x:n.x,y:n.y-n.r-10,class:"mg-zone-count"});
-        ct.textContent=`${n.count} memories`;
-        g.append(nm,ct);
         periodsG.append(g);
         zoneEls.set(n.p,g);
     });
@@ -1038,11 +1033,16 @@ function drawBubbles(world){
             "pointer-events":"all",
         }));
 
-        /* --- ラベル（記憶数） --- */
-        const lbl=el("text",{x:cx,y:cy-r*0.08,class:"mg-label","font-size":Math.max(22,r*0.38),"font-weight":"800"});
+        /* --- ラベル（年代名 + 件数） --- */
+        const periodLabel=el("text",{x:cx,y:cy-r*0.34,class:"mg-label","font-size":Math.max(14,r*0.20),"font-weight":"800"});
+        periodLabel.textContent=node.period;
+        body.append(periodLabel);
+
+        const lbl=el("text",{x:cx,y:cy-r*0.02,class:"mg-label","font-size":Math.max(22,r*0.38),"font-weight":"800"});
         lbl.textContent=node.count;
         body.append(lbl);
-        const lbl2=el("text",{x:cx,y:cy+r*0.30,class:"mg-label","font-size":Math.max(9,r*0.14),"font-weight":"400",opacity:"0.72"});
+
+        const lbl2=el("text",{x:cx,y:cy+r*0.28,class:"mg-label","font-size":Math.max(9,r*0.14),"font-weight":"400",opacity:"0.72"});
         lbl2.textContent="memories";
         body.append(lbl2);
 
