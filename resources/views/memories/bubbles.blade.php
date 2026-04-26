@@ -605,6 +605,10 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 .mem-status--left { left: 24px; }
 .mem-status--right { right: 24px; }
 
+.mem-status--left {
+    top: 24px;
+}
+
 .mem-status-shell {
     display: grid;
     gap: 16px;
