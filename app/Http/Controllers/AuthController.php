@@ -5,21 +5,25 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\View\View;
 
 class AuthController extends Controller
 {
-    public function create(): View
+    public function create(): Response
     {
         $credentials = $this->ensureDefaultUserExists();
 
-        return view('auth.login', [
-            'defaultEmail' => $credentials['email'],
-            'defaultPassword' => $credentials['password'],
-        ]);
+        return response()
+            ->view('auth.login', [
+                'defaultEmail' => $credentials['email'],
+                'defaultPassword' => $credentials['password'],
+            ])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     public function store(Request $request): RedirectResponse
