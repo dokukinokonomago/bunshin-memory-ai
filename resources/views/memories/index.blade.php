@@ -2,6 +2,7 @@
 
 @section('title', '全記憶一覧 | 分身AI MVP')
 @section('page_class', 'page-memory-index-wide')
+@section('hide_auth_dock', '1')
 
 @php
     $dashboardNow = now('Asia/Tokyo');
@@ -14,10 +15,28 @@
         '成人期' => '成人',
         '不明' => '不明',
     ];
+    $distributionLabels = [
+        '幼少期' => '幼少期',
+        '小学生' => '小学生',
+        '中学生' => '中学生',
+        '高校生' => '高校生',
+        '大学生' => '大学生',
+        '成人期' => '成人期',
+        '不明' => '不 明',
+    ];
+    $periodColors = [
+        '幼少期' => ['#ff6b6b', '#ff4757'],
+        '小学生' => ['#ffa94d', '#ff7c1f'],
+        '中学生' => ['#ffe066', '#ffbc00'],
+        '高校生' => ['#69db7c', '#2dbe4e'],
+        '大学生' => ['#4dabf7', '#1c7ed6'],
+        '成人期' => ['#9775fa', '#6741d9'],
+        '不明' => ['#f06595', '#c2255c'],
+    ];
     $distribution = collect($periods)
-        ->map(function ($period) use ($memories, $periodShortLabels) {
+        ->map(function ($period) use ($memories, $distributionLabels) {
             return [
-                'label' => $periodShortLabels[$period] ?? $period,
+                'label' => $distributionLabels[$period] ?? $period,
                 'count' => $memories->where('period', $period)->count(),
             ];
         })
@@ -36,16 +55,28 @@
             <span class="memory-index-grid"></span>
         </div>
 
-        <section class="memory-index-headerbar">
-            <div class="memory-index-header-main">
-                <span class="memory-index-kicker">PERSONAL MEMORY ARCHIVE</span>
-                <h1>全記憶一覧</h1>
-                <span class="memory-index-count">保存数 <strong>{{ $allCount }}</strong></span>
-            </div>
-        </section>
-
         <div class="memory-index-layout">
             <section class="memory-index-main">
+                <section class="memory-index-headerbar">
+                    <div class="memory-index-header-main">
+                        <div class="memory-index-title-row">
+                            <span class="memory-index-kicker">PERSONAL MEMORY ARCHIVE</span>
+                            <h1>全記憶一覧</h1>
+                            <span class="memory-index-count">保存数 <strong>{{ $allCount }}</strong></span>
+                            @auth
+                            <div class="memory-index-authline">
+                                <span class="memory-index-auth-user">{{ auth()->user()->email }}</span>
+                                <a class="memory-index-auth-link" href="{{ route('memories.bubbles') }}">記憶の玉</a>
+                                <form method="post" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button class="memory-index-auth-link" type="submit">ログアウト</button>
+                                </form>
+                            </div>
+                            @endauth
+                        </div>
+                    </div>
+                </section>
+
                 @if (session('status') === 'created')
                     <div class="flash">記憶を保存しました。</div>
                 @endif
@@ -63,7 +94,6 @@
                         <div class="memory-index-toolbar-copy">
                             <span class="memory-index-toolbar-label">ARCHIVE FILTER</span>
                             <strong>{{ $selectedPeriod === 'すべて' ? '全記憶を横断表示' : $selectedPeriodShort . 'の記憶を表示中' }}</strong>
-                            <p>{{ $memories->count() }}件の記憶を、検索と年代条件で絞り込みできます。</p>
                         </div>
 
                         <div class="memory-index-toolbar-actions">
@@ -82,24 +112,24 @@
                                 <input type="hidden" name="period" value="{{ $selectedPeriod }}">
                             @endif
                             <input id="q" type="search" name="q" value="{{ $searchQuery }}" placeholder="キーワードで記憶を探す">
-                            <button class="btn btn-secondary" type="submit">検索</button>
+                            <button class="btn btn-secondary memory-index-mini-btn" type="submit">検索</button>
                             @if ($searchQuery !== '' || $selectedPeriod !== 'すべて')
-                                <a class="btn btn-secondary" href="{{ route('memories.index') }}">解除</a>
+                                <a class="btn btn-secondary memory-index-mini-btn" href="{{ route('memories.index') }}">解除</a>
                             @endif
                         </form>
-                    </div>
 
-                    <div class="memory-index-period-filter" aria-label="年代で検索">
-                        @php
-                            $periodBaseParams = $searchQuery !== '' ? ['q' => $searchQuery] : [];
-                        @endphp
-                        <a class="memory-index-period-btn {{ $selectedPeriod === 'すべて' ? 'is-active' : '' }}" href="{{ route('memories.index', $periodBaseParams) }}">すべて</a>
-                        @foreach ($periods as $period)
-                            <a
-                                class="memory-index-period-btn {{ $selectedPeriod === $period ? 'is-active' : '' }}"
-                                href="{{ route('memories.index', array_merge($periodBaseParams, ['period' => $period])) }}"
-                            >{{ $period }}</a>
-                        @endforeach
+                        <div class="memory-index-period-filter" aria-label="年代で検索">
+                            @php
+                                $periodBaseParams = $searchQuery !== '' ? ['q' => $searchQuery] : [];
+                            @endphp
+                            <a class="memory-index-period-btn {{ $selectedPeriod === 'すべて' ? 'is-active' : '' }}" href="{{ route('memories.index', $periodBaseParams) }}">すべて</a>
+                            @foreach ($periods as $period)
+                                <a
+                                    class="memory-index-period-btn {{ $selectedPeriod === $period ? 'is-active' : '' }}"
+                                    href="{{ route('memories.index', array_merge($periodBaseParams, ['period' => $period])) }}"
+                                >{{ $period }}</a>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
 
@@ -115,7 +145,7 @@
                                 @php
                                     $tone = $emotionToneMap[$memory->emotion] ?? 'ニュートラル';
                                     $badgeClass = str_contains($tone, 'ポジティブ') ? 'badge-positive' : (str_contains($tone, 'ニュートラル') ? 'badge-neutral' : 'badge-negative');
-                                    $orbClass = str_contains($tone, 'ポジティブ') ? 'is-warm' : (str_contains($tone, 'ニュートラル') ? 'is-cool' : 'is-dream');
+                                    $orbColors = $periodColors[$memory->period] ?? ['#dce9ff', '#63a6ff'];
                                 @endphp
                                 <label class="memory-entry">
                                     <input
@@ -130,7 +160,7 @@
 
                                     <div class="memory-entry-shell">
                                         <div class="memory-entry-orb-wrap">
-                                            <span class="memory-entry-orb {{ $orbClass }}"></span>
+                                            <span class="memory-entry-orb" style="--orb-a: {{ $orbColors[0] }}; --orb-b: {{ $orbColors[1] }};"></span>
                                         </div>
 
                                         <div class="memory-entry-body">
@@ -146,9 +176,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="memory-entry-story">
-                                                <p class="memory-entry-content">{{ $memory->content }}</p>
-                                            </div>
+                                            <p class="memory-entry-content">{{ $memory->content }}</p>
                                         </div>
                                     </div>
                                 </label>
@@ -325,26 +353,66 @@
         .memory-index-headerbar {
             display: flex;
             align-items: flex-start;
-            justify-content: flex-start;
+            justify-content: space-between;
             gap: 14px;
-            padding: 18px 20px;
-            margin-bottom: 18px;
-            border-radius: 28px;
-            border: 1px solid transparent;
-            background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015) 52%, rgba(255, 255, 255, 0.01)),
-                linear-gradient(135deg, rgba(14, 28, 62, 0.72), rgba(8, 16, 38, 0.62));
-            box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                0 20px 46px rgba(2, 7, 18, 0.18);
+            padding: 0;
+            margin-bottom: 8px;
         }
 
         .memory-index-header-main {
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
+            align-items: stretch;
             flex-wrap: wrap;
+            gap: 0;
+            width: 100%;
+        }
+
+        .memory-index-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .memory-index-title-row > h1,
+        .memory-index-title-row > .memory-index-kicker,
+        .memory-index-title-row > .memory-index-count,
+        .memory-index-title-row > .memory-index-authline {
+            flex: 0 0 auto;
+        }
+
+        .memory-index-authline {
+            display: flex;
+            align-items: center;
             gap: 10px;
+            flex-wrap: wrap;
+            margin-left: auto;
+        }
+
+        .memory-index-auth-user {
+            color: rgba(227, 236, 255, 0.72);
+            font-size: 12px;
+            letter-spacing: 0.08em;
+        }
+
+        .memory-index-authline form {
+            margin: 0;
+        }
+
+        .memory-index-auth-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            background: rgba(14, 26, 58, 0.34);
+            color: rgba(241, 246, 255, 0.92);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+            cursor: pointer;
         }
 
         .memory-index-kicker {
@@ -354,7 +422,7 @@
             padding: 0 12px;
             border-radius: 999px;
             border: 1px solid transparent;
-            background: rgba(12, 22, 48, 0.38);
+            background: rgba(12, 22, 48, 0.24);
             color: rgba(174, 210, 255, 0.72);
             font-size: 11px;
             font-weight: 700;
@@ -415,16 +483,12 @@
 
         .memory-index-toolbar {
             display: grid;
-            gap: 14px;
-            padding: 18px;
-            border-radius: 28px;
-            border: 1px solid transparent;
-            background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015) 46%, rgba(255, 255, 255, 0.01)),
-                linear-gradient(140deg, rgba(9, 18, 44, 0.68), rgba(6, 12, 28, 0.58));
-            box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.04),
-                0 20px 48px rgba(2, 7, 18, 0.16);
+            gap: 10px;
+            padding: 0 0 8px;
+            border-radius: 0;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
         }
 
         .memory-index-toolbar-top {
@@ -437,7 +501,7 @@
 
         .memory-index-toolbar-copy {
             display: grid;
-            gap: 6px;
+            gap: 4px;
         }
 
         .memory-index-toolbar-label {
@@ -449,15 +513,8 @@
 
         .memory-index-toolbar-copy strong {
             color: rgba(246, 249, 255, 0.98);
-            font-size: 22px;
+            font-size: 18px;
             line-height: 1.2;
-        }
-
-        .memory-index-toolbar-copy p {
-            margin: 0;
-            color: rgba(184, 205, 238, 0.78);
-            font-size: 13px;
-            line-height: 1.6;
         }
 
         .memory-index-toolbar-main {
@@ -465,14 +522,16 @@
             align-items: center;
             justify-content: flex-start;
             gap: 12px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 4px;
         }
 
         .memory-index-search-form {
             display: flex;
             align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
+            gap: 8px;
+            flex-wrap: nowrap;
             min-width: 0;
         }
 
@@ -491,6 +550,16 @@
                 0 10px 22px rgba(5, 10, 24, 0.10);
         }
 
+        .memory-index-mini-btn,
+        .memory-index-period-btn {
+            min-height: 34px;
+            padding: 0 12px;
+            font-size: 12px;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.04),
+                0 8px 18px rgba(6, 10, 24, 0.10);
+        }
+
         .memory-index-toolbar-actions,
         .memory-index-toolbar-actions form {
             display: flex;
@@ -501,9 +570,9 @@
         .memory-index-period-filter {
             display: flex;
             flex-wrap: nowrap;
-            gap: 10px;
+            gap: 8px;
             overflow-x: auto;
-            padding-bottom: 4px;
+            padding-bottom: 0;
         }
 
         .memory-index-period-filter::-webkit-scrollbar,
@@ -563,6 +632,16 @@
             color: rgba(250, 252, 255, 0.98);
         }
 
+        .memory-index-command .memory-index-mini-btn,
+        .memory-index-command .memory-index-period-btn {
+            min-height: 34px;
+            padding: 0 12px;
+            font-size: 12px;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.04),
+                0 8px 18px rgba(6, 10, 24, 0.10);
+        }
+
         .memory-index-toolbar-actions .is-disabled {
             pointer-events: none;
             opacity: 0.4;
@@ -576,7 +655,7 @@
 
         .memory-index-timeline {
             display: grid;
-            gap: 16px;
+            gap: 2px;
         }
 
         .memory-entry {
@@ -595,16 +674,11 @@
             grid-template-columns: 92px minmax(0, 1fr);
             gap: 20px;
             align-items: center;
-            padding: 20px 22px;
-            border-radius: 30px;
-            border: 1px solid transparent;
-            background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015) 36%, rgba(255, 255, 255, 0.01)),
-                linear-gradient(145deg, rgba(12, 24, 56, 0.56), rgba(8, 15, 34, 0.62));
-            box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                inset 0 -16px 28px rgba(0, 0, 0, 0.14),
-                0 22px 52px rgba(4, 10, 22, 0.14);
+            padding: 18px 6px 18px 4px;
+            border-radius: 0;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
             transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
             position: relative;
             overflow: hidden;
@@ -613,35 +687,39 @@
         .memory-entry-shell::before {
             content: "";
             position: absolute;
-            inset: 1px 1px auto;
-            height: 48%;
-            border-radius: 28px 28px 18px 18px;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02));
+            left: 94px;
+            right: 0;
+            bottom: 0;
+            height: 1px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(124, 191, 255, 0.28), rgba(255,255,255,0.02));
             pointer-events: none;
         }
 
         .memory-entry-shell::after {
             content: "";
             position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at 88% 14%, rgba(108, 189, 255, 0.12), transparent 26%);
+            left: 106px;
+            right: 18px;
+            top: 10px;
+            bottom: 10px;
+            border-radius: 24px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01) 18%, rgba(255,255,255,0.01));
             pointer-events: none;
         }
 
         .memory-entry:hover .memory-entry-shell {
-            transform: translateY(-2px);
-            border-color: rgba(174, 214, 255, 0.28);
-            box-shadow: 0 28px 60px rgba(4, 10, 22, 0.28);
+            transform: translateX(2px);
         }
 
         .memory-select:checked + .memory-entry-shell {
-            border-color: transparent;
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.08),
-                0 28px 64px rgba(20, 54, 120, 0.24);
+                0 0 0 1px rgba(92, 180, 255, 0.05);
+        }
+
+        .memory-select:checked + .memory-entry-shell::after {
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.02)),
-                linear-gradient(145deg, rgba(13, 29, 68, 0.72), rgba(8, 17, 38, 0.76));
+                linear-gradient(90deg, rgba(86, 163, 255, 0.18), rgba(86, 163, 255, 0.04) 28%, rgba(255,255,255,0.01));
         }
 
         .memory-entry-orb-wrap {
@@ -659,7 +737,11 @@
             box-shadow:
                 inset -14px -16px 30px rgba(5, 12, 24, 0.24),
                 inset 10px 10px 24px rgba(255, 255, 255, 0.18),
-                0 0 48px rgba(116, 180, 255, 0.20);
+                0 0 18px color-mix(in srgb, var(--orb-b) 34%, transparent),
+                0 0 42px color-mix(in srgb, var(--orb-a) 22%, transparent);
+            background:
+                radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.92), transparent 18%),
+                radial-gradient(circle at 56% 58%, color-mix(in srgb, var(--orb-a) 94%, white 6%), color-mix(in srgb, var(--orb-b) 48%, transparent) 72%, transparent 100%);
         }
 
         .memory-entry-orb::before {
@@ -673,24 +755,6 @@
             background: rgba(255, 255, 255, 0.3);
             filter: blur(4px);
             transform: rotate(-18deg);
-        }
-
-        .memory-entry-orb.is-warm {
-            background:
-                radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.9), transparent 18%),
-                radial-gradient(circle at 56% 58%, rgba(255, 196, 134, 0.88), rgba(255, 153, 110, 0.24) 72%, transparent 100%);
-        }
-
-        .memory-entry-orb.is-cool {
-            background:
-                radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.9), transparent 18%),
-                radial-gradient(circle at 56% 58%, rgba(132, 212, 255, 0.88), rgba(103, 147, 255, 0.24) 72%, transparent 100%);
-        }
-
-        .memory-entry-orb.is-dream {
-            background:
-                radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.9), transparent 18%),
-                radial-gradient(circle at 56% 58%, rgba(193, 172, 255, 0.88), rgba(124, 110, 255, 0.24) 72%, transparent 100%);
         }
 
         .memory-entry-body {
@@ -759,16 +823,6 @@
             font-weight: 700;
         }
 
-        .memory-entry-story {
-            padding: 16px 18px;
-            border-radius: 20px;
-            border: 1px solid transparent;
-            background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)),
-                rgba(6, 12, 30, 0.22);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-        }
-
         .memory-entry-content {
             margin: 0;
             color: rgba(232, 240, 255, 0.94);
@@ -784,6 +838,7 @@
 
         .memory-index-sidebar {
             min-width: 0;
+            padding-top: 0;
         }
 
         .memory-side-monitor {
@@ -892,7 +947,7 @@
 
         .memory-side-bar-row {
             display: grid;
-            grid-template-columns: 36px minmax(0, 1fr) 24px;
+            grid-template-columns: 56px minmax(0, 1fr) 24px;
             gap: 12px;
             align-items: center;
         }
@@ -1009,22 +1064,26 @@
                 border-radius: 24px;
             }
 
-            .memory-index-headerbar,
-            .memory-index-toolbar,
-            .memory-side-monitor {
-                border-radius: 20px;
-            }
-
             .memory-index-headerbar h1 {
                 font-size: 28px;
             }
 
+            .memory-index-title-row {
+                align-items: flex-start;
+            }
+
+            .memory-index-authline {
+                margin-left: 0;
+            }
+
             .memory-index-toolbar-main {
-                align-items: stretch;
+                align-items: center;
+                flex-wrap: wrap;
             }
 
             .memory-index-search-form {
                 width: 100%;
+                flex-wrap: wrap;
             }
 
             .memory-index-search-form input {
@@ -1043,10 +1102,16 @@
 
             .memory-entry-shell {
                 grid-template-columns: 1fr;
+                padding-left: 0;
             }
 
             .memory-entry-orb-wrap {
                 justify-items: start;
+            }
+
+            .memory-entry-shell::before,
+            .memory-entry-shell::after {
+                left: 0;
             }
 
             .memory-entry-content {
@@ -1054,7 +1119,7 @@
             }
 
             .memory-side-bar-row {
-                grid-template-columns: 34px minmax(0, 1fr) 20px;
+                grid-template-columns: 52px minmax(0, 1fr) 20px;
             }
 
         }
