@@ -412,7 +412,7 @@
     gap: 8px;
     padding: 10px 20px;
     border-radius: 999px;
-    border: none;
+    border: 1px solid rgba(255,255,255,0.34);
     outline: none;
     font-size: 13px;
     font-weight: 700;
@@ -423,6 +423,11 @@
     transition: transform 0.18s, box-shadow 0.18s;
     position: relative;
     overflow: hidden;
+    backdrop-filter: blur(18px) saturate(1.1);
+    box-shadow:
+        0 16px 30px rgba(0,0,0,0.18),
+        inset 0 1px 0 rgba(255,255,255,0.48),
+        inset 0 -10px 18px rgba(116, 162, 255, 0.16);
 }
 
 /* 内部の光沢ライン（画像4の上縁ハイライト） */
@@ -436,38 +441,48 @@
     pointer-events: none;
 }
 
+.mem-glass-pill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+        radial-gradient(circle at 0% 100%, rgba(255, 199, 118, 0.18), transparent 36%),
+        radial-gradient(circle at 100% 0%, rgba(109, 201, 255, 0.2), transparent 38%);
+    pointer-events: none;
+}
+
 .mem-glass-pill--blue {
     background:
-        linear-gradient(160deg, rgba(0,100,220,0.70) 0%, rgba(0,40,130,0.90) 100%);
-    color: rgba(210,238,255,0.97);
+        linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08)),
+        linear-gradient(135deg, rgba(74, 146, 255, 0.48), rgba(88, 208, 255, 0.24) 58%, rgba(255,255,255,0.08));
+    color: rgba(234,246,255,0.98);
     box-shadow:
-        0 0 0 1.5px rgba(0,180,255,0.55),
-        0 0 20px rgba(0,140,255,0.30),
-        0 0 50px rgba(0,80,255,0.15),
-        inset 0 1px 0 rgba(255,255,255,0.20),
-        inset 0 -1px 0 rgba(0,60,180,0.40);
+        0 16px 30px rgba(0,0,0,0.18),
+        0 0 26px rgba(90, 188, 255, 0.18),
+        inset 0 1px 0 rgba(255,255,255,0.52),
+        inset 0 -10px 18px rgba(88, 144, 255, 0.18);
 }
 
 .mem-glass-pill--purple {
     background:
-        linear-gradient(160deg, rgba(90,0,200,0.65) 0%, rgba(40,0,110,0.90) 100%);
-    color: rgba(220,200,255,0.97);
+        linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08)),
+        linear-gradient(135deg, rgba(176, 118, 255, 0.4), rgba(105, 96, 255, 0.26) 58%, rgba(255,255,255,0.08));
+    color: rgba(244,236,255,0.98);
     box-shadow:
-        0 0 0 1.5px rgba(140,60,255,0.55),
-        0 0 20px rgba(100,0,220,0.30),
-        0 0 50px rgba(60,0,180,0.15),
-        inset 0 1px 0 rgba(255,255,255,0.18),
-        inset 0 -1px 0 rgba(60,0,160,0.40);
+        0 16px 30px rgba(0,0,0,0.18),
+        0 0 26px rgba(168, 118, 255, 0.16),
+        inset 0 1px 0 rgba(255,255,255,0.52),
+        inset 0 -10px 18px rgba(120, 104, 255, 0.16);
 }
 
 .mem-glass-pill:hover {
     transform: translateY(-2px) scale(1.03);
     box-shadow:
-        0 0 0 1.5px rgba(80,220,255,0.80),
-        0 0 32px rgba(0,180,255,0.50),
-        0 0 70px rgba(0,100,255,0.25),
-        inset 0 1px 0 rgba(255,255,255,0.28),
-        inset 0 -1px 0 rgba(0,60,180,0.40);
+        0 20px 38px rgba(0,0,0,0.22),
+        0 0 36px rgba(98, 194, 255, 0.22),
+        inset 0 1px 0 rgba(255,255,255,0.58),
+        inset 0 -10px 18px rgba(88, 144, 255, 0.18);
 }
 
 .mem-glass-pill::-webkit-details-marker { display: none; }
@@ -493,13 +508,14 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     border-radius: 18px;
     /* 画像4のカードスタイル */
     background:
-        linear-gradient(145deg, rgba(8,18,60,0.96) 0%, rgba(4,10,36,0.98) 100%);
-    border: 1px solid rgba(0,160,255,0.28);
+        linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06)),
+        linear-gradient(145deg, rgba(10,22,62,0.9) 0%, rgba(6,12,36,0.94) 100%);
+    border: 1px solid rgba(255,255,255,0.18);
     box-shadow:
         0 0 0 1px rgba(0,100,200,0.12),
         0 30px 60px rgba(0,0,0,0.75),
         0 0 30px rgba(0,80,200,0.18),
-        inset 0 1px 0 rgba(255,255,255,0.08);
+        inset 0 1px 0 rgba(255,255,255,0.22);
     backdrop-filter: blur(28px) saturate(1.5);
 }
 
@@ -513,11 +529,20 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     font-size: 13px;
     font-weight: 600;
     text-decoration: none;
-    transition: background 0.16s, transform 0.14s;
+    transition: background 0.16s, transform 0.14s, box-shadow 0.14s;
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid transparent;
 }
 .mem-drop-item:hover {
-    background: rgba(0,100,255,0.18);
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04)),
+        rgba(93, 158, 255, 0.12);
+    border-color: rgba(255,255,255,0.16);
+    box-shadow:
+        0 12px 24px rgba(0,0,0,0.12),
+        inset 0 1px 0 rgba(255,255,255,0.2);
     transform: translateX(3px);
 }
 .mem-drop-item--dim { opacity: 0.38; pointer-events: none; }
@@ -546,24 +571,42 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     align-items: center;
     padding: 7px 16px;
     border-radius: 999px;
-    border: 1px solid rgba(60,130,255,0.28);
-    background: rgba(0,16,60,0.65);
-    color: rgba(150,205,255,0.88);
+    border: 1px solid rgba(255,255,255,0.24);
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.05)),
+        radial-gradient(circle at 0% 100%, rgba(255, 199, 118, 0.14), transparent 36%),
+        radial-gradient(circle at 100% 0%, rgba(109, 201, 255, 0.16), transparent 38%),
+        rgba(0,16,60,0.34);
+    color: rgba(220,238,255,0.92);
     font-size: 12px;
     font-weight: 600;
     text-decoration: none;
     transition: all 0.16s;
+    box-shadow:
+        0 12px 24px rgba(0,0,0,0.12),
+        inset 0 1px 0 rgba(255,255,255,0.26);
+    backdrop-filter: blur(14px);
 }
 .mem-filter-chip:hover {
-    border-color: rgba(0,200,255,0.60);
-    background: rgba(0,60,180,0.55);
+    border-color: rgba(255,255,255,0.4);
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.06)),
+        radial-gradient(circle at 0% 100%, rgba(95, 176, 255, 0.22), transparent 40%),
+        rgba(0,60,180,0.24);
     color: #fff;
 }
 .mem-filter-chip.is-on {
-    border-color: rgba(0,210,255,0.80);
-    background: linear-gradient(135deg, rgba(0,100,220,0.55), rgba(0,60,180,0.65));
+    border-color: rgba(208,235,255,0.48);
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08)),
+        radial-gradient(circle at 0% 100%, rgba(95, 176, 255, 0.38), transparent 40%),
+        radial-gradient(circle at 100% 0%, rgba(255, 203, 124, 0.14), transparent 42%),
+        rgba(0,60,180,0.22);
     color: #fff;
-    box-shadow: 0 0 18px rgba(0,180,255,0.35);
+    box-shadow:
+        0 14px 28px rgba(0,0,0,0.14),
+        0 0 24px rgba(90, 188, 255, 0.18),
+        inset 0 1px 0 rgba(255,255,255,0.34);
 }
 
 /* ── 階層ナビ ───────────────────────────── */
@@ -582,15 +625,22 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 .mem-layer-btn {
     padding: 3px 10px;
     border-radius: 999px;
-    border: 1px solid rgba(0,150,255,0.32);
-    background: rgba(0,40,150,0.48);
-    color: rgba(160,215,255,0.92);
+    border: 1px solid rgba(255,255,255,0.24);
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.05)),
+        radial-gradient(circle at 100% 0%, rgba(109, 201, 255, 0.14), transparent 38%),
+        rgba(0,40,150,0.2);
+    color: rgba(228,243,255,0.96);
     font-size: 11px;
     font-weight: 600;
     text-decoration: none;
     transition: all 0.16s;
+    box-shadow:
+        0 12px 20px rgba(0,0,0,0.12),
+        inset 0 1px 0 rgba(255,255,255,0.24);
+    backdrop-filter: blur(14px);
 }
-.mem-layer-btn:hover { border-color: rgba(0,220,255,0.60); }
+.mem-layer-btn:hover { border-color: rgba(255,255,255,0.42); }
 
 /* ── 期間バッジ ─────────────────────────── */
 .mem-period-badge {
@@ -774,14 +824,22 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 
 .mem-status-modal-button {
     min-height: 42px;
-    border: 1px solid rgba(100, 164, 255, 0.16);
+    border: 1px solid rgba(255,255,255,0.24);
     border-radius: 16px;
-    background: rgba(255,255,255,0.03);
-    color: rgba(169, 214, 255, 0.9);
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.05)),
+        radial-gradient(circle at 0% 100%, rgba(255, 203, 121, 0.14), transparent 36%),
+        radial-gradient(circle at 100% 0%, rgba(109, 201, 255, 0.16), transparent 38%),
+        rgba(255,255,255,0.03);
+    color: rgba(228, 240, 255, 0.94);
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.08em;
     cursor: pointer;
+    box-shadow:
+        0 14px 24px rgba(0,0,0,0.14),
+        inset 0 1px 0 rgba(255,255,255,0.24);
+    backdrop-filter: blur(14px);
 }
 
 .mem-status-modal[hidden] {
@@ -833,13 +891,18 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 .mem-status-modal-x {
     min-height: 34px;
     padding: 0 12px;
-    border: 1px solid rgba(100, 164, 255, 0.16);
+    border: 1px solid rgba(255,255,255,0.22);
     border-radius: 999px;
-    background: rgba(255,255,255,0.04);
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.05)),
+        rgba(255,255,255,0.04);
     color: rgba(192, 224, 255, 0.92);
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
+    box-shadow:
+        0 12px 20px rgba(0,0,0,0.12),
+        inset 0 1px 0 rgba(255,255,255,0.22);
 }
 
 .mem-status-logs-stack {

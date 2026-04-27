@@ -401,11 +401,33 @@
             min-height: 34px;
             padding: 0 12px;
             border-radius: 999px;
-            border: 1px solid transparent;
-            background: rgba(14, 26, 58, 0.34);
-            color: rgba(241, 246, 255, 0.92);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            background:
+                radial-gradient(circle at 0% 100%, rgba(82, 160, 255, 0.26), transparent 38%),
+                radial-gradient(circle at 100% 0%, rgba(255, 208, 128, 0.18), transparent 42%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.07)),
+                rgba(12, 20, 40, 0.24);
+            color: rgba(247, 250, 255, 0.96);
+            box-shadow:
+                0 14px 26px rgba(3, 8, 22, 0.18),
+                inset 0 1px 0 rgba(255,255,255,0.34),
+                inset 0 -8px 16px rgba(96, 154, 255, 0.14);
             cursor: pointer;
+            backdrop-filter: blur(16px) saturate(1.08);
+        }
+
+        .memory-index-auth-link::before {
+            content: "";
+            position: absolute;
+            left: 10%;
+            right: 10%;
+            top: 1px;
+            height: 46%;
+            border-radius: inherit;
+            background: linear-gradient(180deg, rgba(255,255,255,0.76), rgba(255,255,255,0.12) 62%, transparent);
+            pointer-events: none;
         }
 
         .memory-index-headerbar h1 {
@@ -519,14 +541,18 @@
             min-height: 46px;
             padding: 0 18px;
             border-radius: 999px;
-            border: 1px solid transparent;
+            border: 1px solid rgba(255, 255, 255, 0.28);
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01)),
-                rgba(12, 20, 40, 0.72);
+                linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05)),
+                radial-gradient(circle at 0% 100%, rgba(255, 207, 128, 0.14), transparent 40%),
+                radial-gradient(circle at 100% 0%, rgba(109, 201, 255, 0.16), transparent 40%),
+                rgba(12, 20, 40, 0.38);
             color: rgba(239, 245, 255, 0.94);
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.04),
-                0 10px 22px rgba(5, 10, 24, 0.10);
+                0 14px 28px rgba(5, 10, 24, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.28),
+                inset 0 -8px 18px rgba(92, 147, 255, 0.1);
+            backdrop-filter: blur(16px) saturate(1.05);
         }
 
         .memory-index-mini-btn,
@@ -569,39 +595,61 @@
             min-height: 44px;
             padding: 0 18px;
             border-radius: 999px;
-            border: 1px solid transparent;
+            border: 1px solid rgba(255, 255, 255, 0.28);
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-                rgba(12, 20, 40, 0.62);
+                radial-gradient(circle at 0% 100%, rgba(255, 199, 120, 0.16), transparent 38%),
+                radial-gradient(circle at 100% 0%, rgba(106, 198, 255, 0.18), transparent 42%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.05)),
+                rgba(12, 20, 40, 0.24);
             color: rgba(232, 241, 255, 0.92);
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                0 12px 28px rgba(6, 10, 24, 0.14);
+                0 14px 28px rgba(6, 10, 24, 0.14),
+                inset 0 1px 0 rgba(255, 255, 255, 0.34),
+                inset 0 -8px 18px rgba(92, 147, 255, 0.14);
             transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
             white-space: nowrap;
+            backdrop-filter: blur(16px) saturate(1.08);
         }
 
         .memory-index-command .btn-primary {
             background:
-                linear-gradient(135deg, rgba(129, 214, 255, 0.28), rgba(89, 132, 255, 0.86)),
-                rgba(12, 20, 40, 0.7);
+                radial-gradient(circle at 0% 100%, rgba(92, 171, 255, 0.46), transparent 40%),
+                radial-gradient(circle at 100% 0%, rgba(255, 209, 127, 0.3), transparent 42%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.06)),
+                rgba(12, 20, 40, 0.32);
             color: rgba(248, 251, 255, 0.98);
+            border-color: rgba(194, 234, 255, 0.48);
+            box-shadow:
+                0 18px 32px rgba(25, 74, 152, 0.18),
+                0 0 24px rgba(92, 196, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.38),
+                inset 0 -10px 18px rgba(82, 136, 250, 0.2);
         }
 
         .memory-index-command .btn:hover,
         .memory-index-period-btn:hover {
             transform: translateY(-1px);
-            border-color: rgba(196, 224, 255, 0.28);
+            border-color: rgba(232, 245, 255, 0.44);
             background:
-                linear-gradient(135deg, rgba(88, 150, 255, 0.3), rgba(34, 73, 171, 0.82)),
-                rgba(12, 20, 40, 0.7);
+                radial-gradient(circle at 0% 100%, rgba(99, 177, 255, 0.28), transparent 40%),
+                radial-gradient(circle at 100% 0%, rgba(255, 211, 135, 0.2), transparent 42%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.08)),
+                rgba(12, 20, 40, 0.28);
         }
 
         .memory-index-period-btn.is-active {
             background:
-                linear-gradient(135deg, rgba(111, 224, 255, 0.3), rgba(76, 126, 255, 0.9)),
-                rgba(12, 20, 40, 0.7);
+                radial-gradient(circle at 0% 100%, rgba(91, 171, 255, 0.44), transparent 40%),
+                radial-gradient(circle at 100% 0%, rgba(255, 210, 129, 0.24), transparent 42%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.08)),
+                rgba(12, 20, 40, 0.32);
             color: rgba(250, 252, 255, 0.98);
+            border-color: rgba(198, 236, 255, 0.5);
+            box-shadow:
+                0 18px 32px rgba(25, 74, 152, 0.18),
+                0 0 24px rgba(92, 196, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                inset 0 -10px 18px rgba(82, 136, 250, 0.2);
         }
 
         .memory-index-command .memory-index-mini-btn,
@@ -792,11 +840,19 @@
             min-height: 30px;
             padding: 0 12px;
             border-radius: 999px;
-            border: 1px solid transparent;
-            background: rgba(10, 20, 44, 0.30);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06)),
+                radial-gradient(circle at 100% 0%, rgba(109, 201, 255, 0.18), transparent 40%),
+                rgba(10, 20, 44, 0.18);
             font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.12em;
+            box-shadow:
+                0 12px 20px rgba(3, 8, 22, 0.12),
+                inset 0 1px 0 rgba(255,255,255,0.28),
+                inset 0 -8px 14px rgba(92, 147, 255, 0.08);
+            backdrop-filter: blur(14px);
         }
 
         .memory-entry-kicker-chip {
@@ -822,17 +878,30 @@
             min-height: 30px;
             padding: 0 12px;
             border-radius: 999px;
-            border: 1px solid transparent;
-            background: rgba(16, 28, 64, 0.42);
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            background:
+                radial-gradient(circle at 0% 100%, rgba(93, 172, 255, 0.24), transparent 38%),
+                radial-gradient(circle at 100% 0%, rgba(255, 207, 128, 0.16), transparent 42%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06)),
+                rgba(16, 28, 64, 0.18);
             color: rgba(242, 247, 255, 0.92);
             font-size: 12px;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+            box-shadow:
+                0 12px 22px rgba(3, 8, 22, 0.14),
+                inset 0 1px 0 rgba(255,255,255,0.32),
+                inset 0 -8px 14px rgba(92, 147, 255, 0.08);
             cursor: pointer;
+            backdrop-filter: blur(14px);
         }
 
         .memory-entry-action.is-danger {
-            background: rgba(104, 28, 52, 0.34);
+            background:
+                radial-gradient(circle at 0% 100%, rgba(255, 125, 156, 0.3), transparent 38%),
+                radial-gradient(circle at 100% 0%, rgba(255, 209, 127, 0.14), transparent 42%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06)),
+                rgba(104, 28, 52, 0.2);
             color: rgba(255, 224, 232, 0.94);
+            border-color: rgba(255, 206, 216, 0.28);
         }
 
         .memory-entry-inline {
@@ -857,11 +926,20 @@
             min-height: 32px;
             padding: 0 12px;
             border-radius: 999px;
-            background: rgba(118, 173, 255, 0.10);
-            border: 1px solid transparent;
-            color: rgba(238, 245, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.26);
+            background:
+                radial-gradient(circle at 0% 100%, rgba(89, 170, 255, 0.26), transparent 38%),
+                radial-gradient(circle at 100% 0%, rgba(255, 207, 128, 0.16), transparent 40%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.08)),
+                rgba(118, 173, 255, 0.12);
+            color: rgba(244, 249, 255, 0.96);
             font-size: 13px;
             font-weight: 700;
+            box-shadow:
+                0 12px 22px rgba(3, 8, 22, 0.12),
+                inset 0 1px 0 rgba(255,255,255,0.34),
+                inset 0 -8px 14px rgba(92, 147, 255, 0.08);
+            backdrop-filter: blur(14px);
         }
 
         .memory-entry-content {

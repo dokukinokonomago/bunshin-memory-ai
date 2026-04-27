@@ -223,13 +223,49 @@
 
         .auth-login-submit {
             min-height: 56px;
-            border: 0;
-            border-radius: 18px;
-            background: linear-gradient(135deg, #76bbff, #ffb06c);
-            color: #091221;
+            border: 1px solid rgba(255, 255, 255, 0.48);
+            border-radius: 999px;
+            position: relative;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 0% 100%, rgba(74, 157, 255, 0.48), transparent 42%),
+                radial-gradient(circle at 100% 0%, rgba(255, 182, 100, 0.42), transparent 44%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.28) 38%, rgba(255, 255, 255, 0.18) 72%, rgba(255, 255, 255, 0.26)),
+                rgba(255, 255, 255, 0.2);
+            color: rgba(18, 31, 58, 0.94);
             font-size: 16px;
             font-weight: 800;
             cursor: pointer;
+            box-shadow:
+                0 18px 36px rgba(8, 18, 44, 0.18),
+                0 0 26px rgba(122, 190, 255, 0.18),
+                inset 0 1px 0 rgba(255, 255, 255, 0.96),
+                inset 0 -10px 20px rgba(147, 182, 226, 0.24);
+            backdrop-filter: blur(18px) saturate(1.08);
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.32);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+
+        .auth-login-submit::before {
+            content: "";
+            position: absolute;
+            left: 10%;
+            right: 10%;
+            top: 1px;
+            height: 46%;
+            border-radius: inherit;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.18) 62%, transparent);
+            pointer-events: none;
+        }
+
+        .auth-login-submit:hover {
+            transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.62);
+            box-shadow:
+                0 22px 40px rgba(8, 18, 44, 0.22),
+                0 0 32px rgba(122, 190, 255, 0.22),
+                inset 0 1px 0 rgba(255, 255, 255, 0.98),
+                inset 0 -10px 20px rgba(147, 182, 226, 0.26);
         }
 
         @media (max-width: 900px) {
