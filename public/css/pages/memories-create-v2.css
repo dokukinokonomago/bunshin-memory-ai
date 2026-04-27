@@ -1288,65 +1288,75 @@ body.mcv2-modal-open {
   margin: 18px auto 0;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 52%, rgba(168, 160, 255, 0.12), transparent 48%),
-    radial-gradient(circle at 34% 66%, rgba(255,255,255,0.08), transparent 36%),
-    radial-gradient(circle at 70% 34%, rgba(194, 214, 255, 0.08), transparent 34%),
-    rgba(31, 38, 69, 0.42);
-  border: 1px solid rgba(255,255,255,0.1);
+    radial-gradient(circle at 50% 52%, rgba(86, 147, 255, 0.18), transparent 34%),
+    radial-gradient(circle at 32% 26%, rgba(255,255,255,0.08), transparent 18%),
+    radial-gradient(circle at 70% 76%, rgba(109, 205, 255, 0.1), transparent 22%),
+    linear-gradient(180deg, rgba(9, 15, 33, 0.92), rgba(4, 8, 20, 0.98));
+  border: 1px solid rgba(120, 188, 255, 0.18);
   box-shadow:
     inset 0 0 48px rgba(255,255,255,0.05),
-    inset 0 0 80px rgba(103, 95, 178, 0.1),
-    0 18px 46px rgba(0,0,0,0.18);
+    inset 0 0 90px rgba(57, 103, 194, 0.16),
+    0 18px 46px rgba(0,0,0,0.24),
+    0 0 0 1px rgba(255,255,255,0.04);
   overflow: hidden;
-  filter: saturate(0.96);
+  filter: saturate(1.02);
 }
 
 .mcv2-emotion-sphere::before {
   content: "";
   position: absolute;
-  inset: 10% 12% auto;
-  height: 18%;
-  border-radius: 50%;
+  inset: 7%;
+  border-radius: inherit;
   background:
-    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.16), rgba(255,255,255,0.03) 58%, transparent 78%);
-  opacity: 0.8;
-  filter: blur(12px);
+    repeating-conic-gradient(from -8deg, rgba(128, 214, 255, 0.16) 0deg 8deg, rgba(10, 18, 38, 0.02) 8deg 12deg),
+    radial-gradient(circle at center, transparent 56%, rgba(98, 182, 255, 0.08) 56.5%, transparent 58%);
+  mask: radial-gradient(circle at center, transparent 47%, #000 48%, #000 74%, transparent 75%);
+  opacity: 0.9;
 }
 
 .mcv2-emotion-sphere::after {
   content: "";
   position: absolute;
-  inset: auto 12% 12% auto;
-  width: 24%;
-  height: 24%;
+  inset: 16%;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.12), rgba(171, 160, 255, 0.04) 62%, transparent 78%);
-  filter: blur(18px);
-  opacity: 0.46;
+    radial-gradient(circle at center, transparent 64%, rgba(110, 192, 255, 0.16) 64.5%, transparent 67%),
+    radial-gradient(circle at 50% 50%, rgba(18, 28, 56, 0.28), transparent 74%);
+  opacity: 0.84;
 }
 
 .mcv2-emotion-sphere-ring {
-  display: none;
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.72;
 }
 
 .mcv2-emotion-sphere-ring.ring-a {
-  inset: 9%;
+  inset: 12%;
+  border: 1px solid rgba(112, 196, 255, 0.14);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.03),
+    0 0 22px rgba(99, 186, 255, 0.12),
+    inset 0 0 18px rgba(99, 186, 255, 0.05);
 }
 
 .mcv2-emotion-sphere-ring.ring-b {
-  inset: 22%;
+  inset: 24%;
+  border: 1px dashed rgba(118, 183, 255, 0.16);
+  box-shadow: 0 0 18px rgba(99, 186, 255, 0.08);
 }
 
 .mcv2-emotion-orb {
+  --mcv2-orb-size: min(var(--orb-size), 84px);
   position: absolute;
-  left: clamp(calc((min(var(--orb-size), 78px) / 2) + 30px), var(--orb-left), calc(100% - (min(var(--orb-size), 78px) / 2) - 30px));
-  top: clamp(calc((min(var(--orb-size), 78px) / 2) + 30px), var(--orb-top), calc(100% - (min(var(--orb-size), 78px) / 2) - 30px));
-  width: min(var(--orb-size), 78px);
-  height: min(var(--orb-size), 78px);
+  left: clamp(calc((var(--mcv2-orb-size) / 2) + 30px), var(--orb-left), calc(100% - (var(--mcv2-orb-size) / 2) - 30px));
+  top: clamp(calc((var(--mcv2-orb-size) / 2) + 30px), var(--orb-top), calc(100% - (var(--mcv2-orb-size) / 2) - 30px));
+  width: var(--mcv2-orb-size);
+  height: var(--mcv2-orb-size);
   transform: translate(-50%, -50%);
   cursor: pointer;
-  animation: mcv2BubbleFloat 7.2s ease-in-out infinite;
+  animation: mcv2BubbleFloat 8.4s ease-in-out infinite;
   animation-delay: var(--orb-delay);
 }
 
@@ -1362,58 +1372,138 @@ body.mcv2-modal-open {
   display: grid;
   place-items: center;
   text-align: center;
-  padding: 10px;
+  padding: 16px;
   border-radius: 50%;
-  font-size: clamp(11px, 1.25vw, 13px);
-  font-weight: 800;
-  line-height: 1.2;
+  font-size: clamp(10px, 1.15vw, 13px);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
   color: rgba(252,253,255,0.98);
-  border: 1px solid rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.2);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 24px rgba(17, 22, 36, 0.12);
+  isolation: isolate;
+  box-shadow:
+    0 16px 28px rgba(4, 8, 18, 0.26),
+    0 0 24px var(--mcv2-orb-glow),
+    inset 0 1px 0 rgba(255,255,255,0.12);
   background:
-    radial-gradient(circle at 36% 32%, rgba(255,255,255,0.24), transparent 18%),
-    radial-gradient(circle at 52% 52%, var(--mcv2-orb-core), transparent 62%),
-    linear-gradient(160deg, var(--mcv2-orb-start), var(--mcv2-orb-end));
+    radial-gradient(circle at center, rgba(4, 10, 24, 0.96) 0%, rgba(8, 16, 32, 0.92) 42%, rgba(1, 4, 14, 0.98) 100%);
   transition:
     transform .18s ease,
     box-shadow .18s ease,
     border-color .18s ease;
+  text-shadow:
+    0 2px 8px rgba(0,0,0,0.56),
+    0 0 14px color-mix(in srgb, var(--mcv2-orb-ring-end) 30%, white);
+}
+
+.mcv2-emotion-orb span::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    repeating-conic-gradient(from -16deg, color-mix(in srgb, var(--mcv2-orb-track) 74%, transparent) 0deg 6deg, rgba(5, 10, 24, 0) 6deg 10deg),
+    conic-gradient(from 212deg, color-mix(in srgb, var(--mcv2-orb-ring-end) 88%, transparent) 0deg 82deg, rgba(7, 12, 24, 0) 82deg 360deg);
+  mask: radial-gradient(circle at center, transparent 56%, #000 57%, #000 87%, transparent 88%);
+  opacity: 0.96;
+  z-index: -3;
+}
+
+.mcv2-emotion-orb span::after {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255,255,255,0.84), transparent 15%),
+    radial-gradient(circle at center, color-mix(in srgb, var(--mcv2-orb-core) 42%, white 6%) 0%, color-mix(in srgb, var(--mcv2-orb-core) 18%, transparent) 44%, rgba(6, 12, 24, 0.02) 72%, rgba(3, 6, 16, 0.2) 100%);
+  border: 2px solid color-mix(in srgb, var(--mcv2-orb-ring-end) 82%, white 8%);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--mcv2-orb-ring-start) 18%, transparent),
+    0 0 18px color-mix(in srgb, var(--mcv2-orb-glow) 90%, transparent),
+    inset 0 0 22px color-mix(in srgb, var(--mcv2-orb-core) 26%, transparent);
+  z-index: -2;
 }
 
 .mcv2-emotion-orb:hover span {
-  transform: scale(1.03);
-}
-
-.mcv2-emotion-orb input:checked + span {
-  border-color: rgba(255,255,255,0.48);
-  box-shadow:
-    0 0 0 2px rgba(255,255,255,0.1),
-    0 0 20px var(--mcv2-orb-glow),
-    0 14px 28px rgba(17, 22, 36, 0.16);
   transform: scale(1.05);
 }
 
+.mcv2-emotion-orb input:checked + span {
+  border-color: rgba(255,255,255,0.42);
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,0.08),
+    0 0 32px var(--mcv2-orb-glow),
+    0 18px 34px rgba(17, 22, 36, 0.24);
+  transform: scale(1.08);
+}
+
 .mcv2-emotion-orb.tone-positive {
-  --mcv2-orb-start: rgba(255, 184, 142, 0.72);
-  --mcv2-orb-end: rgba(255, 130, 160, 0.4);
-  --mcv2-orb-core: rgba(255, 241, 231, 0.24);
-  --mcv2-orb-glow: rgba(255, 156, 156, 0.18);
+  --mcv2-orb-track: rgba(118, 255, 223, 0.68);
+  --mcv2-orb-ring-start: rgba(84, 246, 204, 0.98);
+  --mcv2-orb-ring-end: rgba(167, 255, 215, 0.98);
+  --mcv2-orb-core: rgba(74, 233, 188, 0.82);
+  --mcv2-orb-glow: rgba(104, 255, 209, 0.36);
 }
 
 .mcv2-emotion-orb.tone-neutral {
-  --mcv2-orb-start: rgba(132, 220, 220, 0.68);
-  --mcv2-orb-end: rgba(128, 168, 255, 0.38);
-  --mcv2-orb-core: rgba(232, 250, 247, 0.22);
-  --mcv2-orb-glow: rgba(124, 199, 255, 0.16);
+  --mcv2-orb-track: rgba(100, 180, 255, 0.68);
+  --mcv2-orb-ring-start: rgba(74, 132, 255, 0.98);
+  --mcv2-orb-ring-end: rgba(122, 229, 255, 0.96);
+  --mcv2-orb-core: rgba(70, 118, 255, 0.84);
+  --mcv2-orb-glow: rgba(92, 167, 255, 0.38);
 }
 
 .mcv2-emotion-orb.tone-negative {
-  --mcv2-orb-start: rgba(204, 168, 255, 0.74);
-  --mcv2-orb-end: rgba(255, 138, 182, 0.42);
-  --mcv2-orb-core: rgba(246, 232, 255, 0.22);
-  --mcv2-orb-glow: rgba(233, 152, 255, 0.18);
+  --mcv2-orb-track: rgba(181, 114, 255, 0.68);
+  --mcv2-orb-ring-start: rgba(143, 98, 255, 0.98);
+  --mcv2-orb-ring-end: rgba(255, 126, 214, 0.94);
+  --mcv2-orb-core: rgba(152, 94, 255, 0.82);
+  --mcv2-orb-glow: rgba(196, 122, 255, 0.4);
+}
+
+.mcv2-emotion-panel.tone-positive .mcv2-emotion-orb:nth-of-type(3n + 2) {
+  --mcv2-orb-track: rgba(124, 255, 231, 0.68);
+  --mcv2-orb-ring-start: rgba(52, 228, 255, 0.96);
+  --mcv2-orb-ring-end: rgba(129, 255, 216, 0.96);
+  --mcv2-orb-core: rgba(68, 224, 202, 0.84);
+}
+
+.mcv2-emotion-panel.tone-positive .mcv2-emotion-orb:nth-of-type(3n) {
+  --mcv2-orb-track: rgba(170, 255, 144, 0.64);
+  --mcv2-orb-ring-start: rgba(86, 241, 150, 0.96);
+  --mcv2-orb-ring-end: rgba(196, 255, 170, 0.94);
+  --mcv2-orb-core: rgba(98, 236, 158, 0.82);
+}
+
+.mcv2-emotion-panel.tone-neutral .mcv2-emotion-orb:nth-of-type(3n + 2) {
+  --mcv2-orb-track: rgba(92, 212, 255, 0.66);
+  --mcv2-orb-ring-start: rgba(54, 159, 255, 0.96);
+  --mcv2-orb-ring-end: rgba(118, 244, 255, 0.94);
+  --mcv2-orb-core: rgba(64, 168, 255, 0.82);
+}
+
+.mcv2-emotion-panel.tone-neutral .mcv2-emotion-orb:nth-of-type(3n) {
+  --mcv2-orb-track: rgba(100, 154, 255, 0.64);
+  --mcv2-orb-ring-start: rgba(85, 111, 255, 0.96);
+  --mcv2-orb-ring-end: rgba(136, 214, 255, 0.92);
+  --mcv2-orb-core: rgba(88, 126, 255, 0.82);
+}
+
+.mcv2-emotion-panel.tone-negative .mcv2-emotion-orb:nth-of-type(3n + 2) {
+  --mcv2-orb-track: rgba(164, 110, 255, 0.68);
+  --mcv2-orb-ring-start: rgba(104, 92, 255, 0.96);
+  --mcv2-orb-ring-end: rgba(184, 128, 255, 0.94);
+  --mcv2-orb-core: rgba(114, 92, 255, 0.82);
+}
+
+.mcv2-emotion-panel.tone-negative .mcv2-emotion-orb:nth-of-type(3n) {
+  --mcv2-orb-track: rgba(255, 118, 205, 0.68);
+  --mcv2-orb-ring-start: rgba(192, 98, 255, 0.96);
+  --mcv2-orb-ring-end: rgba(255, 140, 197, 0.94);
+  --mcv2-orb-core: rgba(188, 92, 255, 0.82);
 }
 
 .mcv2-add-emotion-modal {
