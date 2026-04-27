@@ -3,6 +3,7 @@
 @section('title', '記憶を追加 | 分身AI MVP')
 @section('body_class', 'body-memory-create-v2')
 @section('page_class', 'page-memory-create-v2')
+@section('hide_auth_dock', '1')
 
 @php
     $eras = ['幼少期', '小学生', '中学生', '高校生', '大学生', '成人期', '不明'];
