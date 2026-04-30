@@ -36,29 +36,42 @@ class MemoryCreatePreviewTest extends TestCase
 
     public function test_preview_form_values_can_be_posted_to_store(): void
     {
+        $token = 'test-token';
         $payload = [
+            '_token' => $token,
             'period' => '高校生',
             'content' => '放課後の教室で友達と話したことを思い出した。',
             'emotion' => '普通',
+            'tags' => '放課後, 友達',
         ];
 
-        $response = $this->post(route('memories.store'), $payload);
+        $response = $this->withSession(['_token' => $token])->post(route('memories.store'), $payload);
 
         $response->assertRedirect(route('memories.index'));
-        $this->assertDatabaseHas('memories', $payload);
+        $this->assertDatabaseHas('memories', [
+            'period' => '高校生',
+            'content' => '放課後の教室で友達と話したことを思い出した。',
+            'emotion' => '普通',
+        ]);
     }
 
     public function test_preview_form_accepts_custom_emotion_values(): void
     {
+        $token = 'test-token';
         $payload = [
+            '_token' => $token,
             'period' => '高校生',
             'content' => '夕方の帰り道で少し胸があたたかくなった。',
             'emotion' => 'じんわり嬉しい',
         ];
 
-        $response = $this->post(route('memories.store'), $payload);
+        $response = $this->withSession(['_token' => $token])->post(route('memories.store'), $payload);
 
         $response->assertRedirect(route('memories.index'));
-        $this->assertDatabaseHas('memories', $payload);
+        $this->assertDatabaseHas('memories', [
+            'period' => '高校生',
+            'content' => '夕方の帰り道で少し胸があたたかくなった。',
+            'emotion' => 'じんわり嬉しい',
+        ]);
     }
 }

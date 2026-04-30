@@ -167,6 +167,9 @@
                                                 <div class="memory-entry-chips">
                                                     <span class="memory-entry-period">{{ $periodShortLabels[$memory->period] ?? $memory->period }}</span>
                                                     <span class="badge {{ $badgeClass }}">{{ $memory->emotion }}</span>
+                                                    @foreach (($memory->tags ?? []) as $tag)
+                                                        <span class="memory-entry-period">{{ $tag }}</span>
+                                                    @endforeach
                                                 </div>
 
                                                 <p class="memory-entry-content">{{ $memory->content }}</p>

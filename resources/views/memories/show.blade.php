@@ -51,6 +51,14 @@
         ->unique()
         ->take(6)
         ->values();
+    $manualTags = collect($memory->tags ?? [])
+        ->map(fn ($tag) => trim((string) $tag))
+        ->filter()
+        ->values();
+
+    if ($manualTags->isNotEmpty()) {
+        $keywords = $manualTags->merge($keywords)->unique()->take(8)->values();
+    }
 
     if ($keywords->isEmpty()) {
         $keywords = collect([$theme, $memory->period, $memory->emotion])->filter();

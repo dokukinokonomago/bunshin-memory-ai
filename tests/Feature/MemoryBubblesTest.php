@@ -18,9 +18,9 @@ class MemoryBubblesTest extends TestCase
         $this->actingAs(User::factory()->create());
     }
 
-    public function test_bubbles_page_shows_up_to_100_memories_in_one_layer(): void
+    public function test_bubbles_page_shows_up_to_10_memories_per_period_in_one_layer(): void
     {
-        foreach (range(1, 100) as $index) {
+        foreach (range(1, 10) as $index) {
             Memory::query()->create([
                 'period' => '高校生',
                 'content' => "記憶 {$index}",
@@ -35,9 +35,9 @@ class MemoryBubblesTest extends TestCase
         $response->assertDontSee('1/2層');
     }
 
-    public function test_bubbles_page_moves_to_second_layer_after_100_memories(): void
+    public function test_bubbles_page_moves_to_second_layer_after_10_memories_in_one_period(): void
     {
-        foreach (range(1, 101) as $index) {
+        foreach (range(1, 11) as $index) {
             Memory::query()->create([
                 'period' => '高校生',
                 'content' => "記憶 {$index}",

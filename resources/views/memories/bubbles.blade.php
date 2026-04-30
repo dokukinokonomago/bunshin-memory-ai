@@ -1053,121 +1053,171 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     stroke-dasharray: 5 18;
 }
 
-/* 年代ゾーン */
-.mg-zone { cursor: pointer; }
-.mg-zone-halo {
-    fill: rgba(0,60,180,0.04);
-    stroke: rgba(0,150,255,0.13);
-    stroke-width: 1.5;
-    stroke-dasharray: 5 12;
-    transition: fill 0.25s, stroke 0.25s;
-}
-.mg-zone.is-active .mg-zone-halo {
-    fill: rgba(0,100,240,0.08);
-    stroke: rgba(0,220,255,0.40);
-}
-.mg-zone-dot {
-    fill: rgba(0,200,255,0.80);
-    filter: drop-shadow(0 0 6px rgba(0,200,255,0.65));
-}
-.mg-zone-name {
-    fill: rgba(140,210,255,0.90);
-    font-size: 17px;
-    font-weight: 800;
-    text-anchor: middle;
-    letter-spacing: 0.05em;
-    transition: fill 0.25s;
-}
-.mg-zone.is-active .mg-zone-name { fill: rgba(180,240,255,1); }
-.mg-zone-count {
-    fill: rgba(80,150,230,0.72);
-    font-size: 11px;
-    text-anchor: middle;
-}
-
-/* バブルラッパー（出現アニメ） */
-.mg-bubble-wrap {
+/* 年代クラスタ */
+.mg-period-wrap {
     opacity: 0;
-    animation: mgReveal 0.80s cubic-bezier(0.22,0.85,0.32,1) var(--d,0s) forwards;
+    animation: mgReveal 0.82s cubic-bezier(0.22,0.85,0.32,1) var(--d,0s) forwards;
+    transition: transform 0.52s cubic-bezier(0.2,0.8,0.2,1), opacity 0.34s ease, filter 0.34s ease;
 }
 
-/* バブル本体（呼吸アニメ） */
-.mg-bubble-body {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: mgPulse var(--dur,6s) ease-in-out var(--delay,0s) infinite;
-    transition: transform 0.42s cubic-bezier(0.2,0.8,0.2,1), filter 0.42s;
-}
-.mg-bubble-wrap:hover .mg-bubble-body {
-    animation: none;
-    transform: scale(var(--hs,1.16));
-    filter: brightness(1.25) saturate(1.35)
-            drop-shadow(0 0 36px rgba(0,180,255,0.60));
-}
-.mg-bubble-wrap.period-hi .mg-bubble-body {
-    animation: none;
-    transform: scale(1.10);
-    filter: brightness(1.15) saturate(1.20)
-            drop-shadow(0 0 22px rgba(0,150,255,0.42));
+.mg-period-wrap.is-focused {
+    opacity: 1;
+    filter: none;
 }
 
-/* テキストラベル */
-.mg-label {
-    fill: rgba(255,255,255,0.97);
-    font-weight: 700;
+.mg-period-wrap.is-muted {
+    opacity: 0.28;
+    filter: saturate(0.72) brightness(0.82);
+}
+
+.mg-period-anchor {
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.mg-period-shell {
+    transition: transform 0.42s cubic-bezier(0.2,0.8,0.2,1), opacity 0.32s ease;
+}
+
+.mg-period-wrap:hover .mg-period-shell {
+    transform: scale(1.03);
+}
+
+.mg-period-shell-aura {
+    opacity: 0.52;
+}
+
+.mg-period-shell-fill {
+    fill: rgba(255,255,255,0.02);
+    stroke: rgba(206, 235, 255, 0.28);
+    stroke-width: 1.8;
+}
+
+.mg-period-shell-rim {
+    fill: none;
+    stroke: rgba(235, 246, 255, 0.48);
+    stroke-width: 1.2;
+    stroke-dasharray: 7 11;
+    opacity: 0.62;
+}
+
+.mg-period-shell-inner {
+    fill: rgba(130, 198, 255, 0.04);
+    stroke: rgba(214, 236, 255, 0.16);
+    stroke-width: 1;
+}
+
+.mg-period-wrap.is-focused .mg-period-shell-fill {
+    fill: rgba(255,255,255,0.045);
+    stroke: rgba(234, 246, 255, 0.44);
+}
+
+.mg-period-wrap.is-focused .mg-period-shell-rim {
+    opacity: 0.88;
+}
+
+.mg-period-title,
+.mg-period-caption,
+.mg-period-count,
+.mg-period-count-unit,
+.mg-memory-label,
+.mg-memory-subline {
     text-anchor: middle;
     dominant-baseline: middle;
     paint-order: stroke;
-    stroke: rgba(0,0,0,0.58);
-    stroke-width: 3.5px;
+    stroke: rgba(5, 10, 24, 0.72);
+    stroke-width: 3px;
     stroke-linejoin: round;
     pointer-events: none;
 }
 
-.mg-bubble-cta {
+.mg-period-title {
+    fill: rgba(245, 250, 255, 0.98);
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+}
+
+.mg-period-count {
+    fill: rgba(255,255,255,0.98);
+    font-size: 72px;
+    font-weight: 900;
+}
+
+.mg-period-count-unit {
+    fill: rgba(216, 232, 255, 0.82);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+}
+
+.mg-period-caption {
+    fill: rgba(196, 221, 255, 0.78);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+}
+
+.mg-period-empty {
+    fill: rgba(206, 225, 255, 0.72);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.mg-period-action {
     display: grid;
     place-items: center;
     width: 100%;
     height: 100%;
     border-radius: 999px;
-    border: 1px solid rgba(168, 228, 255, 0.44);
-    background: linear-gradient(180deg, rgba(12, 24, 66, 0.92), rgba(6, 12, 34, 0.92));
-    color: rgba(243, 249, 255, 0.96);
+    border: 1px solid rgba(182, 227, 255, 0.42);
+    background:
+        linear-gradient(180deg, rgba(14, 25, 66, 0.92), rgba(8, 14, 36, 0.92)),
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.18), transparent 42%);
+    color: rgba(244, 249, 255, 0.98);
     font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.08em;
     text-decoration: none;
     box-shadow:
         0 0 0 1px rgba(255,255,255,0.05) inset,
-        0 0 26px rgba(88, 181, 255, 0.22);
-    backdrop-filter: blur(8px);
+        0 0 24px rgba(95, 193, 255, 0.18);
+    backdrop-filter: blur(10px);
 }
 
-.mg-bubble-cta:hover {
-    background: linear-gradient(180deg, rgba(20, 40, 96, 0.98), rgba(10, 22, 54, 0.96));
-    box-shadow:
-        0 0 0 1px rgba(255,255,255,0.08) inset,
-        0 0 30px rgba(104, 198, 255, 0.30);
+.mg-memory-orb-wrap {
+    transition: transform 0.24s ease, opacity 0.24s ease, filter 0.24s ease;
 }
 
-/* 衛星小バブル */
-.mg-sat {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: mgReveal 0.90s cubic-bezier(0.22,0.85,0.32,1) var(--d,0s) both,
-               satFloat var(--sd,7s) ease-in-out var(--sdly,0s) infinite;
-}
-@keyframes satFloat {
-    0%,100% { transform: translate(0px, 0px) scale(0.97); }
-    33%     { transform: translate(calc(var(--amp,6)*0.4px), calc(var(--amp,6)*-1px)) scale(1.03); }
-    66%     { transform: translate(calc(var(--amp,6)*-0.3px), calc(var(--amp,6)*-0.6px)) scale(1.01); }
+.mg-memory-orb-wrap:hover {
+    transform: scale(1.06);
+    filter: brightness(1.08) saturate(1.08);
 }
 
-/* シェル呼吸 */
-.mg-shell-breath {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: shellBreath var(--sd,8s) ease-in-out var(--sdelay,0s) infinite;
+.mg-memory-orb-link {
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.mg-memory-core {
+    opacity: 0.95;
+}
+
+.mg-memory-rim {
+    fill: none;
+    stroke-width: 1.5;
+    opacity: 0.84;
+}
+
+.mg-memory-label {
+    fill: rgba(255,255,255,0.98);
+    font-weight: 800;
+}
+
+.mg-memory-subline {
+    fill: rgba(232, 241, 255, 0.82);
+    font-weight: 600;
+    stroke-width: 2px;
 }
 
 /* ── キーフレーム ────────────────────────── */
@@ -1175,14 +1225,6 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     0%   { opacity:0; filter:blur(14px) saturate(0.2); }
     70%  { opacity:0.90; }
     100% { opacity:1;  filter:blur(0)   saturate(1); }
-}
-@keyframes mgPulse {
-    0%,100% { transform: scale(var(--rs,0.95)); }
-    50%     { transform: scale(var(--rise,1.05)); }
-}
-@keyframes shellBreath {
-    0%,100% { transform:scale(0.982); opacity:0.85; }
-    50%     { transform:scale(1.018); opacity:1; }
 }
 @keyframes breathe {
     0%,100% { transform:scale(0.94); }
@@ -1241,522 +1283,611 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 (function(){
 "use strict";
 
-/* ===== 定数 ===== */
-const memories       = @json($bubbleMemories);
-const periods        = @json($periods);
-const selPeriod      = @json($selectedPeriod);
-const bubblesRoute   = @json($bubbleBaseRoute);
-const memoriesRoute  = @json(route('memories.index'));
+const memories = @json($bubbleMemories);
+const periods = @json($periods);
+const periodCounts = @json($periodBubbleCounts);
+const selPeriod = @json($selectedPeriod);
+const bubblesRoute = @json($bubbleBaseRoute);
+const memoriesRoute = @json(route('memories.index'));
 const NS = "http://www.w3.org/2000/svg";
-const VP = { w:1400, h:900 };
+const VP = { w: 1400, h: 900 };
 
-/* ===== DOM refs ===== */
-const svg      = document.getElementById("memSvg");
-const defs     = document.getElementById("memDefs");
+const svg = document.getElementById("memSvg");
+const defs = document.getElementById("memDefs");
 const viewport = document.getElementById("memViewport");
-const gridG    = document.getElementById("memGrid");
+const gridG = document.getElementById("memGrid");
 const periodsG = document.getElementById("memPeriods");
-const bubblesG = document.getElementById("memBubbles");
 
-/* ===== 年代座標（幼少期・小学生→左寄り、高校生・大学生→右寄り） ===== */
-const ANCHORS = {
-    "幼少期":{ x: -320, y: 320 },
-    "小学生":{ x:  200, y: 820 },
-    "中学生":{ x:  960, y: 560 },
-    "高校生":{ x: 1880, y: 880 },
-    "大学生":{ x: 1680, y:-160 },
-    "成人期":{ x: 2380, y: 220 },
-    "不明":  { x:  820, y:-120 },
+const PERIOD_ACCENTS = {
+    "幼少期":["#ff6b6b", "#ff4757"],
+    "小学生":["#ffa94d", "#ff7c1f"],
+    "中学生":["#ffe066", "#ffbc00"],
+    "高校生":["#69db7c", "#2dbe4e"],
+    "大学生":["#4dabf7", "#1c7ed6"],
+    "成人期":["#9775fa", "#6741d9"],
+    "不明":["#f06595", "#c2255c"],
 };
 
-/* ===== パン/ズーム状態 ===== */
+const HOME_ANCHORS = {
+    "幼少期": { x: 240, y: 285 },
+    "小学生": { x: 330, y: 690 },
+    "中学生": { x: 650, y: 620 },
+    "高校生": { x: 930, y: 635 },
+    "大学生": { x: 1080, y: 250 },
+    "成人期": { x: 1210, y: 470 },
+    "不明":   { x: 690, y: 210 },
+};
+
+const FOCUS_CENTER = { x: 700, y: 470 };
+const FOCUS_SLOTS = [
+    { x: 225, y: 170 },
+    { x: 1115, y: 170 },
+    { x: 1225, y: 430 },
+    { x: 1115, y: 730 },
+    { x: 285, y: 730 },
+    { x: 150, y: 435 },
+];
+
+const ORB_LAYOUTS = [
+    { x: -0.24, y: -0.16, r: 0.19, z: 2 },
+    { x:  0.01, y: -0.24, r: 0.18, z: 5 },
+    { x:  0.24, y: -0.12, r: 0.17, z: 1 },
+    { x: -0.36, y:  0.03, r: 0.16, z: 0 },
+    { x: -0.05, y:  0.01, r: 0.22, z: 6 },
+    { x:  0.28, y:  0.11, r: 0.16, z: 2 },
+    { x: -0.20, y:  0.23, r: 0.18, z: 4 },
+    { x:  0.08, y:  0.25, r: 0.17, z: 5 },
+    { x:  0.33, y:  0.28, r: 0.15, z: 1 },
+    { x: -0.08, y: -0.02, r: 0.17, z: 3 },
+];
+
 const st = {
-    scale:1, tx:0, ty:0,
-    minS:0.65, maxS:1.65,
-    drag:false, started:false, pid:null,
-    sx:0, sy:0, stx:0, sty:0,
-    touch:null, pinchD:0,
-    bounds:null,
+    scale: 1,
+    tx: 0,
+    ty: 0,
+    minS: 0.76,
+    maxS: 1.58,
+    drag: false,
+    pid: null,
+    sx: 0,
+    sy: 0,
+    stx: 0,
+    sty: 0,
+    touch: null,
+    pinchD: 0,
+    bounds: null,
 };
 
-/* ===== SVGユーティリティ ===== */
-function el(tag, a={}){
-    const e=document.createElementNS(NS,tag);
-    for(const[k,v] of Object.entries(a)) e.setAttribute(k,v);
-    return e;
+const periodEls = new Map();
+let activeFocus = selPeriod !== "すべて" ? selPeriod : null;
+
+function el(tag, attrs = {}) {
+    const node = document.createElementNS(NS, tag);
+    for (const [key, value] of Object.entries(attrs)) {
+        node.setAttribute(key, value);
+    }
+    return node;
 }
 
-/* 16進→rgba */
-function rgba(hex,a){
-    if(!hex||!hex.startsWith("#")) return `rgba(80,140,255,${a})`;
-    const h=hex.length===4
-        ? hex.slice(1).split("").map(c=>c+c).join("")
+function rgba(hex, alpha) {
+    if (!hex || !hex.startsWith("#")) {
+        return `rgba(80,140,255,${alpha})`;
+    }
+
+    const raw = hex.length === 4
+        ? hex.slice(1).split("").map((char) => char + char).join("")
         : hex.slice(1);
-    const r=parseInt(h.slice(0,2),16);
-    const g=parseInt(h.slice(2,4),16);
-    const b=parseInt(h.slice(4,6),16);
-    return `rgba(${r},${g},${b},${a})`;
+
+    const r = parseInt(raw.slice(0, 2), 16);
+    const g = parseInt(raw.slice(2, 4), 16);
+    const b = parseInt(raw.slice(4, 6), 16);
+
+    return `rgba(${r},${g},${b},${alpha})`;
 }
 
-/* ===== グラデーション定義 =====
-   ▼ 画像1・2・3を参考に3パターン作成
-============================================= */
-function mkGrads(idx, colors){
-    const c0=colors?.[0]??"#2a6fff";
-    const c1=colors?.[1]??"#00d4ff";
-    const gId=`g${idx}`, rId=`r${idx}`, aId=`a${idx}`;
+function seededRand(seed) {
+    let value = seed >>> 0;
 
-    /* ① 球体グラデ（画像1・3：左上→右下の深いガラス） */
-    const grd=el("radialGradient",{id:gId,cx:"30%",cy:"26%",r:"76%",gradientUnits:"objectBoundingBox"});
-    /* 左上ハイライト〜深いブルー〜右下シアン */
-    grd.append(
-        el("stop",{offset:"0%",  "stop-color":rgba(c0,0.15)}),
-        el("stop",{offset:"22%", "stop-color":rgba(c0,0.65)}),
-        el("stop",{offset:"55%", "stop-color":rgba(c0,0.80)}),
-        el("stop",{offset:"82%", "stop-color":rgba(c1,0.78)}),
-        el("stop",{offset:"100%","stop-color":rgba(c1,0.92)}),
-    );
-    defs.append(grd);
-
-    /* ② リムライトグラデ（画像1・2のネオンリム） */
-    const rim=el("linearGradient",{id:rId,x1:"0%",y1:"0%",x2:"100%",y2:"100%"});
-    rim.append(
-        el("stop",{offset:"0%",  "stop-color":rgba(c1,1.0)}),
-        el("stop",{offset:"40%", "stop-color":rgba(c0,0.50)}),
-        el("stop",{offset:"100%","stop-color":rgba(c1,0.90)}),
-    );
-    defs.append(rim);
-
-    /* ③ オーラグラデ（画像2：外縁の発光ハロー） */
-    const aur=el("radialGradient",{id:aId,cx:"50%",cy:"50%",r:"50%",gradientUnits:"objectBoundingBox"});
-    aur.append(
-        el("stop",{offset:"0%",  "stop-color":rgba(c0,0.0)}),
-        el("stop",{offset:"55%", "stop-color":rgba(c1,0.22)}),
-        el("stop",{offset:"100%","stop-color":rgba(c1,0.50)}),
-    );
-    defs.append(aur);
-
-    return {gId,rId,aId};
-}
-
-/* ===== バブル半径 ===== */
-function ballR(i){ return [116,106,102,120,98,110,100,114,98,112,104,108][i%12]; }
-function anchor(p){ return ANCHORS[p]??{x:760,y:390}; }
-
-/* ===== 擬似乱数（シード付き再現性あり） ===== */
-function seededRand(seed){
-    let s=seed;
-    return function(){
-        s=(s*1664525+1013904223)&0xffffffff;
-        return (s>>>0)/0xffffffff;
+    return function nextRand() {
+        value = (value * 1664525 + 1013904223) >>> 0;
+        return value / 0xffffffff;
     };
 }
 
-/* ===== 衛星小バブル生成（記憶玉ごとにランダム） ===== */
-/* 各衛星のサイズ倍率（バリエーション豊かに） */
-const SAT_SIZE_RATIOS = [0.32, 0.18, 0.42, 0.14, 0.28, 0.38, 0.12, 0.24, 0.20, 0.35];
-const SAT_COUNT = 10;
+function makeGlowDefs(prefix, colors, shell = false) {
+    const [c0, c1] = colors?.length ? colors : ["#7db8ff", "#4d7fff"];
+    const bodyId = `${prefix}-body`;
+    const rimId = `${prefix}-rim`;
+    const auraId = `${prefix}-aura`;
 
-/* ===== 年代ごとの記憶数マップ ===== */
-const periodCount = new Map();
-memories.forEach(m=>periodCount.set(m.period,(periodCount.get(m.period)??0)+1));
+    const body = el("radialGradient", { id: bodyId, cx: "32%", cy: "26%", r: "76%" });
+    body.append(
+        el("stop", { offset: "0%", "stop-color": rgba("#ffffff", shell ? 0.30 : 0.42) }),
+        el("stop", { offset: "18%", "stop-color": rgba(c0, shell ? 0.16 : 0.74) }),
+        el("stop", { offset: "58%", "stop-color": rgba(c0, shell ? 0.08 : 0.86) }),
+        el("stop", { offset: "100%", "stop-color": rgba(c1, shell ? 0.03 : 0.94) }),
+    );
 
-/* ===== ワールドデータ構築 ===== */
-function buildWorld(){
-    const buckets=new Map();
-    memories.forEach(m=>{
-        if(!buckets.has(m.period)) buckets.set(m.period,[]);
-        buckets.get(m.period).push(m);
-    });
-    const pNodes=[], bNodes=[], sNodes=[];
-    periods.forEach(p=>{
-        const anc=anchor(p);
-        const items=buckets.get(p)??[];
-        if(selPeriod!=="すべて"&&selPeriod!==p) return;
-        const zoneR=Math.max(260,280+items.length*12);
-        pNodes.push({ p, count:items.length, x:anc.x, y:anc.y, r:zoneR });
-        if(items.length===0) return;
+    const rim = el("linearGradient", { id: rimId, x1: "10%", y1: "0%", x2: "100%", y2: "100%" });
+    rim.append(
+        el("stop", { offset: "0%", "stop-color": rgba("#ffffff", shell ? 0.9 : 0.8) }),
+        el("stop", { offset: "45%", "stop-color": rgba(c0, shell ? 0.52 : 0.72) }),
+        el("stop", { offset: "100%", "stop-color": rgba(c1, 0.92) }),
+    );
 
-        const representative = items[0];
-        const r = Math.min(148, Math.max(92, 92 + Math.sqrt(items.length) * 14));
-        const bx = anc.x;
-        const by = anc.y;
-        bNodes.push({
-            m: representative,
-            r,
-            x: bx,
-            y: by,
-            count: items.length,
-            period: p,
-        });
+    const aura = el("radialGradient", { id: auraId, cx: "50%", cy: "50%", r: "50%" });
+    aura.append(
+        el("stop", { offset: "0%", "stop-color": rgba(c0, 0) }),
+        el("stop", { offset: "62%", "stop-color": rgba(c0, shell ? 0.10 : 0.18) }),
+        el("stop", { offset: "100%", "stop-color": rgba(c1, shell ? 0.20 : 0.36) }),
+    );
 
-        const rng = seededRand(representative.id * 7919 + items.length * 1327);
-        for(let si=0; si<SAT_COUNT; si++){
-            const sizeRatio = SAT_SIZE_RATIOS[si % SAT_SIZE_RATIOS.length];
-            const sr = Math.max(5, Math.round(r * sizeRatio * (0.75 + rng() * 0.55)));
-            const baseAngle = (si / SAT_COUNT) * Math.PI * 2;
-            const angleJitter = (rng() - 0.5) * 0.9;
-            const angle = baseAngle + angleJitter;
-            const orbitBase = r * 1.48 + sr * 1.8;
-            const orbitDist = orbitBase + rng() * r * 0.55;
-            sNodes.push({
-                x: bx + Math.cos(angle) * orbitDist,
-                y: by + Math.sin(angle) * orbitDist,
-                r: sr,
-                op: 0.35 + rng() * 0.35,
-                dur: 5.5 + rng() * 4.0,
-                dly: -(rng() * 6.0),
-                floatAmp: 4 + rng() * 8,
-                colors: representative.colors,
-            });
+    defs.append(body, rim, aura);
+
+    return { bodyId, rimId, auraId };
+}
+
+function buildWorld() {
+    const buckets = new Map();
+    memories.forEach((memory) => {
+        if (!buckets.has(memory.period)) {
+            buckets.set(memory.period, []);
         }
+        buckets.get(memory.period).push(memory);
     });
-    return {pNodes,bNodes,sNodes};
-}
 
-function buildBounds(world){
-    let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
-    world.pNodes.forEach(n=>{
-        x0=Math.min(x0,n.x-n.r-60); x1=Math.max(x1,n.x+n.r+60);
-        y0=Math.min(y0,n.y-n.r-80); y1=Math.max(y1,n.y+n.r+60);
-    });
-    world.bNodes.forEach(n=>{
-        x0=Math.min(x0,n.x-n.r-50); x1=Math.max(x1,n.x+n.r+50);
-        y0=Math.min(y0,n.y-n.r-50); y1=Math.max(y1,n.y+n.r+50);
-    });
-    world.sNodes.forEach(n=>{
-        x0=Math.min(x0,n.x-n.r-20); x1=Math.max(x1,n.x+n.r+20);
-        y0=Math.min(y0,n.y-n.r-20); y1=Math.max(y1,n.y+n.r+20);
-    });
-    return {x0,y0,x1,y1,w:x1-x0,h:y1-y0};
-}
+    const visiblePeriods = selPeriod === "すべて"
+        ? periods
+        : periods.filter((period) => period === selPeriod);
 
-/* ===== グリッド描画 ===== */
-function drawGrid(b){
-    const step=260;
-    for(let x=Math.floor(b.x0/step)*step;x<=b.x1;x+=step)
-        gridG.append(el("line",{x1:x,y1:b.y0-150,x2:x,y2:b.y1+150,class:"mg-grid-line"}));
-    for(let y=Math.floor(b.y0/step)*step;y<=b.y1;y+=step)
-        gridG.append(el("line",{x1:b.x0-150,y1:y,x2:b.x1+150,y2:y,class:"mg-grid-line"}));
-}
+    const nodes = visiblePeriods.map((period) => {
+        const bucket = (buckets.get(period) ?? []).slice(0, 10);
+        const count = periodCounts[period] ?? bucket.length;
+        const accent = bucket[0]?.periodColors ?? PERIOD_ACCENTS[period] ?? ["#7db8ff", "#4d7fff"];
+        const home = HOME_ANCHORS[period] ?? { x: 700, y: 450 };
+        const shellRadius = selPeriod === "すべて"
+            ? Math.max(150, Math.min(205, 148 + Math.min(count, 20) * 3.2))
+            : 245;
 
-/* ===== 年代ゾーン描画 ===== */
-const zoneEls=new Map(), ballByPeriod=new Map();
+        const orbNodes = bucket
+            .map((memory, index) => {
+                const layout = ORB_LAYOUTS[index] ?? ORB_LAYOUTS[ORB_LAYOUTS.length - 1];
+                const rand = seededRand(memory.id * 7919 + index * 193);
+                const jitterX = (rand() - 0.5) * shellRadius * 0.05;
+                const jitterY = (rand() - 0.5) * shellRadius * 0.05;
+                const radius = shellRadius * layout.r * (0.94 + rand() * 0.1);
+                const tagline = (memory.tags ?? []).find((tag) => tag !== period && tag !== memory.emotion) ?? memory.emotion;
 
-function drawPeriods(world){
-    world.pNodes.forEach(n=>{
-        const g=el("g",{class:"mg-zone","data-p":n.p});
-        g.append(
-            el("circle",{cx:n.x,cy:n.y,r:n.r,class:"mg-zone-halo"}),
-            el("circle",{cx:n.x,cy:n.y,r:5,class:"mg-zone-dot"}),
-        );
-        periodsG.append(g);
-        zoneEls.set(n.p,g);
-    });
-}
+                return {
+                    ...memory,
+                    x: layout.x * shellRadius + jitterX,
+                    y: layout.y * shellRadius + jitterY,
+                    r: radius,
+                    z: layout.z + rand() * 0.2,
+                    tagline,
+                };
+            })
+            .sort((left, right) => left.z - right.z);
 
-/* ===== バブル描画 =====
-   ▼ 画像1〜3の多層構造を完全再現
-================================================ */
-function drawBubbles(world){
-    world.bNodes.forEach((node,i)=>{
-        const {gId,rId,aId}=mkGrads(i+1,node.m.colors);
-        const {x:cx,y:cy,r}=node;
-        const isSelectedBubble = selPeriod !== "すべて" && selPeriod === node.period;
-
-        const wrap=el("g",{
-            class:"mg-bubble-wrap",
-            "data-period":node.period,
-            style:`--d:${(i*0.04).toFixed(2)}s`,
-        });
-
-        const periodUrl = new URL(bubblesRoute,location.origin);
-        periodUrl.searchParams.set("period", node.period);
-        const bubbleAttrs={
-            class:"mg-bubble-link",
-            "data-period":node.period,
-            "aria-label":`${node.period}の記憶 ${node.count}件`,
-            style:[
-                `--rs:${(0.94+i%4*0.018).toFixed(3)}`,
-                `--rise:${(1.03+i%5*0.020).toFixed(3)}`,
-                `--hs:${(1.15+i%4*0.022).toFixed(3)}`,
-                `--dur:${(5.4+i%6*0.50).toFixed(2)}s`,
-                `--delay:${(-i*0.40).toFixed(2)}s`,
-            ].join(";"),
+        return {
+            period,
+            count,
+            visibleCount: bucket.length,
+            homeX: home.x,
+            homeY: home.y,
+            r: shellRadius,
+            accent,
+            items: orbNodes,
         };
-        const bubbleShell=isSelectedBubble ? el("g",bubbleAttrs) : el("a",{...bubbleAttrs,href:periodUrl.toString()});
+    });
 
-        const body=el("g",{class:"mg-bubble-body"});
+    return { nodes };
+}
 
-        /* --- レイヤー1：外側オーラグロー（画像2のハロー） --- */
-        body.append(el("circle",{
-            cx,cy,r:r+36,
-            fill:`url(#${aId})`,
-            filter:"url(#fAura)",
+function buildBounds(world) {
+    let x0 = Infinity;
+    let x1 = -Infinity;
+    let y0 = Infinity;
+    let y1 = -Infinity;
+
+    world.nodes.forEach((node) => {
+        x0 = Math.min(x0, node.homeX - node.r - 80);
+        x1 = Math.max(x1, node.homeX + node.r + 80);
+        y0 = Math.min(y0, node.homeY - node.r - 100);
+        y1 = Math.max(y1, node.homeY + node.r + 100);
+    });
+
+    return { x0, y0, x1, y1, w: x1 - x0, h: y1 - y0 };
+}
+
+function drawGrid(bounds) {
+    const step = 220;
+
+    for (let x = Math.floor(bounds.x0 / step) * step; x <= bounds.x1; x += step) {
+        gridG.append(el("line", {
+            x1: x,
+            y1: bounds.y0 - 120,
+            x2: x,
+            y2: bounds.y1 + 120,
+            class: "mg-grid-line",
         }));
+    }
 
-        /* --- レイヤー2：多層リングシェル（画像3のシアンリング群） --- */
-        /* 外→内の6層リング */
-        [
-            {rr:r+2,  sw:14, op:0.60},
-            {rr:r-6,  sw:10, op:0.50},
-            {rr:r*0.88,sw:7, op:0.40},
-            {rr:r*0.76,sw:5, op:0.28},
-            {rr:r*0.64,sw:4, op:0.18},
-            {rr:r*0.52,sw:3, op:0.10},
-        ].forEach(({rr,sw,op})=>{
-            body.append(el("circle",{
-                cx,cy,r:rr,fill:"none",
-                stroke:`url(#${rId})`,
-                "stroke-width":sw,
-                opacity:op,
-                filter:"url(#fRimGlow)",
-            }));
+    for (let y = Math.floor(bounds.y0 / step) * step; y <= bounds.y1; y += step) {
+        gridG.append(el("line", {
+            x1: bounds.x0 - 120,
+            y1: y,
+            x2: bounds.x1 + 120,
+            y2: y,
+            class: "mg-grid-line",
+        }));
+    }
+}
+
+function buildPeriodUrl(period) {
+    const url = new URL(bubblesRoute, location.origin);
+    url.searchParams.set("period", period);
+    return url.toString();
+}
+
+function buildListUrl(period) {
+    const url = new URL(memoriesRoute, location.origin);
+    if (period !== "すべて") {
+        url.searchParams.set("period", period);
+    }
+    return url.toString();
+}
+
+function drawMemoryOrb(memory, period, parent, index) {
+    const defsRef = makeGlowDefs(`memory-${period}-${memory.id}-${index}`, memory.colors ?? ["#dce9ff", "#63a6ff"]);
+    const wrap = el("g", {
+        class: "mg-memory-orb-wrap",
+        transform: `translate(${memory.x.toFixed(2)} ${memory.y.toFixed(2)})`,
+    });
+    const link = el("a", {
+        href: memory.url,
+        class: "mg-memory-orb-link",
+        "aria-label": `${period}の記憶 ${memory.label}`,
+    });
+
+    link.append(
+        el("circle", {
+            cx: 0,
+            cy: 0,
+            r: (memory.r * 1.38).toFixed(2),
+            fill: `url(#${defsRef.auraId})`,
+            filter: "url(#fAura)",
+            opacity: "0.78",
+        })
+    );
+
+    const body = el("g", { class: "mg-memory-core" });
+    body.append(
+        el("circle", {
+            cx: 0,
+            cy: 0,
+            r: memory.r.toFixed(2),
+            fill: `url(#${defsRef.bodyId})`,
+            filter: "url(#fShadow)",
+        }),
+        el("circle", {
+            cx: 0,
+            cy: 0,
+            r: (memory.r - 1.5).toFixed(2),
+            class: "mg-memory-rim",
+            stroke: `url(#${defsRef.rimId})`,
+        }),
+        el("ellipse", {
+            cx: (-memory.r * 0.24).toFixed(2),
+            cy: (-memory.r * 0.25).toFixed(2),
+            rx: Math.max(6, memory.r * 0.28).toFixed(2),
+            ry: Math.max(3, memory.r * 0.14).toFixed(2),
+            fill: "rgba(255,255,255,0.48)",
+            transform: `rotate(-22 ${(-memory.r * 0.24).toFixed(2)} ${(-memory.r * 0.25).toFixed(2)})`,
+        }),
+        el("circle", {
+            cx: (-memory.r * 0.28).toFixed(2),
+            cy: (-memory.r * 0.3).toFixed(2),
+            r: Math.max(3, memory.r * 0.12).toFixed(2),
+            fill: "rgba(255,255,255,0.9)",
+            filter: "url(#fSpec)",
+        }),
+        el("circle", {
+            cx: (memory.r * 0.24).toFixed(2),
+            cy: (memory.r * 0.26).toFixed(2),
+            r: Math.max(2, memory.r * 0.08).toFixed(2),
+            fill: "rgba(255,255,255,0.18)",
+        })
+    );
+
+    const label = el("text", {
+        x: "0",
+        y: (memory.r > 28 ? "-2" : "0"),
+        class: "mg-memory-label",
+        "font-size": Math.max(10, memory.r * 0.34).toFixed(2),
+    });
+    label.textContent = memory.label;
+    body.append(label);
+
+    if (memory.r > 28) {
+        const subline = el("text", {
+            x: "0",
+            y: (memory.r * 0.28).toFixed(2),
+            class: "mg-memory-subline",
+            "font-size": Math.max(8, memory.r * 0.18).toFixed(2),
         });
+        subline.textContent = memory.tagline;
+        body.append(subline);
+    }
 
-        /* --- レイヤー3：ガラス球本体（画像1・3の深いブルーガラス） --- */
-        body.append(el("circle",{
-            cx,cy,r,
-            fill:`url(#${gId})`,
-            filter:"url(#fShadow)",
-            opacity:"0.95",
-        }));
+    const title = el("title");
+    title.textContent = `${memory.emotion} | ${memory.content}`;
+    body.append(title);
 
-        /* --- レイヤー4：内部暗領域（画像3中央の黒い虚空感） --- */
-        body.append(el("circle",{
-            cx,cy,r:r*0.58,
-            fill:"rgba(0,2,20,0.08)",
-        }));
+    link.append(body);
+    wrap.append(link);
+    parent.append(wrap);
+}
 
-        /* --- レイヤー5：メインスペキュラ（画像1の強い白光点） --- */
-        body.append(el("circle",{
-            cx:cx-r*0.27, cy:cy-r*0.28,
-            r:Math.max(6,r*0.20),
-            fill:"rgba(255,255,255,0.88)",
-            filter:"url(#fSpec)",
-        }));
+function drawPeriodNode(node, index) {
+    const shellDefs = makeGlowDefs(`period-${node.period}-${index}`, node.accent, true);
+    const wrap = el("g", {
+        class: "mg-period-wrap",
+        "data-period": node.period,
+        style: `--d:${(index * 0.06).toFixed(2)}s`,
+        transform: `translate(${node.homeX} ${node.homeY}) scale(1)`,
+    });
 
-        /* --- レイヤー6：サブスペキュラ楕円（表面の光の伸び） --- */
-        body.append(el("ellipse",{
-            cx:cx-r*0.15, cy:cy-r*0.21,
-            rx:Math.max(9,r*0.30), ry:Math.max(4,r*0.12),
-            fill:"rgba(255,255,255,0.28)",
-            transform:`rotate(-26 ${cx-r*0.15} ${cy-r*0.21})`,
-        }));
+    const anchorHref = selPeriod === node.period ? buildListUrl(node.period) : buildPeriodUrl(node.period);
+    const shellLink = el("a", {
+        href: anchorHref,
+        class: "mg-period-anchor",
+        "aria-label": `${node.period}の記憶 ${node.count}件`,
+    });
+    const shell = el("g", { class: "mg-period-shell" });
 
-        /* --- レイヤー7：右下副反射（画像1のガラスの厚み感） --- */
-        body.append(el("circle",{
-            cx:cx+r*0.28, cy:cy+r*0.30,
-            r:Math.max(4,r*0.11),
-            fill:"rgba(255,255,255,0.18)",
-        }));
+    shell.append(
+        el("circle", {
+            cx: 0,
+            cy: 0,
+            r: (node.r + 28).toFixed(2),
+            class: "mg-period-shell-aura",
+            fill: `url(#${shellDefs.auraId})`,
+            filter: "url(#fAura)",
+        }),
+        el("circle", {
+            cx: 0,
+            cy: 0,
+            r: node.r.toFixed(2),
+            class: "mg-period-shell-fill",
+            fill: `url(#${shellDefs.bodyId})`,
+        }),
+        el("circle", {
+            cx: 0,
+            cy: 0,
+            r: (node.r - 7).toFixed(2),
+            class: "mg-period-shell-rim",
+            stroke: `url(#${shellDefs.rimId})`,
+        }),
+        el("circle", {
+            cx: 0,
+            cy: 0,
+            r: (node.r * 0.76).toFixed(2),
+            class: "mg-period-shell-inner",
+        }),
+        el("ellipse", {
+            cx: (-node.r * 0.24).toFixed(2),
+            cy: (-node.r * 0.28).toFixed(2),
+            rx: (node.r * 0.24).toFixed(2),
+            ry: (node.r * 0.11).toFixed(2),
+            fill: "rgba(255,255,255,0.16)",
+            transform: `rotate(-18 ${(-node.r * 0.24).toFixed(2)} ${(-node.r * 0.28).toFixed(2)})`,
+        }),
+        el("circle", {
+            cx: (-node.r * 0.3).toFixed(2),
+            cy: (-node.r * 0.29).toFixed(2),
+            r: Math.max(10, node.r * 0.08).toFixed(2),
+            fill: "rgba(255,255,255,0.32)",
+            filter: "url(#fSpec)",
+        })
+    );
 
-        /* --- レイヤー8：ネオンリムアーク（画像2の輝くリング縁） --- */
-        const arcR=r+4;
-        const a1={x:cx+arcR*Math.cos(Math.PI*1.25),y:cy+arcR*Math.sin(Math.PI*1.25)};
-        const a2={x:cx+arcR*Math.cos(Math.PI*1.80),y:cy+arcR*Math.sin(Math.PI*1.80)};
-        body.append(el("path",{
-            d:`M${a1.x} ${a1.y} A${arcR} ${arcR} 0 0 1 ${a2.x} ${a2.y}`,
-            fill:"none",stroke:`url(#${rId})`,
-            "stroke-width":"4","stroke-linecap":"round",opacity:"0.80",
-        }));
+    const periodTitle = el("text", {
+        x: "0",
+        y: (-node.r * 0.4).toFixed(2),
+        class: "mg-period-title",
+    });
+    periodTitle.textContent = node.period;
+    shell.append(periodTitle);
 
-        /* --- ヒットエリア --- */
-        body.append(el("circle",{
-            cx,cy,r:r+20,
-            fill:"rgba(255,255,255,0.001)",
-            "pointer-events":"all",
-        }));
+    const count = el("text", {
+        x: "0",
+        y: (-node.r * 0.03).toFixed(2),
+        class: "mg-period-count",
+    });
+    count.textContent = String(node.count);
+    shell.append(count);
 
-        /* --- ラベル（年代名 + 件数） --- */
-        const periodLabel=el("text",{x:cx,y:cy-r*0.34,class:"mg-label","font-size":Math.max(14,r*0.20),"font-weight":"800"});
-        periodLabel.textContent=node.period;
-        body.append(periodLabel);
+    const unit = el("text", {
+        x: "0",
+        y: (node.r * 0.18).toFixed(2),
+        class: "mg-period-count-unit",
+    });
+    unit.textContent = "MEMORIES";
+    shell.append(unit);
 
-        const countY = isSelectedBubble ? cy-r*0.08 : cy-r*0.02;
-        const labelY = isSelectedBubble ? cy+r*0.14 : cy+r*0.28;
-        const lbl=el("text",{x:cx,y:countY,class:"mg-label","font-size":Math.max(22,r*0.38),"font-weight":"800"});
-        lbl.textContent=node.count;
-        body.append(lbl);
+    const caption = el("text", {
+        x: "0",
+        y: (node.r * 0.34).toFixed(2),
+        class: `mg-period-caption${node.visibleCount === 0 ? " mg-period-empty" : ""}`,
+    });
+    caption.textContent = node.visibleCount > 0
+        ? `この層に ${node.visibleCount} / 最大10個を表示`
+        : "まだ記憶がありません";
+    shell.append(caption);
 
-        const lbl2=el("text",{x:cx,y:labelY,class:"mg-label","font-size":Math.max(9,r*0.14),"font-weight":"400",opacity:"0.72"});
-        lbl2.textContent="memories";
-        body.append(lbl2);
+    shellLink.append(shell);
+    wrap.append(shellLink);
 
-        /* --- title（アクセシビリティ） --- */
-        const ttl=el("title",{});
-        ttl.textContent=`${node.period} / ${node.count} memories`;
-        bubbleShell.append(ttl);
-        bubbleShell.append(body);
+    const orbGroup = el("g", { class: "mg-memory-cluster" });
+    node.items.forEach((memory, itemIndex) => drawMemoryOrb(memory, node.period, orbGroup, itemIndex));
+    wrap.append(orbGroup);
 
-        if(isSelectedBubble){
-            const listUrl = new URL(memoriesRoute, location.origin);
-            listUrl.searchParams.set("period", node.period);
+    if (selPeriod === node.period) {
+        const actionFo = el("foreignObject", {
+            x: (-72).toString(),
+            y: (node.r * 0.49).toFixed(2),
+            width: "144",
+            height: "36",
+        });
+        const actionLink = document.createElement("a");
+        actionLink.setAttribute("href", buildListUrl(node.period));
+        actionLink.setAttribute("class", "mg-period-action");
+        actionLink.textContent = "一覧を見る";
+        actionFo.append(actionLink);
+        wrap.append(actionFo);
+    }
 
-            const btnWidth = Math.max(112, Math.min(140, r * 1.04));
-            const btnHeight = Math.max(30, Math.min(36, r * 0.28));
-            const btnX = cx - btnWidth / 2;
-            const btnY = cy + r * 0.28;
+    periodsG.append(wrap);
+    periodEls.set(node.period, wrap);
+}
 
-            const fo = el("foreignObject",{
-                x:btnX,
-                y:btnY,
-                width:btnWidth,
-                height:btnHeight,
-            });
-            const btn = document.createElement("a");
-            btn.setAttribute("href", listUrl.toString());
-            btn.setAttribute("class","mg-bubble-cta");
-            btn.textContent = "記憶を見る";
-            fo.append(btn);
-            bubbleShell.append(fo);
+function layoutFocusedPeriod(world, focusPeriod) {
+    const secondaryNodes = world.nodes.filter((node) => node.period !== focusPeriod);
+    let slotIndex = 0;
+
+    world.nodes.forEach((node) => {
+        const wrap = periodEls.get(node.period);
+        if (!wrap) {
+            return;
         }
 
-        wrap.append(bubbleShell);
-        bubblesG.append(wrap);
+        if (!focusPeriod) {
+            wrap.setAttribute("transform", `translate(${node.homeX} ${node.homeY}) scale(1)`);
+            wrap.classList.remove("is-focused", "is-muted");
+            return;
+        }
 
-        if(!ballByPeriod.has(node.period)) ballByPeriod.set(node.period,[]);
-        ballByPeriod.get(node.period).push(wrap);
+        if (node.period === focusPeriod) {
+            wrap.setAttribute("transform", `translate(${FOCUS_CENTER.x} ${FOCUS_CENTER.y}) scale(1.24)`);
+            wrap.classList.add("is-focused");
+            wrap.classList.remove("is-muted");
+            return;
+        }
+
+        const slot = FOCUS_SLOTS[slotIndex] ?? FOCUS_SLOTS[FOCUS_SLOTS.length - 1];
+        slotIndex += 1;
+        wrap.setAttribute("transform", `translate(${slot.x} ${slot.y}) scale(0.58)`);
+        wrap.classList.add("is-muted");
+        wrap.classList.remove("is-focused");
     });
+
+    if (secondaryNodes.length === 0 && focusPeriod) {
+        const target = periodEls.get(focusPeriod);
+        target?.classList.add("is-focused");
+    }
 }
 
-/* ===== ホバー連動 ===== */
-function setActive(p){
-    zoneEls.forEach((z,k)=>z.classList.toggle("is-active",k===p));
-    ballByPeriod.forEach((ws,k)=>ws.forEach(w=>w.classList.toggle("period-hi",k===p)));
-}
-function clearActive(){
-    zoneEls.forEach(z=>z.classList.remove("is-active"));
-    ballByPeriod.forEach(ws=>ws.forEach(w=>w.classList.remove("period-hi")));
+function svgPt(clientX, clientY) {
+    const rect = svg.getBoundingClientRect();
+    return {
+        x: ((clientX - rect.left) / rect.width) * VP.w,
+        y: ((clientY - rect.top) / rect.height) * VP.h,
+    };
 }
 
-/* ===== ズーム/パン ===== */
-function svgPt(cx,cy){
-    const rc=svg.getBoundingClientRect();
-    return{x:(cx-rc.left)/rc.width*VP.w,y:(cy-rc.top)/rc.height*VP.h};
+function clamp() {
+    const bounds = st.bounds;
+    const margin = 120;
+    const scaledWidth = bounds.w * st.scale;
+    const scaledHeight = bounds.h * st.scale;
+
+    if (scaledWidth <= VP.w - margin * 2) {
+        st.tx = (VP.w - scaledWidth) / 2 - bounds.x0 * st.scale;
+    } else {
+        st.tx = Math.min(margin - bounds.x0 * st.scale, Math.max(VP.w - (bounds.x1 * st.scale + margin), st.tx));
+    }
+
+    if (scaledHeight <= VP.h - margin * 2) {
+        st.ty = (VP.h - scaledHeight) / 2 - bounds.y0 * st.scale;
+    } else {
+        st.ty = Math.min(margin - bounds.y0 * st.scale, Math.max(VP.h - (bounds.y1 * st.scale + margin), st.ty));
+    }
 }
-function clamp(){
-    const b=st.bounds,m=140;
-    const sw=b.w*st.scale,sh=b.h*st.scale;
-    if(sw<=VP.w-m*2) st.tx=(VP.w-sw)/2-b.x0*st.scale;
-    else st.tx=Math.min(m-b.x0*st.scale,Math.max(VP.w-(b.x1*st.scale+m),st.tx));
-    if(sh<=VP.h-m*2) st.ty=(VP.h-sh)/2-b.y0*st.scale;
-    else st.ty=Math.min(m-b.y0*st.scale,Math.max(VP.h-(b.y1*st.scale+m),st.ty));
-}
-function apply(){
+
+function applyTransform() {
     clamp();
-    viewport.setAttribute("transform",`matrix(${st.scale} 0 0 ${st.scale} ${st.tx} ${st.ty})`);
+    viewport.setAttribute("transform", `matrix(${st.scale} 0 0 ${st.scale} ${st.tx} ${st.ty})`);
 }
-function frame(){
-    const b=st.bounds,px=200,py=200;
-    st.scale=Math.min(st.maxS,Math.max(0.45,Math.min(VP.w/(b.w+px),VP.h/(b.h+py))));
-    st.tx=(VP.w/2)-((b.x0+b.x1)/2*st.scale);
-    st.ty=(VP.h/2)-((b.y0+b.y1)/2*st.scale);
-    apply();
+
+function frameWorld() {
+    const bounds = st.bounds;
+    const padX = 220;
+    const padY = 180;
+    st.scale = Math.min(st.maxS, Math.max(st.minS, Math.min(VP.w / (bounds.w + padX), VP.h / (bounds.h + padY))));
+    st.tx = (VP.w / 2) - (((bounds.x0 + bounds.x1) / 2) * st.scale);
+    st.ty = (VP.h / 2) - (((bounds.y0 + bounds.y1) / 2) * st.scale);
+    applyTransform();
 }
-function zoom(ns,pt){
-    const s=Math.min(st.maxS,Math.max(st.minS,ns));
-    const wx=(pt.x-st.tx)/st.scale,wy=(pt.y-st.ty)/st.scale;
-    st.tx=pt.x-wx*s; st.ty=pt.y-wy*s; st.scale=s;
-    apply();
+
+function zoom(nextScale, point) {
+    const scale = Math.min(st.maxS, Math.max(st.minS, nextScale));
+    const worldX = (point.x - st.tx) / st.scale;
+    const worldY = (point.y - st.ty) / st.scale;
+    st.tx = point.x - worldX * scale;
+    st.ty = point.y - worldY * scale;
+    st.scale = scale;
+    applyTransform();
 }
-function dragStart(pt,pid=null){
-    st.drag=true;st.started=false;st.pid=pid;
-    st.sx=pt.x;st.sy=pt.y;st.stx=st.tx;st.sty=st.ty;
+
+function dragStart(point, pointerId = null) {
+    st.drag = true;
+    st.pid = pointerId;
+    st.sx = point.x;
+    st.sy = point.y;
+    st.stx = st.tx;
+    st.sty = st.ty;
     svg.classList.add("dragging");
 }
-function dragMove(pt){
-    if(!st.drag) return;
-    const dx=pt.x-st.sx,dy=pt.y-st.sy;
-    if(Math.abs(dx)>2||Math.abs(dy)>2) st.started=true;
-    st.tx=st.stx+dx; st.ty=st.sty+dy; apply();
-}
-function dragEnd(){ st.drag=false;st.pid=null;svg.classList.remove("dragging"); }
 
-/* ===== 衛星小バブル描画 ===== */
-function drawSatellites(world){
-    world.sNodes.forEach((s,i)=>{
-        const sid=`sat${i}`;
-        const c0=s.colors?.[0]??"#2a6fff";
-        const c1=s.colors?.[1]??"#00d4ff";
+function dragMove(point) {
+    if (!st.drag) {
+        return;
+    }
 
-        /* サイズに応じてグラデの鮮やかさを変える */
-        const vividness = Math.min(1, s.r / 30);
-        const sg=el("radialGradient",{id:sid,cx:"32%",cy:"28%",r:"72%",gradientUnits:"objectBoundingBox"});
-        sg.append(
-            el("stop",{offset:"0%",  "stop-color":rgba(c0, 0.05 + vividness*0.12)}),
-            el("stop",{offset:"40%", "stop-color":rgba(c0, 0.40 + vividness*0.25)}),
-            el("stop",{offset:"100%","stop-color":rgba(c1, 0.60 + vividness*0.22)}),
-        );
-        defs.append(sg);
-
-        const g=el("g",{
-            class:"mg-sat",
-            style:[
-                `--sd:${s.dur.toFixed(1)}s`,
-                `--sdly:${s.dly.toFixed(1)}s`,
-                `--amp:${s.floatAmp.toFixed(1)}`,
-                `--d:${(i*0.018).toFixed(2)}s`,
-            ].join(";"),
-            opacity:s.op,
-        });
-
-        /* オーラ（大きな玉は強め） */
-        if(s.r > 12){
-            g.append(el("circle",{
-                cx:s.x,cy:s.y,r:s.r+s.r*0.9,
-                fill:rgba(c1, 0.12 + vividness*0.10),
-                filter:"url(#fAura)",
-            }));
-        }
-        /* リム */
-        g.append(el("circle",{
-            cx:s.x,cy:s.y,r:s.r,fill:"none",
-            stroke:rgba(c1,0.65+vividness*0.25),
-            "stroke-width": s.r > 20 ? 2.0 : s.r > 12 ? 1.5 : 1.0,
-            filter:"url(#fRimGlow)",
-        }));
-        /* 球体 */
-        g.append(el("circle",{
-            cx:s.x,cy:s.y,r:s.r,
-            fill:`url(#${sid})`,opacity:"0.92",
-        }));
-        /* スペキュラ（大きめの玉のみ） */
-        if(s.r > 10){
-            g.append(el("circle",{
-                cx:s.x-s.r*0.28, cy:s.y-s.r*0.28,
-                r:Math.max(1.5, s.r*0.24),
-                fill:"rgba(255,255,255,0.85)",
-                filter:"url(#fSpec)",
-            }));
-        }
-
-        bubblesG.insertBefore(g, bubblesG.firstChild);
-    });
+    st.tx = st.stx + (point.x - st.sx);
+    st.ty = st.sty + (point.y - st.sy);
+    applyTransform();
 }
 
-/* ===== 初期化 ===== */
-const world=buildWorld();
-st.bounds=buildBounds(world);
+function dragEnd() {
+    st.drag = false;
+    st.pid = null;
+    svg.classList.remove("dragging");
+}
+
+const world = buildWorld();
+st.bounds = buildBounds(world);
 drawGrid(st.bounds);
-drawPeriods(world);
-drawSatellites(world);   /* 先に描画（記憶玉の下に重なるように） */
-drawBubbles(world);
-frame();
-if(selPeriod!=="すべて") setActive(selPeriod);
+world.nodes.forEach((node, index) => drawPeriodNode(node, index));
+layoutFocusedPeriod(world, activeFocus);
+frameWorld();
 
-/* ===== イベント ===== */
-/* ===== ダブルクリック：年代フィルター ===== */
-function goToPeriod(p){
-    const url=new URL(bubblesRoute,location.origin);
-    url.searchParams.set("period",p);
-    location.href=url.toString();
-}
+world.nodes.forEach((node) => {
+    const wrap = periodEls.get(node.period);
+    if (!wrap) {
+        return;
+    }
 
-zoneEls.forEach((z,p)=>{
-    z.addEventListener("mouseenter",()=>setActive(p));
-    z.addEventListener("mouseleave",()=>clearActive());
-    z.addEventListener("dblclick",()=>goToPeriod(p));
+    wrap.addEventListener("mouseenter", () => {
+        activeFocus = node.period;
+        layoutFocusedPeriod(world, activeFocus);
+    });
+
+    wrap.addEventListener("mouseleave", () => {
+        activeFocus = selPeriod !== "すべて" ? selPeriod : null;
+        layoutFocusedPeriod(world, activeFocus);
+    });
 });
 
 svg.addEventListener("wheel",e=>{
@@ -1765,7 +1896,7 @@ svg.addEventListener("wheel",e=>{
 },{passive:false});
 
 svg.addEventListener("pointerdown",e=>{
-    if(e.target.closest(".mg-bubble-link")||e.target.closest(".mg-zone")) return;
+    if(e.target.closest(".mg-period-anchor")||e.target.closest(".mg-memory-orb-link")||e.target.closest(".mg-period-action")) return;
     dragStart(svgPt(e.clientX,e.clientY),e.pointerId);
 });
 svg.addEventListener("pointermove",e=>{
@@ -1781,7 +1912,7 @@ svg.addEventListener("touchstart",e=>{
         const b=svgPt(e.touches[1].clientX,e.touches[1].clientY);
         st.touch="pinch"; st.pinchD=Math.hypot(a.x-b.x,a.y-b.y); return;
     }
-    if(e.touches.length===1&&!e.target.closest(".mg-bubble-link")&&!e.target.closest(".mg-zone")){
+    if(e.touches.length===1&&!e.target.closest(".mg-period-anchor")&&!e.target.closest(".mg-memory-orb-link")&&!e.target.closest(".mg-period-action")){
         st.touch="drag"; dragStart(svgPt(e.touches[0].clientX,e.touches[0].clientY));
     }
 },{passive:true});

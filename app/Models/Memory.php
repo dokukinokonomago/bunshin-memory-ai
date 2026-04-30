@@ -10,5 +10,10 @@ class Memory extends Model
         'period',
         'content',
         'emotion',
+        'tags',
+    ];
+
+    protected $casts = [
+        'tags' => 'array',
     ];
 }

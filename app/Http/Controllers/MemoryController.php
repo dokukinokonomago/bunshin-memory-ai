@@ -12,7 +12,7 @@ use Illuminate\View\View;
 
 class MemoryController extends Controller
 {
-    private const BUBBLE_LAYER_SIZE = 100;
+    private const PERIOD_BUBBLE_MEMORY_LIMIT = 10;
     private const ACTIVE_CREATE_VIEW = 'memories.create_v2';
     private const PERIODS = ['幼少期', '小学生', '中学生', '高校生', '大学生', '成人期', '不明'];
     private const CREATE_COMPOSER_GROUP_META = [
@@ -91,7 +91,8 @@ class MemoryController extends Controller
                 $builder
                     ->where('content', 'like', '%' . $keyword . '%')
                     ->orWhere('period', 'like', '%' . $keyword . '%')
-                    ->orWhere('emotion', 'like', '%' . $keyword . '%');
+                    ->orWhere('emotion', 'like', '%' . $keyword . '%')
+                    ->orWhere('tags', 'like', '%' . $keyword . '%');
             });
         }
 
@@ -130,43 +131,62 @@ class MemoryController extends Controller
         $selectedPeriod = in_array($selectedPeriod, array_merge(['すべて'], self::PERIODS), true) ? $selectedPeriod : 'すべて';
         $requestedLayer = max(1, $request->integer('layer', 1));
 
-        $query = Memory::query()->latest();
+        $emotionToneMap = $this->emotionToneMap();
+        $matchingMemories = collect();
+        $matchingCount = 0;
+        $layerCount = 1;
+        $currentLayer = 1;
+        $bubbleMemories = collect();
 
         if ($selectedPeriod !== 'すべて') {
-            $query->where('period', $selectedPeriod);
+            $query = Memory::query()
+                ->where('period', $selectedPeriod)
+                ->latest();
+
+            $matchingCount = (clone $query)->count();
+            $matchingMemories = (clone $query)->get();
+            $layerCount = max(1, (int) ceil($matchingCount / self::PERIOD_BUBBLE_MEMORY_LIMIT));
+            $currentLayer = min($requestedLayer, $layerCount);
+            $offset = ($currentLayer - 1) * self::PERIOD_BUBBLE_MEMORY_LIMIT;
+
+            $bubbleMemories = (clone $query)
+                ->skip($offset)
+                ->take(self::PERIOD_BUBBLE_MEMORY_LIMIT)
+                ->get()
+                ->values()
+                ->map(fn (Memory $memory): array => $this->bubbleMemoryPayload($memory, $emotionToneMap));
+        } else {
+            $allMemories = Memory::query()
+                ->latest()
+                ->get()
+                ->groupBy('period');
+
+            $matchingCount = $allMemories->flatten(1)->count();
+            $layerCount = max(
+                1,
+                (int) collect(self::PERIODS)
+                    ->map(fn (string $period): int => (int) ceil(($allMemories->get($period)?->count() ?? 0) / self::PERIOD_BUBBLE_MEMORY_LIMIT))
+                    ->max()
+            );
+            $currentLayer = min($requestedLayer, $layerCount);
+            $offset = ($currentLayer - 1) * self::PERIOD_BUBBLE_MEMORY_LIMIT;
+
+            $bubbleMemories = collect(self::PERIODS)
+                ->flatMap(function (string $period) use ($allMemories, $offset, $emotionToneMap): Collection {
+                    return ($allMemories->get($period) ?? collect())
+                        ->slice($offset, self::PERIOD_BUBBLE_MEMORY_LIMIT)
+                        ->values()
+                        ->map(fn (Memory $memory): array => $this->bubbleMemoryPayload($memory, $emotionToneMap));
+                })
+                ->values();
         }
-
-        $emotionToneMap = $this->emotionToneMap();
-        $matchingCount = (clone $query)->count();
-        $matchingMemories = $selectedPeriod !== 'すべて' ? (clone $query)->get() : collect();
-        $layerCount = max(1, (int) ceil($matchingCount / self::BUBBLE_LAYER_SIZE));
-        $currentLayer = min($requestedLayer, $layerCount);
-        $offset = ($currentLayer - 1) * self::BUBBLE_LAYER_SIZE;
-        $memories = (clone $query)
-            ->skip($offset)
-            ->take(self::BUBBLE_LAYER_SIZE)
-            ->get();
-
-        $bubbleMemories = $memories->values()->map(function (Memory $memory) use ($emotionToneMap): array {
-            $tone = $emotionToneMap[$memory->emotion] ?? 'ニュートラル';
-
-            return [
-                'id' => $memory->id,
-                'period' => $memory->period,
-                'emotion' => $memory->emotion,
-                'content' => $memory->content,
-                'label' => $this->bubbleKeyword($memory),
-                'tone' => $tone,
-                'colors' => $this->periodColors($memory->period),
-                'tags' => [$memory->period, $memory->emotion],
-            ];
-        });
 
         return view('memories.bubbles', [
             'bubbleMemories' => $bubbleMemories,
             'allCount' => Memory::query()->count(),
             'displayCount' => $bubbleMemories->count(),
             'matchingCount' => $matchingCount,
+            'periodBubbleCounts' => Memory::query()->get()->countBy('period')->all(),
             'periods' => self::PERIODS,
             'selectedPeriod' => $selectedPeriod,
             'currentLayer' => $currentLayer,
@@ -418,19 +438,62 @@ class MemoryController extends Controller
             'period' => ['required', Rule::in(self::PERIODS)],
             'content' => ['required', 'string'],
             'emotion' => ['required', 'string', 'max:20'],
+            'tags' => ['nullable', 'string', 'max:180'],
         ], [
             'period.required' => '年代を選択してください。',
             'period.in' => '年代を正しく選択してください。',
             'content.required' => '内容を入力してください。',
             'emotion.required' => '感情を選択してください。',
             'emotion.max' => '感情は20文字以内で入力してください。',
+            'tags.max' => '関連タグは180文字以内で入力してください。',
         ]);
 
         return [
             'period' => $validated['period'],
             'content' => trim($validated['content']),
             'emotion' => trim($validated['emotion']),
+            'tags' => $this->normalizeTags((string) ($validated['tags'] ?? '')),
         ];
+    }
+
+    private function bubbleMemoryPayload(Memory $memory, array $emotionToneMap): array
+    {
+        $tone = $emotionToneMap[$memory->emotion] ?? 'ニュートラル';
+        $storedTags = collect($memory->tags ?? [])
+            ->map(fn (mixed $tag): string => trim((string) $tag))
+            ->filter()
+            ->values();
+
+        return [
+            'id' => $memory->id,
+            'period' => $memory->period,
+            'emotion' => $memory->emotion,
+            'content' => $memory->content,
+            'label' => $this->bubbleKeyword($memory),
+            'tone' => $tone,
+            'colors' => $this->toneColors($tone),
+            'periodColors' => $this->periodColors($memory->period),
+            'tags' => $storedTags
+                ->prepend($memory->emotion)
+                ->prepend($memory->period)
+                ->unique()
+                ->take(6)
+                ->values()
+                ->all(),
+            'url' => route('memories.show', $memory),
+        ];
+    }
+
+    private function normalizeTags(string $rawTags): array
+    {
+        return collect(preg_split('/[\r\n,、]+/u', $rawTags) ?: [])
+            ->map(fn (string $tag): string => trim(ltrim($tag, '#＃ ')))
+            ->filter()
+            ->map(fn (string $tag): string => mb_substr($tag, 0, 20))
+            ->unique()
+            ->take(8)
+            ->values()
+            ->all();
     }
 
     private function createComposerViewData(Request $request): array

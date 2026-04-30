@@ -123,6 +123,7 @@
 
     $initialEra = (string) old('period', '高校生');
     $initialContent = old('content', '');
+    $initialTags = (string) old('tags', '');
     $initialEmotion = (string) old('emotion', '普通');
     $initialEmotionBucket = (string) old('emotion_group', $emotionBucketMap[$initialEmotion] ?? 'normal');
 
@@ -302,6 +303,19 @@
                                 placeholder="思い出の場所、会話、感じたことなどを入力してください..."
                             >{{ $initialContent }}</textarea>
                         </div>
+
+                        <label class="mcv2-tag-field">
+                            <span class="mcv2-tag-field-label">関連タグ</span>
+                            <input
+                                class="mcv2-tag-input"
+                                type="text"
+                                name="tags"
+                                value="{{ $initialTags }}"
+                                data-tag-input
+                                placeholder="例：家族, 夏祭り, 部活"
+                            >
+                            <small>カンマ区切りで入力すると、あとで記憶を探しやすくなります。</small>
+                        </label>
                     </section>
 
                     <section class="mcv2-section">

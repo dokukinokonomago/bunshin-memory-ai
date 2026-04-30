@@ -474,19 +474,13 @@ html {
   width: 100%;
   min-height: 44px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.34);
-  position: relative;
-  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.22);
   background:
-    radial-gradient(circle at 0% 100%, rgba(255, 194, 112, 0.18), transparent 38%),
-    radial-gradient(circle at 100% 0%, rgba(111, 199, 255, 0.22), transparent 42%),
-    linear-gradient(180deg, rgba(255,255,255,0.3), rgba(255,255,255,0.08) 38%, rgba(255,255,255,0.04) 72%, rgba(255,255,255,0.1)),
-    rgba(35, 42, 63, 0.2);
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
+    rgba(35, 42, 63, 0.42);
   box-shadow:
-    0 16px 28px rgba(0,0,0,0.16),
-    0 0 20px rgba(111, 199, 255, 0.08),
-    inset 0 1px 0 rgba(255,255,255,0.52),
-    inset 0 -10px 18px rgba(118, 168, 255, 0.18);
+    0 10px 24px rgba(0,0,0,0.14),
+    inset 0 1px 0 rgba(255,255,255,0.08);
   color: rgba(247,249,255,0.92);
   font-size: 16px;
   font-weight: 700;
@@ -498,32 +492,12 @@ html {
   backdrop-filter: blur(10px);
 }
 
-.mcv2-ghost-btn::before,
-.mcv2-inline-reset::after,
-.mcv2-emotion-add-trigger::before,
-.mcv2-add-emotion-submit::before,
-.mcv2-primary::before,
-.mcv2-secondary::before,
-.mcv2-emotion-close::before,
-.mcv2-add-emotion-close::before {
-  content: "";
-  position: absolute;
-  left: 10%;
-  right: 10%;
-  top: 1px;
-  height: 46%;
-  border-radius: inherit;
-  background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.16) 62%, transparent);
-  pointer-events: none;
-}
-
 .mcv2-ghost-btn:hover {
   transform: translateY(-1px);
-  border-color: rgba(255,255,255,0.48);
+  border-color: rgba(255,255,255,0.32);
   box-shadow:
-    0 20px 32px rgba(0,0,0,0.2),
-    0 0 24px rgba(111, 199, 255, 0.12),
-    inset 0 1px 0 rgba(255,255,255,0.58);
+    0 14px 28px rgba(0,0,0,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.12);
 }
 
 .mcv2-center {
@@ -769,24 +743,18 @@ html {
   min-height: 30px;
   padding: 0 14px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.28);
+  border: 1px solid rgba(255,255,255,0.16);
   background:
-    radial-gradient(circle at 0% 100%, rgba(255, 197, 116, 0.16), transparent 38%),
-    radial-gradient(circle at 100% 0%, rgba(111, 199, 255, 0.18), transparent 40%),
-    linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.06)),
-    rgba(19, 25, 45, 0.22);
+    linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04)),
+    rgba(19, 25, 45, 0.52);
   color: rgba(241,245,255,0.82);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.03em;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.4),
-    inset 0 -8px 16px rgba(118, 168, 255, 0.14),
-    0 12px 22px rgba(8, 12, 24, 0.1);
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 10px 20px rgba(8, 12, 24, 0.08);
   cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  backdrop-filter: blur(16px);
   transition:
     transform .18s ease,
     border-color .18s ease,
@@ -797,12 +765,11 @@ html {
 
 .mcv2-inline-reset:hover {
   transform: translateY(-1px);
-  border-color: rgba(255,255,255,0.44);
+  border-color: rgba(255,255,255,0.3);
   color: rgba(250,252,255,0.96);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.48),
-    inset 0 -8px 16px rgba(118, 168, 255, 0.16),
-    0 16px 28px rgba(8, 12, 24, 0.14);
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    0 12px 24px rgba(8, 12, 24, 0.12);
 }
 
 .mcv2-inline-reset:active {
@@ -920,6 +887,54 @@ html {
 
 .mcv2-textarea::placeholder {
   color: rgba(226,233,250,0.62);
+}
+
+.mcv2-tag-field {
+  margin-top: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.mcv2-tag-field-label {
+  color: rgba(234,241,255,0.94);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.mcv2-tag-input {
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid rgba(198,211,255,0.28);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.03)),
+    rgba(37, 45, 74, 0.52);
+  box-shadow:
+    0 14px 26px rgba(0,0,0,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+  color: rgba(247,250,255,0.94);
+  font-size: 14px;
+  padding: 0 16px;
+  outline: none;
+  transition: border-color .22s ease, box-shadow .22s ease;
+}
+
+.mcv2-tag-input:focus {
+  border-color: rgba(176,163,255,0.62);
+  box-shadow:
+    0 0 0 3px rgba(127,114,255,0.08),
+    0 16px 28px rgba(0,0,0,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.16);
+}
+
+.mcv2-tag-input::placeholder {
+  color: rgba(226,233,250,0.56);
+}
+
+.mcv2-tag-field small {
+  color: rgba(212,223,245,0.62);
+  font-size: 11px;
+  line-height: 1.5;
 }
 
 .mcv2-emotion-picker {
@@ -1204,23 +1219,15 @@ body.mcv2-modal-open {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.3);
+  border: 1px solid rgba(255,255,255,0.18);
   background:
-    radial-gradient(circle at 0% 100%, rgba(255, 199, 118, 0.16), transparent 38%),
-    radial-gradient(circle at 100% 0%, rgba(111, 199, 255, 0.18), transparent 40%),
-    linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0.06)),
-    rgba(18, 24, 44, 0.22);
+    linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03)),
+    rgba(18, 24, 44, 0.72);
   color: rgba(245,248,255,0.94);
   font-size: 24px;
   line-height: 1;
   cursor: pointer;
   z-index: 3;
-  overflow: hidden;
-  backdrop-filter: blur(16px);
-  box-shadow:
-    0 14px 26px rgba(0,0,0,0.16),
-    inset 0 1px 0 rgba(255,255,255,0.46),
-    inset 0 -8px 16px rgba(118, 168, 255, 0.14);
 }
 
 .mcv2-emotion-panel {
@@ -1256,23 +1263,14 @@ body.mcv2-modal-open {
   min-height: 34px;
   padding: 0 14px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.3);
+  border: 1px solid rgba(255,255,255,0.16);
   background:
-    radial-gradient(circle at 0% 100%, rgba(255, 199, 118, 0.16), transparent 38%),
-    radial-gradient(circle at 100% 0%, rgba(111, 199, 255, 0.18), transparent 40%),
-    linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0.06)),
-    rgba(17, 24, 44, 0.22);
+    linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03)),
+    rgba(17, 24, 44, 0.58);
   color: rgba(247,249,255,0.94);
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  backdrop-filter: blur(16px);
-  box-shadow:
-    0 14px 26px rgba(0,0,0,0.16),
-    inset 0 1px 0 rgba(255,255,255,0.46),
-    inset 0 -8px 16px rgba(118, 168, 255, 0.14);
 }
 
 .mcv2-emotion-panel-copy {
@@ -1288,74 +1286,65 @@ body.mcv2-modal-open {
   margin: 18px auto 0;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 24% 18%, rgba(255,255,255,0.08), transparent 14%),
-    radial-gradient(circle at 78% 22%, rgba(255,255,255,0.04), transparent 18%),
-    radial-gradient(circle at 50% 60%, rgba(28, 42, 80, 0.42), transparent 34%),
-    linear-gradient(180deg, rgba(5, 8, 18, 0.98), rgba(2, 4, 10, 1));
-  border: 1px solid rgba(122, 150, 214, 0.24);
+    radial-gradient(circle at 50% 52%, rgba(168, 160, 255, 0.12), transparent 48%),
+    radial-gradient(circle at 34% 66%, rgba(255,255,255,0.08), transparent 36%),
+    radial-gradient(circle at 70% 34%, rgba(194, 214, 255, 0.08), transparent 34%),
+    rgba(31, 38, 69, 0.42);
+  border: 1px solid rgba(255,255,255,0.1);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.08),
-    inset 0 -20px 36px rgba(0,0,0,0.34),
-    0 24px 56px rgba(0,0,0,0.34),
-    0 0 24px rgba(70, 112, 200, 0.12);
+    inset 0 0 48px rgba(255,255,255,0.05),
+    inset 0 0 80px rgba(103, 95, 178, 0.1),
+    0 18px 46px rgba(0,0,0,0.18);
   overflow: hidden;
-  filter: saturate(1.02);
+  filter: saturate(0.96);
 }
 
 .mcv2-emotion-sphere::before {
   content: "";
   position: absolute;
-  left: 12%;
-  right: 12%;
-  top: 10%;
-  height: 20%;
+  inset: 10% 12% auto;
+  height: 18%;
   border-radius: 50%;
   background:
-    radial-gradient(circle at center, rgba(255,255,255,0.34), rgba(255,255,255,0.04) 68%, transparent 76%);
-  opacity: 0.5;
-  filter: blur(8px);
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.16), rgba(255,255,255,0.03) 58%, transparent 78%);
+  opacity: 0.8;
+  filter: blur(12px);
 }
 
 .mcv2-emotion-sphere::after {
   content: "";
   position: absolute;
-  inset: 12%;
+  inset: auto 12% 12% auto;
+  width: 24%;
+  height: 24%;
   border-radius: 50%;
   background:
-    radial-gradient(circle at center, transparent 64%, rgba(116, 150, 228, 0.08) 64.5%, transparent 67%);
-  opacity: 0.54;
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.12), rgba(171, 160, 255, 0.04) 62%, transparent 78%);
+  filter: blur(18px);
+  opacity: 0.46;
 }
 
 .mcv2-emotion-sphere-ring {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  opacity: 0.58;
+  display: none;
 }
 
 .mcv2-emotion-sphere-ring.ring-a {
-  inset: 16px;
-  border: 1px solid rgba(102, 134, 204, 0.24);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.1),
-    0 0 18px rgba(90, 128, 216, 0.08);
+  inset: 9%;
 }
 
 .mcv2-emotion-sphere-ring.ring-b {
-  inset: 34px;
-  border: 1px solid rgba(96, 122, 188, 0.16);
+  inset: 22%;
 }
 
 .mcv2-emotion-orb {
-  --mcv2-orb-size: min(var(--orb-size), 96px);
   position: absolute;
-  left: clamp(calc((var(--mcv2-orb-size) / 2) + 30px), var(--orb-left), calc(100% - (var(--mcv2-orb-size) / 2) - 30px));
-  top: clamp(calc((var(--mcv2-orb-size) / 2) + 30px), var(--orb-top), calc(100% - (var(--mcv2-orb-size) / 2) - 30px));
-  width: var(--mcv2-orb-size);
-  height: var(--mcv2-orb-size);
+  left: clamp(calc((min(var(--orb-size), 78px) / 2) + 30px), var(--orb-left), calc(100% - (min(var(--orb-size), 78px) / 2) - 30px));
+  top: clamp(calc((min(var(--orb-size), 78px) / 2) + 30px), var(--orb-top), calc(100% - (min(var(--orb-size), 78px) / 2) - 30px));
+  width: min(var(--orb-size), 78px);
+  height: min(var(--orb-size), 78px);
   transform: translate(-50%, -50%);
   cursor: pointer;
-  animation: mcv2BubbleFloat 7.6s ease-in-out infinite;
+  animation: mcv2BubbleFloat 7.2s ease-in-out infinite;
   animation-delay: var(--orb-delay);
 }
 
@@ -1371,62 +1360,24 @@ body.mcv2-modal-open {
   display: grid;
   place-items: center;
   text-align: center;
-  padding: 16px 10px 14px;
+  padding: 10px;
   border-radius: 50%;
-  font-size: clamp(11px, 1.08vw, 13px);
-  font-weight: 900;
-  line-height: 1.12;
-  letter-spacing: 0.02em;
-  color: rgba(255,255,255,0.98);
-  border: 1px solid rgba(255,255,255,0.24);
+  font-size: clamp(11px, 1.25vw, 13px);
+  font-weight: 800;
+  line-height: 1.2;
+  color: rgba(252,253,255,0.98);
+  border: 1px solid rgba(255,255,255,0.18);
   position: relative;
   overflow: hidden;
-  isolation: isolate;
-  box-shadow:
-    0 16px 28px rgba(0,0,0,0.28),
-    0 0 18px var(--mcv2-orb-glow),
-    inset 0 1px 0 rgba(255,255,255,0.52),
-    inset 0 -16px 24px rgba(0,0,0,0.18);
+  box-shadow: 0 10px 24px rgba(17, 22, 36, 0.12);
   background:
-    radial-gradient(circle at 50% 66%, color-mix(in srgb, var(--mcv2-orb-fill) 92%, black 8%), color-mix(in srgb, var(--mcv2-orb-fill) 62%, black 38%) 62%, rgba(4,8,18,0.96) 100%),
-    linear-gradient(180deg, rgba(255,255,255,0.16), transparent 34%);
+    radial-gradient(circle at 36% 32%, rgba(255,255,255,0.24), transparent 18%),
+    radial-gradient(circle at 52% 52%, var(--mcv2-orb-core), transparent 62%),
+    linear-gradient(160deg, var(--mcv2-orb-start), var(--mcv2-orb-end));
   transition:
     transform .18s ease,
     box-shadow .18s ease,
     border-color .18s ease;
-  text-shadow:
-    0 1px 3px rgba(0,0,0,0.18);
-}
-
-.mcv2-emotion-orb span::before {
-  content: "";
-  position: absolute;
-  left: 14%;
-  right: 14%;
-  top: 10%;
-  height: 24%;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at center, rgba(255,255,255,0.86), rgba(255,255,255,0.2) 62%, transparent 78%);
-  opacity: 0.72;
-  z-index: -3;
-  filter: blur(1px);
-}
-
-.mcv2-emotion-orb span::after {
-  content: "";
-  position: absolute;
-  inset: 9%;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at center, transparent 66%, rgba(255,255,255,0.1) 66.5%, transparent 70%);
-  z-index: -2;
-  opacity: 0.72;
-}
-
-.mcv2-emotion-orb span > * {
-  position: relative;
-  z-index: 2;
 }
 
 .mcv2-emotion-orb:hover span {
@@ -1434,52 +1385,33 @@ body.mcv2-modal-open {
 }
 
 .mcv2-emotion-orb input:checked + span {
-  border-color: rgba(255,255,255,0.58);
+  border-color: rgba(255,255,255,0.48);
   box-shadow:
-    0 0 0 3px rgba(255,255,255,0.12),
-    0 0 26px var(--mcv2-orb-glow),
-    0 18px 30px rgba(0,0,0,0.32),
-    inset 0 1px 0 rgba(255,255,255,0.62);
-  transform: scale(1.06);
+    0 0 0 2px rgba(255,255,255,0.1),
+    0 0 20px var(--mcv2-orb-glow),
+    0 14px 28px rgba(17, 22, 36, 0.16);
+  transform: scale(1.05);
 }
 
 .mcv2-emotion-orb.tone-positive {
-  --mcv2-orb-fill: rgba(102, 208, 120, 0.92);
-  --mcv2-orb-glow: rgba(96, 207, 120, 0.34);
+  --mcv2-orb-start: rgba(255, 184, 142, 0.72);
+  --mcv2-orb-end: rgba(255, 130, 160, 0.4);
+  --mcv2-orb-core: rgba(255, 241, 231, 0.24);
+  --mcv2-orb-glow: rgba(255, 156, 156, 0.18);
 }
 
 .mcv2-emotion-orb.tone-neutral {
-  --mcv2-orb-fill: rgba(101, 191, 255, 0.92);
-  --mcv2-orb-glow: rgba(98, 188, 255, 0.32);
+  --mcv2-orb-start: rgba(132, 220, 220, 0.68);
+  --mcv2-orb-end: rgba(128, 168, 255, 0.38);
+  --mcv2-orb-core: rgba(232, 250, 247, 0.22);
+  --mcv2-orb-glow: rgba(124, 199, 255, 0.16);
 }
 
 .mcv2-emotion-orb.tone-negative {
-  --mcv2-orb-fill: rgba(232, 97, 170, 0.94);
-  --mcv2-orb-glow: rgba(232, 104, 176, 0.34);
-}
-
-.mcv2-emotion-panel.tone-positive .mcv2-emotion-orb:nth-of-type(3n + 2) {
-  --mcv2-orb-fill: rgba(129, 218, 146, 0.92);
-}
-
-.mcv2-emotion-panel.tone-positive .mcv2-emotion-orb:nth-of-type(3n) {
-  --mcv2-orb-fill: rgba(88, 196, 105, 0.94);
-}
-
-.mcv2-emotion-panel.tone-neutral .mcv2-emotion-orb:nth-of-type(3n + 2) {
-  --mcv2-orb-fill: rgba(123, 208, 255, 0.92);
-}
-
-.mcv2-emotion-panel.tone-neutral .mcv2-emotion-orb:nth-of-type(3n) {
-  --mcv2-orb-fill: rgba(82, 173, 246, 0.94);
-}
-
-.mcv2-emotion-panel.tone-negative .mcv2-emotion-orb:nth-of-type(3n + 2) {
-  --mcv2-orb-fill: rgba(244, 118, 190, 0.92);
-}
-
-.mcv2-emotion-panel.tone-negative .mcv2-emotion-orb:nth-of-type(3n) {
-  --mcv2-orb-fill: rgba(217, 70, 158, 0.94);
+  --mcv2-orb-start: rgba(204, 168, 255, 0.74);
+  --mcv2-orb-end: rgba(255, 138, 182, 0.42);
+  --mcv2-orb-core: rgba(246, 232, 255, 0.22);
+  --mcv2-orb-glow: rgba(233, 152, 255, 0.18);
 }
 
 .mcv2-add-emotion-modal {
@@ -1522,22 +1454,12 @@ body.mcv2-modal-open {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.28);
-  background:
-    radial-gradient(circle at 0% 100%, rgba(255, 199, 118, 0.16), transparent 38%),
-    radial-gradient(circle at 100% 0%, rgba(111, 199, 255, 0.18), transparent 40%),
-    linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0.06)),
-    rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.05);
   color: rgba(245,248,255,0.92);
   font-size: 20px;
   line-height: 1;
   cursor: pointer;
-  overflow: hidden;
-  backdrop-filter: blur(16px);
-  box-shadow:
-    0 14px 24px rgba(0,0,0,0.14),
-    inset 0 1px 0 rgba(255,255,255,0.42),
-    inset 0 -8px 16px rgba(118, 168, 255, 0.12);
 }
 
 .mcv2-add-emotion-head h4 {
@@ -1582,24 +1504,13 @@ body.mcv2-modal-open {
   min-height: 40px;
   margin-top: 16px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.38);
+  border: 1px solid rgba(192,180,255,0.28);
   background:
-    radial-gradient(circle at 0% 100%, rgba(86, 164, 255, 0.36), transparent 40%),
-    radial-gradient(circle at 100% 0%, rgba(255, 197, 118, 0.24), transparent 42%),
-    linear-gradient(180deg, rgba(255,255,255,0.34), rgba(255,255,255,0.08)),
-    linear-gradient(135deg, rgba(177, 162, 255, 0.86), rgba(103, 91, 255, 0.72));
+    linear-gradient(180deg, rgba(185,169,255,0.96), rgba(112, 98, 255, 0.88));
   color: rgba(255,255,255,0.98);
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  backdrop-filter: blur(16px);
-  box-shadow:
-    0 16px 30px rgba(57, 55, 150, 0.18),
-    0 0 22px rgba(116, 162, 255, 0.14),
-    inset 0 1px 0 rgba(255,255,255,0.5),
-    inset 0 -10px 18px rgba(92, 147, 255, 0.16);
 }
 
 .mcv2-right {
@@ -1881,38 +1792,26 @@ body.mcv2-modal-open {
   font-size: 16px;
   font-weight: 800;
   cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  backdrop-filter: blur(18px);
 }
 
 .mcv2-primary {
-  border: 1px solid rgba(255,255,255,0.4);
+  border: 1px solid rgba(195,182,255,0.48);
   color: #fff;
   background:
-    radial-gradient(circle at 0% 100%, rgba(86, 164, 255, 0.34), transparent 40%),
-    radial-gradient(circle at 100% 0%, rgba(255, 197, 118, 0.22), transparent 42%),
-    linear-gradient(180deg, rgba(255,255,255,0.3), rgba(255,255,255,0.08)),
-    linear-gradient(135deg, rgba(170,156,255,0.92), rgba(103, 91, 255, 0.74));
+    linear-gradient(180deg, rgba(170,156,255,0.96), rgba(103, 91, 255, 0.90));
   box-shadow:
-    0 0 24px rgba(127,114,255,0.22),
-    0 18px 30px rgba(72, 55, 180, 0.18),
-    inset 0 1px 0 rgba(255,255,255,0.52),
-    inset 0 -10px 18px rgba(92, 147, 255, 0.16);
+    0 0 22px rgba(127,114,255,0.40),
+    0 14px 28px rgba(72, 55, 180, 0.22),
+    inset 0 1px 0 rgba(255,255,255,0.26);
 }
 
 .mcv2-secondary {
-  border: 1px solid rgba(255,255,255,0.34);
+  border: 1px solid rgba(255,255,255,0.24);
   color: rgba(245,248,255,0.94);
   background:
-    radial-gradient(circle at 0% 100%, rgba(255, 197, 118, 0.18), transparent 38%),
-    radial-gradient(circle at 100% 0%, rgba(111, 199, 255, 0.22), transparent 42%),
-    linear-gradient(180deg, rgba(255,255,255,0.3), rgba(255,255,255,0.08)),
-    rgba(15, 21, 39, 0.18);
-  box-shadow:
-    0 16px 28px rgba(0,0,0,0.16),
-    inset 0 1px 0 rgba(255,255,255,0.52),
-    inset 0 -10px 18px rgba(118, 168, 255, 0.16);
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
+    rgba(15, 21, 39, 0.50);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
 .mcv2-primary:hover,
@@ -1952,41 +1851,29 @@ body.mcv2-modal-open {
 
 .mcv2-shell.tone-positive .mcv2-primary {
   background:
-    radial-gradient(circle at 0% 100%, rgba(255, 204, 128, 0.28), transparent 40%),
-    radial-gradient(circle at 100% 0%, rgba(255, 138, 170, 0.18), transparent 42%),
-    linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0.08)),
-    linear-gradient(135deg, rgba(247, 194, 136, 0.92), rgba(231, 147, 75, 0.72));
+    linear-gradient(180deg, rgba(247, 194, 136, 0.96), rgba(231, 147, 75, 0.88));
   box-shadow:
-    0 0 22px rgba(242,177,119,0.2),
-    0 18px 30px rgba(167, 101, 43, 0.18),
-    inset 0 1px 0 rgba(255,255,255,0.52),
-    inset 0 -10px 18px rgba(246, 171, 118, 0.16);
+    0 0 22px rgba(242,177,119,0.38),
+    0 14px 28px rgba(167, 101, 43, 0.22),
+    inset 0 1px 0 rgba(255,255,255,0.26);
 }
 
 .mcv2-shell.tone-neutral .mcv2-primary {
   background:
-    radial-gradient(circle at 0% 100%, rgba(255, 204, 128, 0.22), transparent 40%),
-    radial-gradient(circle at 100% 0%, rgba(143, 242, 223, 0.2), transparent 42%),
-    linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0.08)),
-    linear-gradient(135deg, rgba(143, 242, 223, 0.9), rgba(46, 180, 156, 0.72));
+    linear-gradient(180deg, rgba(143, 242, 223, 0.96), rgba(46, 180, 156, 0.88));
   box-shadow:
-    0 0 22px rgba(130,234,214,0.2),
-    0 18px 30px rgba(27, 125, 111, 0.18),
-    inset 0 1px 0 rgba(255,255,255,0.52),
-    inset 0 -10px 18px rgba(108, 217, 197, 0.16);
+    0 0 22px rgba(130,234,214,0.38),
+    0 14px 28px rgba(27, 125, 111, 0.22),
+    inset 0 1px 0 rgba(255,255,255,0.26);
 }
 
 .mcv2-shell.tone-negative .mcv2-primary {
   background:
-    radial-gradient(circle at 0% 100%, rgba(255, 204, 128, 0.22), transparent 40%),
-    radial-gradient(circle at 100% 0%, rgba(255, 177, 207, 0.22), transparent 42%),
-    linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0.08)),
-    linear-gradient(135deg, rgba(255, 177, 207, 0.92), rgba(220, 103, 154, 0.72));
+    linear-gradient(180deg, rgba(255, 177, 207, 0.96), rgba(220, 103, 154, 0.88));
   box-shadow:
-    0 0 22px rgba(255,153,185,0.22),
-    0 18px 30px rgba(139, 56, 92, 0.18),
-    inset 0 1px 0 rgba(255,255,255,0.52),
-    inset 0 -10px 18px rgba(255, 154, 189, 0.16);
+    0 0 22px rgba(255,153,185,0.38),
+    0 14px 28px rgba(139, 56, 92, 0.22),
+    inset 0 1px 0 rgba(255,255,255,0.26);
 }
 
 .mcv2-shell.preview-medium .mcv2-preview::before {
