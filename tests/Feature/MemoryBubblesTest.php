@@ -18,7 +18,7 @@ class MemoryBubblesTest extends TestCase
         $this->actingAs(User::factory()->create());
     }
 
-    public function test_bubbles_page_shows_up_to_10_memories_per_period_in_one_layer(): void
+    public function test_bubbles_page_shows_memory_ocean_overview_cta(): void
     {
         foreach (range(1, 10) as $index) {
             Memory::query()->create([
@@ -31,11 +31,11 @@ class MemoryBubblesTest extends TestCase
         $response = $this->get(route('memories.bubbles'));
 
         $response->assertOk();
-        $response->assertSee('MEMORIES');
-        $response->assertDontSee('1/2層');
+        $response->assertSee('今日は何をする？');
+        $response->assertSee('人生全体を俯瞰しています');
     }
 
-    public function test_bubbles_page_moves_to_second_layer_after_10_memories_in_one_period(): void
+    public function test_bubbles_page_accepts_period_deep_link(): void
     {
         foreach (range(1, 11) as $index) {
             Memory::query()->create([
@@ -45,9 +45,10 @@ class MemoryBubblesTest extends TestCase
             ]);
         }
 
-        $response = $this->get(route('memories.bubbles'));
+        $response = $this->get(route('memories.bubbles', ['period' => '高校生']));
 
         $response->assertOk();
-        $response->assertSee('1/2層');
+        $response->assertSee('高校生');
+        $response->assertSee('mem-filter-chip is-on', false);
     }
 }

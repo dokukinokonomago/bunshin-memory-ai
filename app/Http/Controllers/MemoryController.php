@@ -12,7 +12,6 @@ use Illuminate\View\View;
 
 class MemoryController extends Controller
 {
-    private const PERIOD_BUBBLE_MEMORY_LIMIT = 10;
     private const ACTIVE_CREATE_VIEW = 'memories.create_v2';
     private const PERIODS = ['幼少期', '小学生', '中学生', '高校生', '大学生', '成人期', '不明'];
     private const CREATE_COMPOSER_GROUP_META = [
@@ -129,72 +128,32 @@ class MemoryController extends Controller
     {
         $selectedPeriod = $request->string('period')->toString();
         $selectedPeriod = in_array($selectedPeriod, array_merge(['すべて'], self::PERIODS), true) ? $selectedPeriod : 'すべて';
-        $requestedLayer = max(1, $request->integer('layer', 1));
-
         $emotionToneMap = $this->emotionToneMap();
-        $matchingMemories = collect();
-        $matchingCount = 0;
-        $layerCount = 1;
-        $currentLayer = 1;
-        $bubbleMemories = collect();
-
-        if ($selectedPeriod !== 'すべて') {
-            $query = Memory::query()
-                ->where('period', $selectedPeriod)
-                ->latest();
-
-            $matchingCount = (clone $query)->count();
-            $matchingMemories = (clone $query)->get();
-            $layerCount = max(1, (int) ceil($matchingCount / self::PERIOD_BUBBLE_MEMORY_LIMIT));
-            $currentLayer = min($requestedLayer, $layerCount);
-            $offset = ($currentLayer - 1) * self::PERIOD_BUBBLE_MEMORY_LIMIT;
-
-            $bubbleMemories = (clone $query)
-                ->skip($offset)
-                ->take(self::PERIOD_BUBBLE_MEMORY_LIMIT)
-                ->get()
-                ->values()
-                ->map(fn (Memory $memory): array => $this->bubbleMemoryPayload($memory, $emotionToneMap));
-        } else {
-            $allMemories = Memory::query()
-                ->latest()
-                ->get()
-                ->groupBy('period');
-
-            $matchingCount = $allMemories->flatten(1)->count();
-            $layerCount = max(
-                1,
-                (int) collect(self::PERIODS)
-                    ->map(fn (string $period): int => (int) ceil(($allMemories->get($period)?->count() ?? 0) / self::PERIOD_BUBBLE_MEMORY_LIMIT))
-                    ->max()
-            );
-            $currentLayer = min($requestedLayer, $layerCount);
-            $offset = ($currentLayer - 1) * self::PERIOD_BUBBLE_MEMORY_LIMIT;
-
-            $bubbleMemories = collect(self::PERIODS)
-                ->flatMap(function (string $period) use ($allMemories, $offset, $emotionToneMap): Collection {
-                    return ($allMemories->get($period) ?? collect())
-                        ->slice($offset, self::PERIOD_BUBBLE_MEMORY_LIMIT)
-                        ->values()
-                        ->map(fn (Memory $memory): array => $this->bubbleMemoryPayload($memory, $emotionToneMap));
-                })
-                ->values();
-        }
+        $allMemories = Memory::query()
+            ->latest()
+            ->get();
+        $matchingMemories = $selectedPeriod === 'すべて'
+            ? $allMemories
+            : $allMemories->where('period', $selectedPeriod)->values();
+        $matchingCount = $matchingMemories->count();
+        $bubbleMemories = $allMemories
+            ->values()
+            ->map(fn (Memory $memory): array => $this->bubbleMemoryPayload($memory, $emotionToneMap));
 
         return view('memories.bubbles', [
             'bubbleMemories' => $bubbleMemories,
-            'allCount' => Memory::query()->count(),
+            'allCount' => $allMemories->count(),
             'displayCount' => $bubbleMemories->count(),
             'matchingCount' => $matchingCount,
-            'periodBubbleCounts' => Memory::query()->get()->countBy('period')->all(),
+            'periodBubbleCounts' => $allMemories->countBy('period')->all(),
             'periods' => self::PERIODS,
             'selectedPeriod' => $selectedPeriod,
-            'currentLayer' => $currentLayer,
-            'layerCount' => $layerCount,
-            'hasPreviousLayer' => $currentLayer > 1,
-            'hasNextLayer' => $currentLayer < $layerCount,
+            'currentLayer' => 1,
+            'layerCount' => 1,
+            'hasPreviousLayer' => false,
+            'hasNextLayer' => false,
             'selectedPeriodStatus' => $selectedPeriod !== 'すべて'
-                ? $this->selectedPeriodStatus($matchingMemories, $emotionToneMap, $selectedPeriod, $currentLayer, $layerCount)
+                ? $this->selectedPeriodStatus($matchingMemories, $emotionToneMap, $selectedPeriod, 1, 1)
                 : null,
         ]);
     }
@@ -463,6 +422,8 @@ class MemoryController extends Controller
             ->map(fn (mixed $tag): string => trim((string) $tag))
             ->filter()
             ->values();
+        $cluster = $this->memoryClusterLabel($memory, $storedTags);
+        $theme = $this->memoryTheme($memory);
 
         return [
             'id' => $memory->id,
@@ -470,6 +431,11 @@ class MemoryController extends Controller
             'emotion' => $memory->emotion,
             'content' => $memory->content,
             'label' => $this->bubbleKeyword($memory),
+            'theme' => $theme,
+            'cluster' => $cluster,
+            'excerpt' => Str::limit(trim($memory->content), 58, '…'),
+            'comment' => $this->memoryCompanionComment($memory, $cluster, $theme),
+            'createdAt' => optional($memory->created_at)->timezone('Asia/Tokyo')->format('Y.m.d H:i') ?? '--.--.-- --:--',
             'tone' => $tone,
             'colors' => $this->toneColors($tone),
             'periodColors' => $this->periodColors($memory->period),
@@ -482,6 +448,49 @@ class MemoryController extends Controller
                 ->all(),
             'url' => route('memories.show', $memory),
         ];
+    }
+
+    private function memoryClusterLabel(Memory $memory, Collection $storedTags): string
+    {
+        $tag = $storedTags
+            ->first(fn (string $value): bool => $value !== $memory->period && $value !== $memory->emotion);
+
+        if (is_string($tag) && $tag !== '') {
+            return Str::limit($tag, 12, '');
+        }
+
+        return Str::limit($memory->emotion, 12, '');
+    }
+
+    private function memoryCompanionComment(Memory $memory, string $cluster, string $theme): string
+    {
+        $templates = [
+            'ポジティブ' => [
+                'この記憶はまだやわらかく光っています。',
+                '近づくほど、当時の温度が戻ってくる記憶です。',
+                '明るさの奥に、{}の輪郭が残っています。',
+            ],
+            'ニュートラル' => [
+                '静かな出来事ほど、あとから意味を帯びます。',
+                '何気ない場面の中に、{}の気配が残っています。',
+                '派手ではないけれど、輪郭の確かな記憶です。',
+            ],
+            'ネガティブ' => [
+                '少し痛みを含みつつ、今も形を失っていません。',
+                '{}の感触が、まだ水面下で揺れています。',
+                '見返すには勇気がいるけれど、大事な記録です。',
+            ],
+        ];
+
+        $toneKey = str_contains($memory->emotion, '不安') || str_contains($memory->emotion, '悲') || str_contains($memory->emotion, '怒') || str_contains($memory->emotion, '落ち')
+            ? 'ネガティブ'
+            : (str_contains($memory->emotion, '嬉') || str_contains($memory->emotion, '楽') || str_contains($memory->emotion, '幸') || str_contains($memory->emotion, '感動')
+                ? 'ポジティブ'
+                : 'ニュートラル');
+        $variants = $templates[$toneKey];
+        $template = $variants[$memory->id % count($variants)];
+
+        return str_replace('{}', $cluster !== '' ? $cluster : $theme, $template);
     }
 
     private function normalizeTags(string $rawTags): array
