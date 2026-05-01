@@ -17,6 +17,7 @@ class MemoryController extends Controller
     private const SESSION_GRAVE_VISIBLE = 'memories.grave.visible';
     private const SESSION_GRAVE_UNLOCKED = 'memories.grave.unlocked';
     private const GRAVE_PASSCODE = '1234';
+    private const GRAVE_TAG = '__grave_hidden__';
     private const CREATE_COMPOSER_GROUP_META = [
         'warm' => [
             'label' => 'あたたかい',
@@ -82,7 +83,7 @@ class MemoryController extends Controller
         $selectedPeriod = $request->string('period')->toString();
         $selectedPeriod = in_array($selectedPeriod, array_merge(['すべて'], self::PERIODS), true) ? $selectedPeriod : 'すべて';
 
-        $query = Memory::query()->latest();
+        $query = $this->visibleMemoriesQuery()->latest();
 
         if ($selectedPeriod !== 'すべて') {
             $query->where('period', $selectedPeriod);
@@ -101,7 +102,7 @@ class MemoryController extends Controller
         return view('memories.index', [
             'memories' => $query->get(),
             'emotionToneMap' => $this->emotionToneMap(),
-            'allCount' => Memory::query()->count(),
+            'allCount' => $this->visibleMemoriesQuery()->count(),
             'searchQuery' => $keyword,
             'periods' => self::PERIODS,
             'selectedPeriod' => $selectedPeriod,
@@ -134,9 +135,12 @@ class MemoryController extends Controller
         $showGraveBubble = (bool) $request->session()->get(self::SESSION_GRAVE_VISIBLE, false);
         $graveUnlocked = (bool) $request->session()->get(self::SESSION_GRAVE_UNLOCKED, false);
         $emotionToneMap = $this->emotionToneMap();
-        $allMemories = Memory::query()
+        $allMemories = $this->visibleMemoriesQuery()
             ->latest()
             ->get();
+        $graveMemories = $graveUnlocked
+            ? $this->graveMemoriesQuery()->latest()->get()
+            : collect();
         $matchingMemories = $selectedPeriod === 'すべて'
             ? $allMemories
             : $allMemories->where('period', $selectedPeriod)->values();
@@ -161,11 +165,16 @@ class MemoryController extends Controller
             'graveMode' => $showGraveBubble ? $this->graveModePayload($graveUnlocked) : null,
             'showGraveBubble' => $showGraveBubble,
             'graveUnlocked' => $graveUnlocked,
+            'graveMemories' => $graveMemories
+                ->map(fn (Memory $memory): array => $this->bubbleMemoryPayload($memory, $emotionToneMap))
+                ->values(),
             'graveUnlockError' => $request->session()->get('grave_unlock_error'),
             'graveUnlockSuccess' => $request->session()->get('grave_unlock_success'),
+            'graveCreateSuccess' => $request->session()->get('grave_create_success'),
             'selectedPeriodStatus' => $selectedPeriod !== 'すべて'
                 ? $this->selectedPeriodStatus($matchingMemories, $emotionToneMap, $selectedPeriod, 1, 1)
                 : null,
+            'emotionGroups' => self::EMOTION_GROUPS,
         ]);
     }
 
@@ -200,6 +209,41 @@ class MemoryController extends Controller
         return redirect()
             ->route('memories.bubbles', $this->bubblesRedirectParams($request))
             ->with('grave_unlock_success', '墓場までモードを開きました。');
+    }
+
+    public function hideGraveMode(Request $request): RedirectResponse
+    {
+        $request->session()->forget([
+            self::SESSION_GRAVE_VISIBLE,
+            self::SESSION_GRAVE_UNLOCKED,
+        ]);
+
+        return redirect()->route('memories.bubbles', $this->bubblesRedirectParams($request));
+    }
+
+    public function storeGraveMemory(Request $request): RedirectResponse
+    {
+        if (! $request->session()->get(self::SESSION_GRAVE_UNLOCKED, false)) {
+            abort(403);
+        }
+
+        $validated = $this->validateMemory($request);
+        $tags = collect($validated['tags'])
+            ->prepend(self::GRAVE_TAG)
+            ->unique()
+            ->values()
+            ->all();
+
+        Memory::query()->create(array_merge($validated, [
+            'tags' => $tags,
+        ]));
+
+        $request->session()->put(self::SESSION_GRAVE_VISIBLE, true);
+        $request->session()->put(self::SESSION_GRAVE_UNLOCKED, true);
+
+        return redirect()
+            ->route('memories.bubbles', $this->bubblesRedirectParams($request))
+            ->with('grave_create_success', '墓場までの記憶玉を保存しました。');
     }
 
     public function store(Request $request): RedirectResponse
@@ -469,6 +513,7 @@ class MemoryController extends Controller
         $tone = $emotionToneMap[$memory->emotion] ?? 'ニュートラル';
         $storedTags = collect($memory->tags ?? [])
             ->map(fn (mixed $tag): string => trim((string) $tag))
+            ->reject(fn (string $tag): bool => $tag === self::GRAVE_TAG)
             ->filter()
             ->values();
         $cluster = $this->memoryClusterLabel($memory, $storedTags);
@@ -546,6 +591,7 @@ class MemoryController extends Controller
     {
         return collect(preg_split('/[\r\n,、]+/u', $rawTags) ?: [])
             ->map(fn (string $tag): string => trim(ltrim($tag, '#＃ ')))
+            ->reject(fn (string $tag): bool => $tag === self::GRAVE_TAG)
             ->filter()
             ->map(fn (string $tag): string => mb_substr($tag, 0, 20))
             ->unique()
@@ -554,9 +600,29 @@ class MemoryController extends Controller
             ->all();
     }
 
+    private function visibleMemoriesQuery()
+    {
+        return Memory::query()
+            ->where(function ($query): void {
+                $query
+                    ->whereNull('tags')
+                    ->orWhere('tags', 'not like', '%"' . self::GRAVE_TAG . '"%');
+            });
+    }
+
+    private function graveMemoriesQuery()
+    {
+        return Memory::query()
+            ->where('tags', 'like', '%"' . self::GRAVE_TAG . '"%');
+    }
+
     private function bubblesRedirectParams(Request $request): array
     {
-        $selectedPeriod = $request->string('period')->toString();
+        $selectedPeriod = $request->string('period_context')->toString();
+
+        if ($selectedPeriod === '') {
+            $selectedPeriod = $request->string('period')->toString();
+        }
 
         if ($selectedPeriod !== '' && $selectedPeriod !== 'すべて' && in_array($selectedPeriod, self::PERIODS, true)) {
             return ['period' => $selectedPeriod];

@@ -115,4 +115,58 @@ class MemoryBubblesTest extends TestCase
         $response->assertSessionMissing('memories.grave.visible');
         $response->assertSessionMissing('memories.grave.unlocked');
     }
+
+    public function test_grave_memory_can_be_saved_and_stays_out_of_normal_bubbles(): void
+    {
+        Memory::query()->create([
+            'period' => '高校生',
+            'content' => '通常の記憶',
+            'emotion' => '普通',
+        ]);
+
+        $response = $this->withSession([
+            'memories.grave.visible' => true,
+            'memories.grave.unlocked' => true,
+        ])->post(route('memories.bubbles.store-grave'), [
+            'period' => '不明',
+            'period_context' => 'すべて',
+            'content' => '誰にも見せない記憶',
+            'emotion' => '不安',
+            'tags' => '秘密, 夜',
+            'grave_form' => '1',
+        ]);
+
+        $response->assertRedirect(route('memories.bubbles'));
+        $response->assertSessionHas('grave_create_success');
+
+        $graveMemory = Memory::query()->where('content', '誰にも見せない記憶')->first();
+        $this->assertNotNull($graveMemory);
+        $this->assertContains('__grave_hidden__', $graveMemory->tags ?? []);
+
+        $page = $this->withSession([
+            'memories.grave.visible' => true,
+            'memories.grave.unlocked' => true,
+        ])->get(route('memories.bubbles'));
+
+        $page->assertOk();
+        $page->assertSee('1件の秘匿記憶');
+
+        $indexPage = $this->get(route('memories.index'));
+        $indexPage->assertOk();
+        $indexPage->assertDontSee('誰にも見せない記憶');
+    }
+
+    public function test_hide_grave_mode_removes_bubble_visibility(): void
+    {
+        $response = $this->withSession([
+            'memories.grave.visible' => true,
+            'memories.grave.unlocked' => true,
+        ])->post(route('memories.bubbles.hide-grave'), [
+            'period' => 'すべて',
+        ]);
+
+        $response->assertRedirect(route('memories.bubbles'));
+        $response->assertSessionMissing('memories.grave.visible');
+        $response->assertSessionMissing('memories.grave.unlocked');
+    }
 }

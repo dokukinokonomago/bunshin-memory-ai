@@ -4,6 +4,7 @@
 @section('page_class', 'page-bubbles-full')
 
 @section('content')
+@php($shouldOpenGraveComposer = old('grave_form') === '1')
 <div class="mem-universe" id="memUniverse">
     <canvas id="starCanvas" class="star-canvas" aria-hidden="true"></canvas>
     <div class="mem-transition-screen" data-page-transition aria-hidden="true"></div>
@@ -72,6 +73,11 @@
             </div>
         </div>
     </nav>
+
+    <form id="graveHideForm" method="POST" action="{{ route('memories.bubbles.hide-grave') }}" hidden>
+        @csrf
+        <input type="hidden" name="period" value="{{ $selectedPeriod }}">
+    </form>
 
     @if($bubbleMemories->isEmpty())
         <div class="mem-empty">
@@ -152,10 +158,101 @@
                         <p class="mem-grave-message mem-grave-message--ok">{{ $graveUnlockSuccess }}</p>
                     @endif
 
+                    @if($graveCreateSuccess)
+                        <p class="mem-grave-message mem-grave-message--ok">{{ $graveCreateSuccess }}</p>
+                    @endif
+
                     @if($graveUnlocked)
                         <div class="mem-detail-comment">
                             <span>本人だけの保管領域</span>
                             <p>このシャボンは、表に出さない記憶をしまっておく隠しモードです。ログアウトすると表示も解錠状態も解除されます。</p>
+                        </div>
+
+                        <div class="mem-grave-toolbar">
+                            <div class="mem-grave-toolbar-copy">
+                                <strong>{{ $graveMemories->count() }}件の秘匿記憶</strong>
+                                <span>この中身は墓場までシャボンを選択した時だけ見えます。</span>
+                            </div>
+                            <button class="mem-hud-button" type="button" data-open-grave-compose>記憶玉を追加</button>
+                        </div>
+
+                        <div class="mem-grave-list">
+                            @forelse($graveMemories as $graveMemory)
+                                <article class="mem-grave-memory">
+                                    <div class="mem-grave-memory-meta">
+                                        <span>{{ $graveMemory['period'] }}</span>
+                                        <span>{{ $graveMemory['emotion'] }}</span>
+                                    </div>
+                                    <strong>{{ $graveMemory['theme'] }}</strong>
+                                    <p>{{ $graveMemory['excerpt'] }}</p>
+                                </article>
+                            @empty
+                                <div class="mem-grave-empty">
+                                    <strong>まだ秘匿記憶はありません。</strong>
+                                    <p>必要な時だけ記憶玉を追加して、このシャボンの中にしまえます。</p>
+                                </div>
+                            @endforelse
+                        </div>
+
+                        <div class="mem-grave-compose" data-grave-compose @if(!$shouldOpenGraveComposer) hidden @endif>
+                            <div class="mem-grave-compose-backdrop" data-close-grave-compose></div>
+                            <div class="mem-grave-compose-shell">
+                                <div class="mem-detail-head">
+                                    <div>
+                                        <span class="mem-detail-kicker">SECRET MEMORY</span>
+                                        <h2>墓場までの記憶玉を追加</h2>
+                                    </div>
+                                    <button class="mem-detail-close" type="button" data-close-grave-compose>閉じる</button>
+                                </div>
+
+                                <form class="mem-grave-create-form" method="POST" action="{{ route('memories.bubbles.store-grave') }}">
+                                    @csrf
+                                    <input type="hidden" name="grave_form" value="1">
+                                    <input type="hidden" name="period_context" value="{{ $selectedPeriod }}">
+                                    <input type="hidden" name="period" value="{{ old('period', '不明') }}" data-grave-period-hidden>
+
+                                    <label class="mem-grave-field">
+                                        <span>年代</span>
+                                        <select data-grave-period-select>
+                                            @foreach($periods as $period)
+                                                <option value="{{ $period }}" @selected(old('period', '不明') === $period)>{{ $period }}</option>
+                                            @endforeach
+                                        </select>
+                                    </label>
+
+                                    <label class="mem-grave-field">
+                                        <span>感情</span>
+                                        <select name="emotion" required>
+                                            @foreach($emotionGroups as $groupLabel => $emotions)
+                                                <optgroup label="{{ $groupLabel }}">
+                                                    @foreach($emotions as $emotion)
+                                                        <option value="{{ $emotion }}" @selected(old('emotion') === $emotion)>{{ $emotion }}</option>
+                                                    @endforeach
+                                                </optgroup>
+                                            @endforeach
+                                        </select>
+                                    </label>
+
+                                    <label class="mem-grave-field">
+                                        <span>関連タグ</span>
+                                        <input type="text" name="tags" maxlength="180" value="{{ old('tags') }}" placeholder="家族, 後悔, 誰にも言わない">
+                                    </label>
+
+                                    <label class="mem-grave-field">
+                                        <span>内容</span>
+                                        <textarea name="content" rows="5" placeholder="表には出さない記憶をここにしまいます。" required>{{ old('content') }}</textarea>
+                                    </label>
+
+                                    @if($errors->any())
+                                        <p class="mem-grave-message mem-grave-message--error">入力内容を確認してください。未入力または不正な項目があります。</p>
+                                    @endif
+
+                                    <div class="mem-grave-compose-actions">
+                                        <button class="mem-hud-button mem-hud-button-ghost" type="button" data-close-grave-compose>キャンセル</button>
+                                        <button class="mem-hud-button" type="submit">秘匿記憶として保存</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     @else
                         <p class="mem-grave-copy">このシャボンは本人専用です。4桁のパスコードを入力した時だけ中を確認できます。</p>
@@ -749,6 +846,83 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     gap: 14px;
 }
 
+.mem-grave-toolbar {
+    margin-top: 18px;
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: center;
+}
+
+.mem-grave-toolbar-copy {
+    display: grid;
+    gap: 4px;
+}
+
+.mem-grave-toolbar-copy strong {
+    color: rgba(243, 248, 255, 0.96);
+    font-size: 15px;
+}
+
+.mem-grave-toolbar-copy span {
+    color: rgba(180, 204, 238, 0.72);
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.mem-grave-list {
+    margin-top: 16px;
+    display: grid;
+    gap: 10px;
+    max-height: 280px;
+    overflow: auto;
+    padding-right: 4px;
+}
+
+.mem-grave-memory,
+.mem-grave-empty {
+    padding: 14px 15px;
+    border-radius: 18px;
+    border: 1px solid rgba(150, 197, 255, 0.12);
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
+        rgba(8, 14, 30, 0.54);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.mem-grave-memory-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.mem-grave-memory-meta span {
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: rgba(205, 225, 252, 0.82);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.mem-grave-memory strong,
+.mem-grave-empty strong {
+    display: block;
+    margin-top: 10px;
+    color: rgba(246, 249, 255, 0.96);
+    font-size: 15px;
+}
+
+.mem-grave-memory p,
+.mem-grave-empty p {
+    margin-top: 8px;
+    color: rgba(204, 220, 243, 0.80);
+    font-size: 13px;
+    line-height: 1.75;
+}
+
 .mem-grave-field {
     display: grid;
     gap: 8px;
@@ -760,7 +934,9 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     letter-spacing: 0.08em;
 }
 
-.mem-grave-field input {
+.mem-grave-field input,
+.mem-grave-field select,
+.mem-grave-field textarea {
     width: 100%;
     min-height: 48px;
     padding: 0 16px;
@@ -768,6 +944,17 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     border: 1px solid rgba(156, 193, 255, 0.14);
     background: rgba(255,255,255,0.07);
     color: rgba(247, 250, 255, 0.98);
+}
+
+.mem-grave-field select,
+.mem-grave-field textarea {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+.mem-grave-field textarea {
+    resize: vertical;
+    min-height: 124px;
 }
 
 .mem-grave-message {
@@ -788,6 +975,50 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     background: rgba(118, 202, 255, 0.10);
     color: rgba(219, 241, 255, 0.94);
     border: 1px solid rgba(126, 198, 255, 0.18);
+}
+
+.mem-grave-compose[hidden] {
+    display: none;
+}
+
+.mem-grave-compose {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+}
+
+.mem-grave-compose-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 6, 18, 0.54);
+    backdrop-filter: blur(6px);
+}
+
+.mem-grave-compose-shell {
+    position: absolute;
+    inset: 24px;
+    padding: 22px;
+    border-radius: 24px;
+    border: 1px solid rgba(143, 204, 255, 0.18);
+    background:
+        linear-gradient(180deg, rgba(8, 14, 42, 0.96), rgba(3, 6, 20, 0.96)),
+        radial-gradient(circle at 18% 12%, rgba(255,255,255,0.10), transparent 34%);
+    box-shadow:
+        0 26px 56px rgba(0,0,0,0.40),
+        inset 0 1px 0 rgba(255,255,255,0.10);
+    overflow: auto;
+}
+
+.mem-grave-create-form {
+    margin-top: 18px;
+    display: grid;
+    gap: 14px;
+}
+
+.mem-grave-compose-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
 }
 
 .mem-detail-shell {
@@ -1191,6 +1422,13 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     letter-spacing: 0.05em;
     text-decoration: none;
     box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+    cursor: pointer;
+}
+
+.mg-fo-button--ghost {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02)),
+        rgba(10, 18, 48, 0.64);
 }
 
 @keyframes mgReveal {
@@ -1302,7 +1540,8 @@ const focusMode = @json($focusMode);
 const periodUrls = @json(collect($periods)->mapWithKeys(fn ($period) => [$period => route('memories.bubbles', ['period' => $period])])->all());
 const allCount = @json($allCount);
 const graveMode = @json($graveMode);
-const shouldOpenGravePanel = @json((bool) $graveUnlockError || (bool) $graveUnlockSuccess);
+const shouldOpenGravePanel = @json((bool) $graveUnlockError || (bool) $graveUnlockSuccess || (bool) $graveCreateSuccess || $shouldOpenGraveComposer);
+const shouldOpenGraveComposer = @json($shouldOpenGraveComposer);
 const createUrl = @json(route('memories.create'));
 const listUrl = @json(route('memories.index'));
 const overviewUrl = @json(route('memories.bubbles'));
@@ -1368,6 +1607,11 @@ const detailBack = stage.querySelector("[data-detail-back]");
 const detailLink = stage.querySelector("[data-detail-link]");
 const gravePanel = stage.querySelector("[data-grave-panel]");
 const graveCloseButtons = stage.querySelectorAll("[data-grave-close]");
+const graveCompose = stage.querySelector("[data-grave-compose]");
+const graveComposeOpeners = stage.querySelectorAll("[data-open-grave-compose]");
+const graveComposeClosers = stage.querySelectorAll("[data-close-grave-compose]");
+const gravePeriodSelect = stage.querySelector("[data-grave-period-select]");
+const gravePeriodHidden = stage.querySelector("[data-grave-period-hidden]");
 
 const detailFields = {
     period: stage.querySelector("[data-detail-period]"),
@@ -1689,13 +1933,16 @@ function drawGraveModeBubble() {
         style: "--delay:0.12s"
     });
     const anchor = el("g", { class: "mg-overview-anchor" });
-    const body = el("g", { class: "mg-overview-body" });
+    const body = el("g", {
+        class: "mg-overview-body",
+        style: `--hover-origin-x:${graveMode.x}px; --hover-origin-y:${graveMode.y}px;`
+    });
 
     body.append(
-        el("circle", { cx: graveMode.x, cy: graveMode.y, r: graveMode.r + 24, fill: `url(#${gradients.auraId})`, filter: "url(#fAura)" }),
-        el("circle", { cx: graveMode.x, cy: graveMode.y, r: graveMode.r + 6, fill: "rgba(233,241,255,0.08)", filter: "url(#fAura)" }),
-        el("circle", { cx: graveMode.x, cy: graveMode.y, r: graveMode.r, class: "mg-era-shell-fill", fill: `url(#${gradients.bodyId})`, opacity: "0.92" }),
-        el("circle", { cx: graveMode.x, cy: graveMode.y, r: graveMode.r - 8, class: "mg-era-shell-rim", filter: "url(#fSpec)" }),
+        el("circle", { cx: graveMode.x, cy: graveMode.y, r: graveMode.r + 18, fill: `url(#${gradients.auraId})`, filter: "url(#fAura)", opacity: "0.46" }),
+        el("circle", { cx: graveMode.x, cy: graveMode.y, r: graveMode.r + 4, fill: "rgba(233,241,255,0.04)", filter: "url(#fAura)" }),
+        el("circle", { cx: graveMode.x, cy: graveMode.y, r: graveMode.r, class: "mg-era-shell-fill", fill: `url(#${gradients.bodyId})`, opacity: "0.24" }),
+        el("circle", { cx: graveMode.x, cy: graveMode.y, r: graveMode.r - 8, class: "mg-era-shell-rim", filter: "url(#fSpec)", opacity: "0.34" }),
         el("ellipse", {
             cx: (graveMode.x - graveMode.r * 0.22).toFixed(2),
             cy: (graveMode.y - graveMode.r * 0.28).toFixed(2),
@@ -1706,25 +1953,31 @@ function drawGraveModeBubble() {
         })
     );
 
-    const title = el("text", {
-        x: graveMode.x,
-        y: graveMode.y - 8,
-        class: "mg-overview-title",
-        "font-size": "28"
-    });
-    title.textContent = graveMode.label;
-    body.append(title);
-
-    const copy = el("text", {
-        x: graveMode.x,
-        y: graveMode.y + graveMode.r * 0.44,
-        class: "mg-overview-copy"
-    });
-    copy.textContent = graveMode.locked ? "鍵付き / 本人だけが見られる" : "解錠済み / 墓場までの記憶";
-    body.append(copy);
-
     anchor.append(body);
     wrap.append(anchor);
+
+    const closeFo = el("foreignObject", {
+        x: (graveMode.x - 48).toFixed(2),
+        y: (graveMode.y + graveMode.r + 18).toFixed(2),
+        width: "96",
+        height: "40"
+    });
+    const closeWrap = document.createElement("div");
+    closeWrap.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+    closeWrap.className = "mg-fo-wrap";
+    const closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.className = "mg-fo-button mg-fo-button--ghost";
+    closeButton.textContent = "閉じる";
+    closeButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        document.getElementById("graveHideForm")?.submit();
+    });
+    closeWrap.appendChild(closeButton);
+    closeFo.appendChild(closeWrap);
+    wrap.append(closeFo);
+
     wrap.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -2344,10 +2597,44 @@ function closeGravePanel() {
     }
 
     gravePanel.hidden = true;
+    closeGraveCompose();
+}
+
+function openGraveCompose() {
+    if (!graveCompose) {
+        return;
+    }
+
+    openGravePanel();
+    graveCompose.hidden = false;
+}
+
+function closeGraveCompose() {
+    if (!graveCompose) {
+        return;
+    }
+
+    graveCompose.hidden = true;
 }
 
 graveCloseButtons.forEach((button) => {
     button.addEventListener("click", closeGravePanel);
+});
+
+graveComposeOpeners.forEach((button) => {
+    button.addEventListener("click", openGraveCompose);
+});
+
+graveComposeClosers.forEach((button) => {
+    button.addEventListener("click", closeGraveCompose);
+});
+
+gravePeriodSelect?.addEventListener("change", () => {
+    if (!gravePeriodHidden) {
+        return;
+    }
+
+    gravePeriodHidden.value = gravePeriodSelect.value;
 });
 
 document.addEventListener("keydown", (event) => {
@@ -2456,6 +2743,10 @@ if (focusMode) {
 
 if (shouldOpenGravePanel) {
     openGravePanel();
+}
+
+if (shouldOpenGraveComposer) {
+    openGraveCompose();
 }
 
 requestAnimationFrame(tick);
