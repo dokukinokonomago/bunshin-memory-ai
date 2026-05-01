@@ -282,7 +282,12 @@ class MemoryController extends Controller
         foreach ($parts as $part) {
             $word = trim($part);
 
-            if ($word !== '') {
+            if (
+                $word !== ''
+                && !preg_match('/^\d+$/u', $word)
+                && !preg_match('/^(demo|test)$/iu', $word)
+                && mb_strlen($word) >= 2
+            ) {
                 return Str::limit($word, 6, '');
             }
         }

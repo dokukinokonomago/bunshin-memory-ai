@@ -463,21 +463,21 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 
 .mem-hud {
     position: absolute;
-    left: 28px;
-    top: 154px;
+    right: 22px;
+    top: 170px;
     z-index: 14;
-    width: min(312px, calc(100vw - 44px));
+    width: min(284px, calc(100vw - 44px));
     padding: 16px 18px 15px;
     border-radius: 26px;
     border: 1px solid rgba(173, 214, 255, 0.12);
     background:
-        linear-gradient(180deg, rgba(14, 22, 48, 0.42), rgba(5, 10, 26, 0.28)),
-        radial-gradient(circle at 20% 0%, rgba(255,255,255,0.16), transparent 34%),
-        radial-gradient(circle at 100% 100%, rgba(113, 173, 255, 0.12), transparent 40%);
+        linear-gradient(180deg, rgba(16, 24, 52, 0.28), rgba(5, 10, 26, 0.18)),
+        radial-gradient(circle at 20% 0%, rgba(255,255,255,0.14), transparent 34%),
+        radial-gradient(circle at 100% 100%, rgba(113, 173, 255, 0.10), transparent 40%);
     box-shadow:
-        0 18px 34px rgba(0,0,0,0.18),
-        inset 0 1px 0 rgba(255,255,255,0.10);
-    backdrop-filter: blur(28px) saturate(1.08);
+        0 16px 30px rgba(0,0,0,0.14),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+    backdrop-filter: blur(30px) saturate(1.05);
 }
 
 .mem-hud-copy {
@@ -826,17 +826,12 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 }
 
 .mg-era-shell-fill {
-    fill: rgba(255,255,255,0.04);
-    stroke: rgba(236, 247, 255, 0.26);
-    stroke-width: 1.6;
+    fill: rgba(255,255,255,0.02);
 }
 
 .mg-era-shell-rim {
-    fill: none;
-    stroke: rgba(241, 248, 255, 0.56);
-    stroke-width: 1.4;
-    stroke-dasharray: 7 12;
-    opacity: 0.72;
+    fill: rgba(232, 243, 255, 0.06);
+    opacity: 0.56;
 }
 
 .mg-era-title,
@@ -905,15 +900,13 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 }
 
 .mg-cluster-halo {
-    fill: rgba(120, 176, 255, 0.06);
-    stroke: rgba(174, 212, 255, 0.18);
-    stroke-width: 1;
-    stroke-dasharray: 6 10;
+    fill: rgba(120, 176, 255, 0.05);
+    opacity: 0.8;
 }
 
 .mg-memory-rim {
-    fill: none;
-    opacity: 0.84;
+    fill: rgba(255,255,255,0.06);
+    opacity: 0.56;
 }
 
 .mg-memory-core circle[data-hit="true"] {
@@ -984,10 +977,9 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     }
 
     .mem-hud {
-        left: 16px;
         right: 16px;
         width: auto;
-        top: 170px;
+        top: 180px;
     }
 
     .mem-detail {
@@ -1046,13 +1038,13 @@ const ERA_SCALE = 2.35;
 const MEMORY_SCALE = 4.8;
 
 const ERA_ANCHORS = {
-    "幼少期": { x: 248, y: 298, r: 148 },
-    "小学生": { x: 338, y: 708, r: 152 },
-    "中学生": { x: 642, y: 668, r: 154 },
-    "高校生": { x: 930, y: 592, r: 158 },
-    "大学生": { x: 1076, y: 286, r: 148 },
-    "成人期": { x: 1238, y: 476, r: 146 },
-    "不明": { x: 724, y: 214, r: 136 }
+    "幼少期": { x: 160, y: 334, r: 138 },
+    "小学生": { x: 344, y: 756, r: 146 },
+    "中学生": { x: 668, y: 748, r: 148 },
+    "高校生": { x: 950, y: 614, r: 152 },
+    "大学生": { x: 1084, y: 222, r: 140 },
+    "成人期": { x: 1234, y: 506, r: 140 },
+    "不明": { x: 1350, y: 170, r: 124 }
 };
 
 const ERA_PALETTES = {
@@ -1180,10 +1172,10 @@ function makeGradientSet(prefix, colors, shell = false) {
 
     const body = el("radialGradient", { id: bodyId, cx: "32%", cy: "26%", r: "76%" });
     body.append(
-        el("stop", { offset: "0%", "stop-color": rgba("#ffffff", shell ? 0.24 : 0.44) }),
-        el("stop", { offset: "22%", "stop-color": rgba(c0, shell ? 0.12 : 0.76) }),
-        el("stop", { offset: "60%", "stop-color": rgba(c0, shell ? 0.08 : 0.88) }),
-        el("stop", { offset: "100%", "stop-color": rgba(c1, shell ? 0.04 : 0.94) })
+        el("stop", { offset: "0%", "stop-color": rgba("#ffffff", shell ? 0.26 : 0.44) }),
+        el("stop", { offset: "18%", "stop-color": rgba(c0, shell ? 0.12 : 0.76) }),
+        el("stop", { offset: "54%", "stop-color": rgba("#ffffff", shell ? 0.045 : 0.32) }),
+        el("stop", { offset: "100%", "stop-color": rgba(c1, shell ? 0.05 : 0.94) })
     );
 
     const rim = el("linearGradient", { id: rimId, x1: "0%", y1: "0%", x2: "100%", y2: "100%" });
@@ -1304,9 +1296,9 @@ function drawOverviewNodes() {
     const nodes = [
         {
             id: "count",
-            x: 270,
-            y: 285,
-            r: 112,
+            x: 306,
+            y: 214,
+            r: 96,
             title: String(allCount),
             copy: "全記憶数 / 宇宙をただよう記録",
             actions: []
@@ -1314,8 +1306,8 @@ function drawOverviewNodes() {
         {
             id: "cta",
             x: 700,
-            y: 360,
-            r: 102,
+            y: 418,
+            r: 108,
             title: "今日は\n何をする？",
             copy: "記憶を追加するか、一覧を見に行けます",
             actions: [
@@ -1336,8 +1328,17 @@ function drawOverviewNodes() {
 
         body.append(
             el("circle", { cx: node.x, cy: node.y, r: node.r + 26, fill: `url(#${gradients.auraId})`, filter: "url(#fAura)" }),
-            el("circle", { cx: node.x, cy: node.y, r: node.r, class: "mg-era-shell-fill", fill: `url(#${gradients.bodyId})` }),
-            el("circle", { cx: node.x, cy: node.y, r: node.r - 6, class: "mg-era-shell-rim", stroke: `url(#${gradients.rimId})` }),
+            el("circle", { cx: node.x, cy: node.y, r: node.r + 8, fill: "rgba(228,241,255,0.08)", filter: "url(#fAura)" }),
+            el("circle", { cx: node.x, cy: node.y, r: node.r, class: "mg-era-shell-fill", fill: `url(#${gradients.bodyId})`, opacity: "0.94" }),
+            el("circle", { cx: node.x, cy: node.y, r: node.r - 8, class: "mg-era-shell-rim", filter: "url(#fSpec)" }),
+            el("ellipse", {
+                cx: node.x,
+                cy: (node.y + node.r * 0.38).toFixed(2),
+                rx: (node.r * 0.54).toFixed(2),
+                ry: (node.r * 0.14).toFixed(2),
+                fill: "rgba(255, 206, 176, 0.09)",
+                filter: "url(#fSpec)"
+            }),
             el("ellipse", {
                 cx: (node.x - node.r * 0.22).toFixed(2),
                 cy: (node.y - node.r * 0.28).toFixed(2),
@@ -1423,10 +1424,26 @@ function drawEraNodes() {
 
         body.append(
             el("circle", { cx: era.x, cy: era.y, r: era.r + 34, fill: `url(#${gradients.auraId})`, filter: "url(#fAura)", opacity: "0.94" }),
-            el("circle", { cx: era.x, cy: era.y, r: era.r + 14, fill: "rgba(218,235,255,0.09)", filter: "url(#fAura)", opacity: "0.78" }),
-            el("circle", { cx: era.x, cy: era.y, r: era.r, class: "mg-era-shell-fill", fill: `url(#${gradients.bodyId})` }),
-            el("circle", { cx: era.x, cy: era.y, r: era.r - 7, class: "mg-era-shell-rim", stroke: `url(#${gradients.rimId})` }),
-            el("circle", { cx: era.x, cy: era.y, r: era.r - 22, fill: "rgba(220,236,255,0.035)", stroke: "rgba(255,255,255,0.08)", "stroke-width": "1.1" })
+            el("circle", { cx: era.x, cy: era.y, r: era.r + 14, fill: "rgba(218,235,255,0.08)", filter: "url(#fAura)", opacity: "0.76" }),
+            el("circle", { cx: era.x, cy: era.y, r: era.r, class: "mg-era-shell-fill", fill: `url(#${gradients.bodyId})`, opacity: "0.92" }),
+            el("circle", { cx: era.x, cy: era.y, r: era.r - 10, class: "mg-era-shell-rim", filter: "url(#fSpec)" }),
+            el("ellipse", {
+                cx: era.x,
+                cy: (era.y + era.r * 0.42).toFixed(2),
+                rx: (era.r * 0.56).toFixed(2),
+                ry: (era.r * 0.14).toFixed(2),
+                fill: "rgba(255, 203, 160, 0.08)",
+                filter: "url(#fSpec)"
+            }),
+            el("ellipse", {
+                cx: (era.x + era.r * 0.28).toFixed(2),
+                cy: (era.y - era.r * 0.24).toFixed(2),
+                rx: (era.r * 0.18).toFixed(2),
+                ry: (era.r * 0.09).toFixed(2),
+                fill: "rgba(110, 208, 255, 0.10)",
+                filter: "url(#fSpec)",
+                transform: `rotate(18 ${era.x + era.r * 0.28} ${era.y - era.r * 0.24})`
+            })
         );
 
         era.preview.forEach((memory, previewIndex) => {
@@ -1438,7 +1455,7 @@ function drawEraNodes() {
             body.append(
                 el("circle", { cx: previewX, cy: previewY, r: previewR + 10, fill: `url(#${previewGradients.auraId})`, filter: "url(#fAura)", opacity: "0.55" }),
                 el("circle", { cx: previewX, cy: previewY, r: previewR, fill: `url(#${previewGradients.bodyId})`, opacity: "0.92" }),
-                el("circle", { cx: previewX, cy: previewY, r: previewR - 1.5, class: "mg-memory-rim", stroke: `url(#${previewGradients.rimId})` }),
+                el("circle", { cx: previewX, cy: previewY, r: previewR - 2.2, class: "mg-memory-rim", filter: "url(#fSpec)" }),
                 el("circle", { cx: previewX - previewR * 0.28, cy: previewY - previewR * 0.30, r: Math.max(3, previewR * 0.16), fill: "rgba(255,255,255,0.82)", filter: "url(#fSpec)" })
             );
         });
@@ -1539,7 +1556,7 @@ function drawClusterNodes() {
                 body.append(
                     el("circle", { cx: memory.baseX, cy: memory.baseY, r: memory.radius + 13, fill: `url(#${gradients.auraId})`, filter: "url(#fAura)", opacity: "0.78" }),
                     el("circle", { cx: memory.baseX, cy: memory.baseY, r: memory.radius, fill: `url(#${gradients.bodyId})`, filter: "url(#fShadow)", opacity: "0.95" }),
-                    el("circle", { cx: memory.baseX, cy: memory.baseY, r: memory.radius - 1.5, class: "mg-memory-rim", stroke: `url(#${gradients.rimId})`, "stroke-width": "1.4" }),
+                    el("circle", { cx: memory.baseX, cy: memory.baseY, r: memory.radius - 2.2, class: "mg-memory-rim", filter: "url(#fSpec)" }),
                     el("ellipse", {
                         cx: (memory.baseX - memory.radius * 0.24).toFixed(2),
                         cy: (memory.baseY - memory.radius * 0.24).toFixed(2),
