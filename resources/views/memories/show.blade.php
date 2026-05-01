@@ -226,7 +226,7 @@
                     </div>
                     <div class="memory-core-content-footer">
                         <div class="memory-dashboard-actions memory-dashboard-actions-inline">
-                            <a class="btn btn-secondary" href="{{ route('memories.bubbles') }}">記憶玉へ戻る</a>
+                            <a class="btn btn-secondary" href="{{ route('memories.bubbles', ['period' => $memory->period]) }}">年代の記憶へ戻る</a>
                             <a class="btn btn-secondary" href="{{ route('memories.index') }}">一覧を見る</a>
                             <a class="btn btn-secondary" href="{{ route('memories.edit', $memory) }}">修正する</a>
                             <form method="post" action="{{ route('memories.destroy', $memory) }}" onsubmit="return confirm('この記憶を削除しますか？');">

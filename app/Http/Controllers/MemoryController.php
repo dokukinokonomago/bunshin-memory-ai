@@ -157,6 +157,7 @@ class MemoryController extends Controller
             'layerCount' => 1,
             'hasPreviousLayer' => false,
             'hasNextLayer' => false,
+            'focusMode' => $selectedPeriod !== 'すべて',
             'graveMode' => $showGraveBubble ? $this->graveModePayload($graveUnlocked) : null,
             'showGraveBubble' => $showGraveBubble,
             'graveUnlocked' => $graveUnlocked,

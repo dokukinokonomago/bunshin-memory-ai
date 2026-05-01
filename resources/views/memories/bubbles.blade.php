@@ -1247,6 +1247,8 @@ const memories = @json($bubbleMemories);
 const periods = @json($periods);
 const periodCounts = @json($periodBubbleCounts);
 const selectedPeriod = @json($selectedPeriod);
+const focusMode = @json($focusMode);
+const periodUrls = @json(collect($periods)->mapWithKeys(fn ($period) => [$period => route('memories.bubbles', ['period' => $period])])->all());
 const allCount = @json($allCount);
 const graveMode = @json($graveMode);
 const shouldOpenGravePanel = @json((bool) $graveUnlockError || (bool) $graveUnlockSuccess);
@@ -1259,6 +1261,7 @@ const EASE = 0.12;
 const OVERVIEW_SCALE = 1;
 const ERA_SCALE = 2.35;
 const MEMORY_SCALE = 4.8;
+const FOCUS_ERA_ANCHOR = { x: 700, y: 470, r: 244 };
 
 const ERA_ANCHORS = {
     "幼少期": { x: 220, y: 320, r: 138 },
@@ -1327,18 +1330,18 @@ const detailFields = {
 };
 
 const state = {
-    zoomLevel: selectedPeriod === "すべて" ? 0 : 1,
+    zoomLevel: focusMode ? 0 : (selectedPeriod === "すべて" ? 0 : 1),
     selectedEra: selectedPeriod === "すべて" ? null : selectedPeriod,
     selectedMemory: null,
     camera: {
-        x: 700,
-        y: 450,
-        scale: selectedPeriod === "すべて" ? OVERVIEW_SCALE : ERA_SCALE
+        x: focusMode ? FOCUS_ERA_ANCHOR.x : 700,
+        y: focusMode ? FOCUS_ERA_ANCHOR.y : 450,
+        scale: focusMode ? OVERVIEW_SCALE : (selectedPeriod === "すべて" ? OVERVIEW_SCALE : ERA_SCALE)
     },
     targetCamera: {
-        x: selectedPeriod === "すべて" ? 700 : (ERA_ANCHORS[selectedPeriod]?.x ?? 700),
-        y: selectedPeriod === "すべて" ? 450 : (ERA_ANCHORS[selectedPeriod]?.y ?? 450),
-        scale: selectedPeriod === "すべて" ? OVERVIEW_SCALE : ERA_SCALE
+        x: focusMode ? FOCUS_ERA_ANCHOR.x : (selectedPeriod === "すべて" ? 700 : (ERA_ANCHORS[selectedPeriod]?.x ?? 700)),
+        y: focusMode ? FOCUS_ERA_ANCHOR.y : (selectedPeriod === "すべて" ? 450 : (ERA_ANCHORS[selectedPeriod]?.y ?? 450)),
+        scale: focusMode ? OVERVIEW_SCALE : (selectedPeriod === "すべて" ? OVERVIEW_SCALE : ERA_SCALE)
     },
     pointer: {
         x: 700,
@@ -1370,6 +1373,18 @@ const runtime = {
     overviewRefs: [],
     graveRef: null
 };
+
+function stagePeriods() {
+    return focusMode && selectedPeriod !== "すべて" ? [selectedPeriod] : periods;
+}
+
+function getEraAnchor(period) {
+    if (focusMode && period === selectedPeriod) {
+        return FOCUS_ERA_ANCHOR;
+    }
+
+    return ERA_ANCHORS[period] ?? { x: 700, y: 450, r: 110 };
+}
 
 function el(tag, attrs = {}) {
     const node = document.createElementNS(NS, tag);
@@ -1429,8 +1444,9 @@ function makeGradientSet(prefix, colors, shell = false) {
 
 function buildWorld() {
     const grouped = new Map();
+    const visiblePeriods = stagePeriods();
 
-    periods.forEach((period) => grouped.set(period, []));
+    visiblePeriods.forEach((period) => grouped.set(period, []));
     memories.forEach((memory) => {
         if (!grouped.has(memory.period)) {
             grouped.set(memory.period, []);
@@ -1438,8 +1454,8 @@ function buildWorld() {
         grouped.get(memory.period).push(memory);
     });
 
-    runtime.eras = periods.map((period, eraIndex) => {
-        const anchor = ERA_ANCHORS[period] ?? { x: 700, y: 450, r: 110 };
+    runtime.eras = visiblePeriods.map((period, eraIndex) => {
+        const anchor = getEraAnchor(period);
         const list = grouped.get(period) ?? [];
         const count = periodCounts[period] ?? list.length;
         const preview = list.slice(0, 4);
@@ -1524,6 +1540,10 @@ function drawParallaxBack() {
 }
 
 function drawOverviewNodes() {
+    if (focusMode) {
+        return;
+    }
+
     const nodes = [
         {
             id: "cta",
@@ -1599,7 +1619,7 @@ function drawOverviewNodes() {
 }
 
 function drawGraveModeBubble() {
-    if (!graveMode) {
+    if (!graveMode || focusMode) {
         return;
     }
 
@@ -1886,10 +1906,13 @@ function setUniversePalette(period) {
 function updateHud() {
     if (state.zoomLevel === 0) {
         hud.classList.remove("is-dormant");
-        modeKicker.textContent = "LEVEL 0";
-        modeTitle.textContent = "人生全体を俯瞰しています";
-        modeBody.textContent = "気になる年代のシャボン玉をクリックして、その中へ潜ってください。";
-        backButton.hidden = true;
+        modeKicker.textContent = focusMode ? "ERA VIEW" : "LEVEL 0";
+        modeTitle.textContent = focusMode ? `${selectedPeriod}の記憶だけを表示しています` : "人生全体を俯瞰しています";
+        modeBody.textContent = focusMode
+            ? "記憶玉を選ぶと専用の詳細画面へ移動します。"
+            : "気になる年代のシャボン玉をクリックして、その年代専用画面へ移動してください。";
+        backButton.textContent = focusMode ? "全体俯瞰へ戻る" : "ひとつ戻る";
+        backButton.hidden = !focusMode;
         overviewButton.hidden = true;
         detail.hidden = true;
         return;
@@ -1983,6 +2006,11 @@ function updateEraVisibility() {
 }
 
 function zoomToOverview() {
+    if (focusMode) {
+        window.location.href = overviewUrl;
+        return;
+    }
+
     state.zoomLevel = 0;
     state.selectedEra = null;
     state.selectedMemory = null;
@@ -1995,20 +2023,15 @@ function zoomToOverview() {
 }
 
 function zoomToEra(period) {
+    if (periodUrls[period]) {
+        window.location.href = periodUrls[period];
+        return;
+    }
+
     const era = runtime.eras.find((entry) => entry.period === period);
     if (!era) {
         return;
     }
-
-    state.zoomLevel = 1;
-    state.selectedEra = period;
-    state.selectedMemory = null;
-    state.memoryTransition.active = false;
-    state.memoryTransition.targetId = null;
-    state.targetCamera = { x: era.x, y: era.y, scale: ERA_SCALE };
-    setUniversePalette(period);
-    updateEraVisibility();
-    updateHud();
 }
 
 function zoomToMemory(memoryId) {
@@ -2017,27 +2040,10 @@ function zoomToMemory(memoryId) {
         return;
     }
 
-    state.zoomLevel = 2;
-    state.selectedEra = entry.era;
-    state.selectedMemory = memoryId;
-    state.memoryTransition.active = true;
-    state.memoryTransition.targetId = memoryId;
-    const time = performance.now() * 0.001;
-    const worldX = entry.memory.baseX + Math.cos(time * entry.memory.driftSpeed + entry.memory.driftPhase) * entry.memory.driftX;
-    const worldY = entry.memory.baseY + Math.sin(time * entry.memory.driftSpeed * 1.06 + entry.memory.driftPhase) * entry.memory.driftY;
-    state.targetCamera = { x: worldX, y: worldY, scale: MEMORY_SCALE };
-    setUniversePalette(entry.era);
-    updateEraVisibility();
-    updateHud();
-    updateDetail(null);
+    window.location.href = entry.memory.url;
 }
 
 function zoomBack() {
-    if (state.zoomLevel === 2 && state.selectedEra) {
-        zoomToEra(state.selectedEra);
-        return;
-    }
-
     zoomToOverview();
 }
 
@@ -2132,6 +2138,10 @@ function tick(timeMs) {
 }
 
 svg.addEventListener("wheel", (event) => {
+    if (focusMode) {
+        return;
+    }
+
     event.preventDefault();
     const point = svgPoint(event.clientX, event.clientY);
     const factor = event.deltaY < 0 ? 1.12 : 0.9;
@@ -2139,6 +2149,10 @@ svg.addEventListener("wheel", (event) => {
 }, { passive: false });
 
 svg.addEventListener("pointerdown", (event) => {
+    if (focusMode) {
+        return;
+    }
+
     if (event.target.closest(".mg-era-anchor") || event.target.closest(".mg-memory-anchor") || event.target.closest(".mg-fo-button")) {
         return;
     }
@@ -2158,6 +2172,10 @@ svg.addEventListener("pointermove", (event) => {
     state.pointer.x = point.x;
     state.pointer.y = point.y;
     state.pointer.active = true;
+
+    if (focusMode) {
+        return;
+    }
 
     if (!state.drag.active || state.drag.pointerId !== event.pointerId) {
         return;
@@ -2182,6 +2200,10 @@ svg.addEventListener("pointerleave", () => {
 });
 
 svg.addEventListener("touchstart", (event) => {
+    if (focusMode) {
+        return;
+    }
+
     if (event.touches.length === 2) {
         const a = svgPoint(event.touches[0].clientX, event.touches[0].clientY);
         const b = svgPoint(event.touches[1].clientX, event.touches[1].clientY);
@@ -2202,6 +2224,10 @@ svg.addEventListener("touchstart", (event) => {
 }, { passive: true });
 
 svg.addEventListener("touchmove", (event) => {
+    if (focusMode) {
+        return;
+    }
+
     if (state.touch.mode === "pinch" && event.touches.length === 2) {
         const a = svgPoint(event.touches[0].clientX, event.touches[0].clientY);
         const b = svgPoint(event.touches[1].clientX, event.touches[1].clientY);
@@ -2356,7 +2382,11 @@ drawGraveModeBubble();
 drawEraNodes();
 drawClusterNodes();
 
-if (selectedPeriod !== "すべて") {
+if (focusMode) {
+    setUniversePalette(selectedPeriod);
+    updateEraVisibility();
+    updateHud();
+} else if (selectedPeriod !== "すべて") {
     setUniversePalette(selectedPeriod);
     updateEraVisibility();
     updateHud();
