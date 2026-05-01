@@ -19,31 +19,42 @@
                 <span class="mem-count-label">MEMORIES</span>
             </div>
 
-            <details class="mem-details" id="detAction">
-                <summary class="mem-glass-pill mem-glass-pill--blue">
-                    <span>今日は何をする？</span>
-                    <svg class="mem-chevron" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
-                </summary>
-                <div class="mem-dropdown">
-                    <a class="mem-drop-item" href="{{ route('memories.create') }}">
-                        <span class="mem-drop-icon">＋</span>記憶を追加
-                    </a>
-                    <a class="mem-drop-item" href="{{ route('memories.index') }}">
-                        <span class="mem-drop-icon">☰</span>記憶一覧
-                    </a>
-                    <a class="mem-drop-item" href="{{ route('memories.bubbles') }}">
-                        <span class="mem-drop-icon">◎</span>全体俯瞰へ
-                    </a>
-                    <div class="mem-dropdown-divider"></div>
-                    <div class="mem-dropdown-label">年代を選ぶ</div>
-                    <div class="mem-dropdown mem-dropdown--filter mem-dropdown--inline">
-                        <a class="mem-filter-chip {{ $selectedPeriod === 'すべて' ? 'is-on' : '' }}" href="{{ route('memories.bubbles') }}">すべて</a>
-                        @foreach($periods as $period)
-                            <a class="mem-filter-chip {{ $selectedPeriod === $period ? 'is-on' : '' }}" href="{{ route('memories.bubbles', ['period' => $period]) }}">{{ $period }}</a>
-                        @endforeach
+            <div class="mem-action-stack">
+                <div class="mem-session-label">{{ auth()->user()?->email }}</div>
+
+                <details class="mem-details" id="detAction">
+                    <summary class="mem-glass-pill mem-glass-pill--blue">
+                        <span>今日は何をする？</span>
+                        <svg class="mem-chevron" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+                    </summary>
+                    <div class="mem-dropdown">
+                        <a class="mem-drop-item" href="{{ route('memories.create') }}">
+                            <span class="mem-drop-icon">＋</span>記憶を追加
+                        </a>
+                        <a class="mem-drop-item" href="{{ route('memories.index') }}">
+                            <span class="mem-drop-icon">☰</span>記憶一覧
+                        </a>
+                        <a class="mem-drop-item" href="{{ route('memories.bubbles') }}">
+                            <span class="mem-drop-icon">◎</span>全体俯瞰へ
+                        </a>
+                        <div class="mem-dropdown-divider"></div>
+                        <div class="mem-dropdown-label">年代を選ぶ</div>
+                        <div class="mem-dropdown mem-dropdown--filter mem-dropdown--inline">
+                            <a class="mem-filter-chip {{ $selectedPeriod === 'すべて' ? 'is-on' : '' }}" href="{{ route('memories.bubbles') }}">すべて</a>
+                            @foreach($periods as $period)
+                                <a class="mem-filter-chip {{ $selectedPeriod === $period ? 'is-on' : '' }}" href="{{ route('memories.bubbles', ['period' => $period]) }}">{{ $period }}</a>
+                            @endforeach
+                        </div>
+                        <div class="mem-dropdown-divider"></div>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button class="mem-drop-item mem-drop-submit" type="submit">
+                                <span class="mem-drop-icon">↗</span>ログアウト
+                            </button>
+                        </form>
                     </div>
-                </div>
-            </details>
+                </details>
+            </div>
         </div>
     </nav>
 
@@ -195,12 +206,6 @@
 }
 
 body.page-bubbles-full .app-auth-dock {
-    top: 104px;
-    right: 22px;
-    z-index: 24;
-}
-
-body.page-bubbles-full .app-auth-dock .app-auth-link {
     display: none;
 }
 
@@ -243,10 +248,27 @@ body.page-bubbles-full .app-auth-dock .app-auth-link {
     right: 28px;
     top: 22px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
     flex-wrap: wrap;
     justify-content: flex-end;
+}
+
+.mem-action-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.mem-session-label {
+    padding: 0 6px;
+    color: rgba(211, 228, 255, 0.76);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-align: right;
+    text-shadow: 0 0 16px rgba(44, 126, 255, 0.22);
 }
 
 .mem-count-orb {
@@ -401,6 +423,7 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 .mem-drop-item {
     display: flex;
     align-items: center;
+    width: 100%;
     gap: 10px;
     padding: 11px 14px;
     border-radius: 12px;
@@ -414,6 +437,13 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 .mem-drop-item:hover {
     background: rgba(93, 158, 255, 0.14);
     transform: translateX(3px);
+}
+
+.mem-drop-submit {
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
 }
 
 .mem-drop-icon {
@@ -1001,6 +1031,15 @@ details[open] .mem-chevron { transform: rotate(180deg); }
         left: 16px;
         right: 16px;
         justify-content: center;
+        align-items: center;
+    }
+
+    .mem-action-stack {
+        align-items: center;
+    }
+
+    .mem-session-label {
+        text-align: center;
     }
 
     .mem-hud {
