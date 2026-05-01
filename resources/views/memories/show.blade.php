@@ -186,10 +186,6 @@
             </aside>
 
             <section class="memory-core-panel">
-                <div class="memory-core-panel-head">
-                    <h1>YOUの記憶</h1>
-                </div>
-
                 <div class="memory-core-stage">
                     <span class="memory-orbit orbit-a"></span>
                     <span class="memory-orbit orbit-b"></span>
@@ -714,30 +710,14 @@
         .memory-core-panel {
             padding: 4px 4px 0;
             display: grid;
-            grid-template-rows: auto minmax(0, 1fr) auto;
+            grid-template-rows: minmax(0, 1fr) auto;
             gap: 8px;
             min-height: 0;
         }
 
-        .memory-core-panel-head,
         .memory-core-content-card {
             position: relative;
             z-index: 1;
-        }
-
-        .memory-core-panel-head {
-            display: grid;
-            justify-items: center;
-            padding-top: 4px;
-        }
-
-        .memory-core-panel-head h1 {
-            margin: 0;
-            font-size: clamp(26px, 3.4vw, 40px);
-            line-height: 1;
-            letter-spacing: 0.04em;
-            color: rgba(248, 251, 255, 0.98);
-            text-shadow: 0 10px 26px rgba(45, 118, 255, 0.16);
         }
 
         .memory-core-stage {
