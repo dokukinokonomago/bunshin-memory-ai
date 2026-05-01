@@ -1134,9 +1134,9 @@
         }
 
         @keyframes memoryCorePulse {
-            0% { transform: scale(0.985); }
-            50% { transform: scale(1.015); }
-            100% { transform: scale(0.985); }
+            0% { transform: scale(0.968); }
+            50% { transform: scale(1.038); }
+            100% { transform: scale(0.968); }
         }
 
         @keyframes memoryStarBlink {
