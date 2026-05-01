@@ -12,6 +12,8 @@ Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
 Route::middleware('auth')->group(function (): void {
     Route::get('/memories', [MemoryController::class, 'index'])->name('memories.index');
     Route::get('/memories/bubbles', [MemoryController::class, 'bubbles'])->name('memories.bubbles');
+    Route::post('/memories/bubbles/reveal-all', [MemoryController::class, 'revealAllBubbles'])->name('memories.bubbles.reveal-all');
+    Route::post('/memories/bubbles/unlock-grave', [MemoryController::class, 'unlockGraveMode'])->name('memories.bubbles.unlock-grave');
     Route::get('/memories/create-preview', [MemoryController::class, 'createPreview'])->name('memories.create.preview');
     Route::get('/memories/create', [MemoryController::class, 'create'])->name('memories.create');
     Route::post('/memories', [MemoryController::class, 'store'])->name('memories.store');

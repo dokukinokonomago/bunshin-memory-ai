@@ -46,6 +46,20 @@
                             @endforeach
                         </div>
                         <div class="mem-dropdown-divider"></div>
+                        @if(!$showGraveBubble)
+                            <form method="POST" action="{{ route('memories.bubbles.reveal-all') }}">
+                                @csrf
+                                <input type="hidden" name="period" value="{{ $selectedPeriod }}">
+                                <button class="mem-drop-item mem-drop-submit" type="submit">
+                                    <span class="mem-drop-icon">◌</span>全シャボンを表示
+                                </button>
+                            </form>
+                        @else
+                            <div class="mem-drop-item mem-drop-item-static">
+                                <span class="mem-drop-icon">◌</span>隠しシャボンを表示中
+                            </div>
+                        @endif
+                        <div class="mem-dropdown-divider"></div>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button class="mem-drop-item mem-drop-submit" type="submit">
@@ -115,6 +129,46 @@
                         <button class="mem-hud-button" type="button" data-detail-back>年代の中へ戻る</button>
                         <a class="mem-hud-button mem-hud-button-ghost" href="#" data-detail-link>詳細ページを見る</a>
                     </div>
+                </div>
+            </aside>
+
+            <aside class="mem-grave-panel" data-grave-panel hidden>
+                <div class="mem-grave-panel-backdrop" data-grave-close></div>
+                <div class="mem-grave-panel-shell">
+                    <div class="mem-detail-head">
+                        <div>
+                            <span class="mem-detail-kicker">GRAVE MODE</span>
+                            <h2>{{ $graveUnlocked ? '墓場まで' : '鍵のかかったシャボン' }}</h2>
+                        </div>
+                        <button class="mem-detail-close" type="button" data-grave-close>閉じる</button>
+                    </div>
+
+                    @if($graveUnlockError)
+                        <p class="mem-grave-message mem-grave-message--error">{{ $graveUnlockError }}</p>
+                    @endif
+
+                    @if($graveUnlockSuccess)
+                        <p class="mem-grave-message mem-grave-message--ok">{{ $graveUnlockSuccess }}</p>
+                    @endif
+
+                    @if($graveUnlocked)
+                        <div class="mem-detail-comment">
+                            <span>本人だけの保管領域</span>
+                            <p>このシャボンは、表に出さない記憶をしまっておく隠しモードです。ログアウトすると表示も解錠状態も解除されます。</p>
+                        </div>
+                    @else
+                        <p class="mem-grave-copy">このシャボンは本人専用です。4桁のパスコードを入力した時だけ中を確認できます。</p>
+
+                        <form class="mem-grave-form" method="POST" action="{{ route('memories.bubbles.unlock-grave') }}">
+                            @csrf
+                            <input type="hidden" name="period" value="{{ $selectedPeriod }}">
+                            <label class="mem-grave-field">
+                                <span>パスコード</span>
+                                <input type="password" name="passcode" inputmode="numeric" pattern="[0-9]*" maxlength="20" placeholder="4桁" required>
+                            </label>
+                            <button class="mem-hud-button" type="submit">解錠する</button>
+                        </form>
+                    @endif
                 </div>
             </aside>
 
@@ -446,6 +500,11 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     text-align: left;
 }
 
+.mem-drop-item-static {
+    opacity: 0.72;
+    cursor: default;
+}
+
 .mem-drop-icon {
     display: grid;
     place-items: center;
@@ -600,6 +659,95 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     bottom: 164px;
     z-index: 15;
     width: min(430px, calc(100vw - 44px));
+}
+
+.mem-grave-panel[hidden] {
+    display: none;
+}
+
+.mem-grave-panel {
+    position: absolute;
+    inset: 0;
+    z-index: 18;
+}
+
+.mem-grave-panel-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 6, 18, 0.46);
+    backdrop-filter: blur(8px);
+}
+
+.mem-grave-panel-shell {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(420px, calc(100vw - 36px));
+    padding: 22px;
+    border-radius: 28px;
+    border: 1px solid rgba(135, 201, 255, 0.18);
+    background:
+        linear-gradient(180deg, rgba(8, 14, 42, 0.94), rgba(3, 6, 20, 0.94)),
+        radial-gradient(circle at 18% 12%, rgba(255,255,255,0.10), transparent 34%);
+    box-shadow:
+        0 36px 74px rgba(0,0,0,0.46),
+        inset 0 1px 0 rgba(255,255,255,0.12);
+    backdrop-filter: blur(18px);
+}
+
+.mem-grave-copy {
+    margin-top: 16px;
+    color: rgba(223, 234, 255, 0.88);
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+.mem-grave-form {
+    margin-top: 18px;
+    display: grid;
+    gap: 14px;
+}
+
+.mem-grave-field {
+    display: grid;
+    gap: 8px;
+}
+
+.mem-grave-field span {
+    color: rgba(175, 205, 245, 0.76);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+}
+
+.mem-grave-field input {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(156, 193, 255, 0.14);
+    background: rgba(255,255,255,0.07);
+    color: rgba(247, 250, 255, 0.98);
+}
+
+.mem-grave-message {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.mem-grave-message--error {
+    background: rgba(255, 116, 156, 0.12);
+    color: rgba(255, 206, 220, 0.94);
+    border: 1px solid rgba(255, 144, 182, 0.18);
+}
+
+.mem-grave-message--ok {
+    background: rgba(118, 202, 255, 0.10);
+    color: rgba(219, 241, 255, 0.94);
+    border: 1px solid rgba(126, 198, 255, 0.18);
 }
 
 .mem-detail-shell {
@@ -1093,6 +1241,8 @@ const periods = @json($periods);
 const periodCounts = @json($periodBubbleCounts);
 const selectedPeriod = @json($selectedPeriod);
 const allCount = @json($allCount);
+const graveMode = @json($graveMode);
+const shouldOpenGravePanel = @json((bool) $graveUnlockError || (bool) $graveUnlockSuccess);
 const createUrl = @json(route('memories.create'));
 const listUrl = @json(route('memories.index'));
 const overviewUrl = @json(route('memories.bubbles'));
@@ -1153,6 +1303,8 @@ const detail = stage.querySelector("[data-memory-detail]");
 const detailClose = stage.querySelector("[data-detail-close]");
 const detailBack = stage.querySelector("[data-detail-back]");
 const detailLink = stage.querySelector("[data-detail-link]");
+const gravePanel = stage.querySelector("[data-grave-panel]");
+const graveCloseButtons = stage.querySelectorAll("[data-grave-close]");
 
 const detailFields = {
     period: stage.querySelector("[data-detail-period]"),
@@ -1203,7 +1355,8 @@ const runtime = {
     eras: [],
     memoryRefs: [],
     clusterRefs: [],
-    overviewRefs: []
+    overviewRefs: [],
+    graveRef: null
 };
 
 function el(tag, attrs = {}) {
@@ -1431,6 +1584,68 @@ function drawOverviewNodes() {
         overviewG.append(wrap);
         runtime.overviewRefs.push(wrap);
     });
+}
+
+function drawGraveModeBubble() {
+    if (!graveMode) {
+        return;
+    }
+
+    const gradients = makeGradientSet(
+        "grave-mode",
+        graveMode.locked ? ["#efe4ff", "#8d6bff"] : ["#ffe8d2", "#8f7cff"],
+        true
+    );
+    const wrap = el("g", {
+        class: "mg-overview-node",
+        style: "--delay:0.12s"
+    });
+    const anchor = el("g", { class: "mg-overview-anchor" });
+    const body = el("g", { class: "mg-overview-body" });
+
+    body.append(
+        el("circle", { cx: graveMode.x, cy: graveMode.y, r: graveMode.r + 24, fill: `url(#${gradients.auraId})`, filter: "url(#fAura)" }),
+        el("circle", { cx: graveMode.x, cy: graveMode.y, r: graveMode.r + 6, fill: "rgba(233,241,255,0.08)", filter: "url(#fAura)" }),
+        el("circle", { cx: graveMode.x, cy: graveMode.y, r: graveMode.r, class: "mg-era-shell-fill", fill: `url(#${gradients.bodyId})`, opacity: "0.92" }),
+        el("circle", { cx: graveMode.x, cy: graveMode.y, r: graveMode.r - 8, class: "mg-era-shell-rim", filter: "url(#fSpec)" }),
+        el("ellipse", {
+            cx: (graveMode.x - graveMode.r * 0.22).toFixed(2),
+            cy: (graveMode.y - graveMode.r * 0.28).toFixed(2),
+            rx: (graveMode.r * 0.22).toFixed(2),
+            ry: (graveMode.r * 0.1).toFixed(2),
+            fill: "rgba(255,255,255,0.18)",
+            transform: `rotate(-20 ${graveMode.x - graveMode.r * 0.22} ${graveMode.y - graveMode.r * 0.28})`
+        })
+    );
+
+    const title = el("text", {
+        x: graveMode.x,
+        y: graveMode.y - 8,
+        class: "mg-overview-title",
+        "font-size": "28"
+    });
+    title.textContent = graveMode.label;
+    body.append(title);
+
+    const copy = el("text", {
+        x: graveMode.x,
+        y: graveMode.y + graveMode.r * 0.44,
+        class: "mg-overview-copy"
+    });
+    copy.textContent = graveMode.locked ? "鍵付き / 本人だけが見られる" : "解錠済み / 墓場までの記憶";
+    body.append(copy);
+
+    anchor.append(body);
+    wrap.append(anchor);
+    wrap.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        openGravePanel();
+    });
+
+    overviewG.append(wrap);
+    runtime.overviewRefs.push(wrap);
+    runtime.graveRef = wrap;
 }
 
 function drawEraNodes() {
@@ -1986,8 +2201,29 @@ function openActionMenu() {
     details.setAttribute("open", "open");
 }
 
+function openGravePanel() {
+    if (!gravePanel) {
+        return;
+    }
+
+    gravePanel.hidden = false;
+}
+
+function closeGravePanel() {
+    if (!gravePanel) {
+        return;
+    }
+
+    gravePanel.hidden = true;
+}
+
+graveCloseButtons.forEach((button) => {
+    button.addEventListener("click", closeGravePanel);
+});
+
 document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+        closeGravePanel();
         zoomBack();
     }
 });
@@ -2073,6 +2309,7 @@ buildWorld();
 drawParallaxBack();
 drawGrid();
 drawOverviewNodes();
+drawGraveModeBubble();
 drawEraNodes();
 drawClusterNodes();
 
@@ -2082,6 +2319,10 @@ if (selectedPeriod !== "すべて") {
     updateHud();
 } else {
     zoomToOverview();
+}
+
+if (shouldOpenGravePanel) {
+    openGravePanel();
 }
 
 requestAnimationFrame(tick);

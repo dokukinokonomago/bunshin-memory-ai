@@ -14,6 +14,9 @@ class MemoryController extends Controller
 {
     private const ACTIVE_CREATE_VIEW = 'memories.create_v2';
     private const PERIODS = ['幼少期', '小学生', '中学生', '高校生', '大学生', '成人期', '不明'];
+    private const SESSION_GRAVE_VISIBLE = 'memories.grave.visible';
+    private const SESSION_GRAVE_UNLOCKED = 'memories.grave.unlocked';
+    private const GRAVE_PASSCODE = '1234';
     private const CREATE_COMPOSER_GROUP_META = [
         'warm' => [
             'label' => 'あたたかい',
@@ -128,6 +131,8 @@ class MemoryController extends Controller
     {
         $selectedPeriod = $request->string('period')->toString();
         $selectedPeriod = in_array($selectedPeriod, array_merge(['すべて'], self::PERIODS), true) ? $selectedPeriod : 'すべて';
+        $showGraveBubble = (bool) $request->session()->get(self::SESSION_GRAVE_VISIBLE, false);
+        $graveUnlocked = (bool) $request->session()->get(self::SESSION_GRAVE_UNLOCKED, false);
         $emotionToneMap = $this->emotionToneMap();
         $allMemories = Memory::query()
             ->latest()
@@ -152,10 +157,48 @@ class MemoryController extends Controller
             'layerCount' => 1,
             'hasPreviousLayer' => false,
             'hasNextLayer' => false,
+            'graveMode' => $showGraveBubble ? $this->graveModePayload($graveUnlocked) : null,
+            'showGraveBubble' => $showGraveBubble,
+            'graveUnlocked' => $graveUnlocked,
+            'graveUnlockError' => $request->session()->get('grave_unlock_error'),
+            'graveUnlockSuccess' => $request->session()->get('grave_unlock_success'),
             'selectedPeriodStatus' => $selectedPeriod !== 'すべて'
                 ? $this->selectedPeriodStatus($matchingMemories, $emotionToneMap, $selectedPeriod, 1, 1)
                 : null,
         ]);
+    }
+
+    public function revealAllBubbles(Request $request): RedirectResponse
+    {
+        $request->session()->put(self::SESSION_GRAVE_VISIBLE, true);
+
+        return redirect()->route('memories.bubbles', $this->bubblesRedirectParams($request));
+    }
+
+    public function unlockGraveMode(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'passcode' => ['required', 'string', 'max:20'],
+        ], [
+            'passcode.required' => 'パスコードを入力してください。',
+            'passcode.max' => 'パスコードが長すぎます。',
+        ]);
+
+        $request->session()->put(self::SESSION_GRAVE_VISIBLE, true);
+
+        if ($validated['passcode'] !== self::GRAVE_PASSCODE) {
+            $request->session()->forget(self::SESSION_GRAVE_UNLOCKED);
+
+            return redirect()
+                ->route('memories.bubbles', $this->bubblesRedirectParams($request))
+                ->with('grave_unlock_error', 'パスコードが違います。');
+        }
+
+        $request->session()->put(self::SESSION_GRAVE_UNLOCKED, true);
+
+        return redirect()
+            ->route('memories.bubbles', $this->bubblesRedirectParams($request))
+            ->with('grave_unlock_success', '墓場までモードを開きました。');
     }
 
     public function store(Request $request): RedirectResponse
@@ -508,6 +551,31 @@ class MemoryController extends Controller
             ->take(8)
             ->values()
             ->all();
+    }
+
+    private function bubblesRedirectParams(Request $request): array
+    {
+        $selectedPeriod = $request->string('period')->toString();
+
+        if ($selectedPeriod !== '' && $selectedPeriod !== 'すべて' && in_array($selectedPeriod, self::PERIODS, true)) {
+            return ['period' => $selectedPeriod];
+        }
+
+        return [];
+    }
+
+    private function graveModePayload(bool $graveUnlocked): array
+    {
+        return [
+            'id' => 'grave-mode',
+            'label' => '墓場まで',
+            'status' => $graveUnlocked ? '解錠済み' : '鍵付き',
+            'hint' => $graveUnlocked ? '本人だけが触れられる隠し記憶' : '4桁パスコードで開く隠しシャボン',
+            'x' => 450,
+            'y' => 150,
+            'r' => 92,
+            'locked' => ! $graveUnlocked,
+        ];
     }
 
     private function createComposerViewData(Request $request): array
