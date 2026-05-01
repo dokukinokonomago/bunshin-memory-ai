@@ -591,6 +591,13 @@ details[open] .mem-chevron { transform: rotate(180deg); }
         0 16px 30px rgba(0,0,0,0.14),
         inset 0 1px 0 rgba(255,255,255,0.08);
     backdrop-filter: blur(30px) saturate(1.05);
+    transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.mem-hud.is-dormant {
+    opacity: 0;
+    transform: translateY(12px);
+    pointer-events: none;
 }
 
 .mem-hud-copy {
@@ -1294,6 +1301,7 @@ const overviewG = document.getElementById("memOverviewNodes");
 const eraG = document.getElementById("memEraNodes");
 const clusterG = document.getElementById("memClusterNodes");
 const stage = document.getElementById("memStage");
+const hud = stage.querySelector(".mem-hud");
 const modeKicker = stage.querySelector("[data-mode-kicker]");
 const modeTitle = stage.querySelector("[data-mode-title]");
 const modeBody = stage.querySelector("[data-mode-body]");
@@ -1348,6 +1356,10 @@ const state = {
     touch: {
         mode: null,
         pinchDistance: 0
+    },
+    memoryTransition: {
+        active: false,
+        targetId: null
     }
 };
 
@@ -1873,6 +1885,7 @@ function setUniversePalette(period) {
 
 function updateHud() {
     if (state.zoomLevel === 0) {
+        hud.classList.remove("is-dormant");
         modeKicker.textContent = "LEVEL 0";
         modeTitle.textContent = "人生全体を俯瞰しています";
         modeBody.textContent = "気になる年代のシャボン玉をクリックして、その中へ潜ってください。";
@@ -1883,6 +1896,7 @@ function updateHud() {
     }
 
     if (state.zoomLevel === 1 && state.selectedEra) {
+        hud.classList.remove("is-dormant");
         const currentEra = runtime.eras.find((era) => era.period === state.selectedEra);
         const clusterCount = currentEra?.clusters.length ?? 0;
         modeKicker.textContent = "LEVEL 1";
@@ -1899,6 +1913,7 @@ function updateHud() {
         return;
     }
 
+    hud.classList.toggle("is-dormant", state.memoryTransition.active);
     modeKicker.textContent = "LEVEL 2";
     modeTitle.textContent = `${memory.period}の記憶へ入っています`;
     modeBody.textContent = "他の記憶は静かに退き、選んだ記憶だけが前景に残っています。";
@@ -1942,16 +1957,23 @@ function updateEraVisibility() {
 
     runtime.clusterRefs.forEach(({ era, wrap }) => {
         const visible = state.selectedEra === era;
-        wrap.style.opacity = visible ? (state.zoomLevel === 2 ? "0.18" : "1") : "0";
+        const clusterOpacity = state.zoomLevel === 2
+            ? (state.memoryTransition.active ? "0" : "0.18")
+            : "1";
+        wrap.style.opacity = visible ? clusterOpacity : "0";
         wrap.style.pointerEvents = visible ? "auto" : "none";
         wrap.classList.toggle("is-muted", state.zoomLevel === 2 && visible);
     });
 
     runtime.memoryRefs.forEach((ref) => {
         const visible = state.selectedEra === ref.era;
-        ref.node.style.opacity = visible ? "1" : "0";
-        ref.node.style.pointerEvents = visible ? "auto" : "none";
-        ref.body.style.opacity = state.zoomLevel === 2 && state.selectedMemory !== ref.id ? "0.42" : "1";
+        const keepOnlySelected = state.zoomLevel === 2 && state.memoryTransition.active;
+        const nodeVisible = visible && (!keepOnlySelected || state.selectedMemory === ref.id);
+        ref.node.style.opacity = nodeVisible ? "1" : "0";
+        ref.node.style.pointerEvents = nodeVisible ? "auto" : "none";
+        ref.body.style.opacity = state.zoomLevel === 2
+            ? (state.selectedMemory !== ref.id ? (state.memoryTransition.active ? "0" : "0.42") : "1")
+            : "1";
     });
 
     runtime.overviewRefs.forEach((wrap) => {
@@ -1964,6 +1986,8 @@ function zoomToOverview() {
     state.zoomLevel = 0;
     state.selectedEra = null;
     state.selectedMemory = null;
+    state.memoryTransition.active = false;
+    state.memoryTransition.targetId = null;
     state.targetCamera = { x: 700, y: 450, scale: OVERVIEW_SCALE };
     setUniversePalette(null);
     updateEraVisibility();
@@ -1979,6 +2003,8 @@ function zoomToEra(period) {
     state.zoomLevel = 1;
     state.selectedEra = period;
     state.selectedMemory = null;
+    state.memoryTransition.active = false;
+    state.memoryTransition.targetId = null;
     state.targetCamera = { x: era.x, y: era.y, scale: ERA_SCALE };
     setUniversePalette(period);
     updateEraVisibility();
@@ -1994,6 +2020,8 @@ function zoomToMemory(memoryId) {
     state.zoomLevel = 2;
     state.selectedEra = entry.era;
     state.selectedMemory = memoryId;
+    state.memoryTransition.active = true;
+    state.memoryTransition.targetId = memoryId;
     const time = performance.now() * 0.001;
     const worldX = entry.memory.baseX + Math.cos(time * entry.memory.driftSpeed + entry.memory.driftPhase) * entry.memory.driftX;
     const worldY = entry.memory.baseY + Math.sin(time * entry.memory.driftSpeed * 1.06 + entry.memory.driftPhase) * entry.memory.driftY;
@@ -2001,7 +2029,7 @@ function zoomToMemory(memoryId) {
     setUniversePalette(entry.era);
     updateEraVisibility();
     updateHud();
-    updateDetail(entry.memory);
+    updateDetail(null);
 }
 
 function zoomBack() {
@@ -2058,7 +2086,7 @@ function updatePointerEffects(time) {
         let scale = 1;
         let glow = false;
 
-        if (pointerWorld) {
+        if (pointerWorld && !state.memoryTransition.active) {
             const dx = pointerWorld.x - x;
             const dy = pointerWorld.y - y;
             const distance = Math.hypot(dx, dy);
@@ -2083,6 +2111,21 @@ function tick(timeMs) {
     state.camera.x += (state.targetCamera.x - state.camera.x) * EASE;
     state.camera.y += (state.targetCamera.y - state.camera.y) * EASE;
     state.camera.scale += (state.targetCamera.scale - state.camera.scale) * EASE;
+
+    if (state.memoryTransition.active) {
+        const settledX = Math.abs(state.targetCamera.x - state.camera.x) < 1.4;
+        const settledY = Math.abs(state.targetCamera.y - state.camera.y) < 1.4;
+        const settledScale = Math.abs(state.targetCamera.scale - state.camera.scale) < 0.02;
+
+        if (settledX && settledY && settledScale) {
+            state.memoryTransition.active = false;
+            const memory = getSelectedMemory();
+            updateEraVisibility();
+            updateHud();
+            updateDetail(memory);
+        }
+    }
+
     applyCamera();
     updatePointerEffects(time);
     requestAnimationFrame(tick);
