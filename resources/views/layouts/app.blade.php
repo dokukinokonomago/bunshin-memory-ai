@@ -477,7 +477,7 @@
     @stack('head')
     @stack('styles')
 </head>
-<body class="@yield('body_class')">
+<body class="@yield('body_class') @yield('page_class')">
     @auth
         @if (trim($__env->yieldContent('hide_auth_dock')) !== '1')
         <div class="app-auth-dock">

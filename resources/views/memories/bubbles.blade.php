@@ -2,7 +2,6 @@
 
 @section('title', 'YOUの記憶 | 分身AI MVP')
 @section('page_class', 'page-bubbles-full')
-@section('hide_auth_dock', '1')
 
 @section('content')
 <div class="mem-universe" id="memUniverse">
@@ -198,6 +197,12 @@
     z-index: 20;
     padding: 22px 28px 0;
     min-height: 112px;
+}
+
+body.page-bubbles-full .app-auth-dock {
+    top: 104px;
+    right: 22px;
+    z-index: 24;
 }
 
 .mem-nav-left {
@@ -941,6 +946,12 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 }
 
 @media (max-width: 980px) {
+    body.page-bubbles-full .app-auth-dock {
+        top: 154px;
+        right: 16px;
+        left: auto;
+    }
+
     .mem-nav {
         padding: 16px 16px 0;
         min-height: 154px;
@@ -974,6 +985,13 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 }
 
 @media (max-width: 640px) {
+    body.page-bubbles-full .app-auth-dock {
+        top: auto;
+        bottom: 20px;
+        left: 12px;
+        right: 12px;
+    }
+
     .mem-nav-title {
         font-size: clamp(22px, 8vw, 34px);
     }
