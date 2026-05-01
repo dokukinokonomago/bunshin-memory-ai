@@ -207,14 +207,14 @@ body.page-bubbles-full .app-auth-dock {
 
 .mem-nav-left {
     position: absolute;
-    left: 50%;
+    left: 28px;
     top: 22px;
-    transform: translateX(-50%);
+    transform: none;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    align-items: center;
-    text-align: center;
+    align-items: flex-start;
+    text-align: left;
 }
 
 .mem-nav-eyebrow {
@@ -966,7 +966,10 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 
     .mem-nav-left {
         top: 16px;
+        left: 16px;
         width: calc(100% - 32px);
+        align-items: flex-start;
+        text-align: left;
     }
 
     .mem-nav-right {
