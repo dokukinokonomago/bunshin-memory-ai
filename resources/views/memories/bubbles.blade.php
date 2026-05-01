@@ -1066,6 +1066,11 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     transform-origin: var(--hover-origin-x, 50%) var(--hover-origin-y, 50%);
 }
 
+.mg-overview-body {
+    transform-box: view-box;
+    transform-origin: var(--hover-origin-x, 50%) var(--hover-origin-y, 50%);
+}
+
 .mg-era-anchor:hover .mg-era-body,
 .mg-overview-anchor:hover .mg-overview-body {
     transform: scale(1.06);
@@ -1609,7 +1614,10 @@ function drawOverviewNodes() {
             style: `--delay:${(index * 0.08).toFixed(2)}s`
         });
         const link = el("g", { class: "mg-overview-anchor" });
-        const body = el("g", { class: "mg-overview-body" });
+        const body = el("g", {
+            class: "mg-overview-body",
+            style: `--hover-origin-x:${node.x}px; --hover-origin-y:${node.y}px;`
+        });
 
         body.append(
             el("circle", { cx: node.x, cy: node.y, r: node.r + 26, fill: `url(#${gradients.auraId})`, filter: "url(#fAura)" }),
