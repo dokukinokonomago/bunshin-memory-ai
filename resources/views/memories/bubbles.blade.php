@@ -1326,12 +1326,7 @@ function drawOverviewNodes() {
             x: 700,
             y: 418,
             r: 108,
-            title: "今日は\n何をする？",
-            copy: "記憶を追加するか、一覧を見に行けます",
-            actions: [
-                { label: "記憶を追加", href: createUrl },
-                { label: "一覧を見る", href: listUrl }
-            ]
+            title: "今日は\n何をする？"
         }
     ];
 
@@ -1376,45 +1371,22 @@ function drawOverviewNodes() {
 
         const title = el("text", {
             x: node.x,
-            y: node.id === "cta" ? node.y - 6 : node.y - 10,
+            y: node.id === "cta" ? node.y + 4 : node.y - 10,
             class: "mg-overview-title",
             "font-size": node.id === "cta" ? "34" : "68"
         });
         title.textContent = node.title;
         body.append(title);
 
-        const copy = el("text", {
-            x: node.x,
-            y: node.y + node.r * 0.42,
-            class: "mg-overview-copy"
-        });
-        copy.textContent = node.copy;
-        body.append(copy);
-
         link.append(body);
         wrap.append(link);
 
-        if (node.actions.length > 0) {
-            const fo = el("foreignObject", {
-                x: (node.x - 130).toFixed(2),
-                y: (node.y + node.r * 0.44).toFixed(2),
-                width: "260",
-                height: "48"
+        if (node.id === "cta") {
+            wrap.addEventListener("click", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                openActionMenu();
             });
-            const container = document.createElement("div");
-            container.className = "mg-fo-wrap";
-            const actions = document.createElement("div");
-            actions.className = "mg-fo-actions";
-            node.actions.forEach((action) => {
-                const linkNode = document.createElement("a");
-                linkNode.className = "mg-fo-button";
-                linkNode.href = action.href;
-                linkNode.textContent = action.label;
-                actions.append(linkNode);
-            });
-            container.append(actions);
-            fo.append(container);
-            wrap.append(fo);
         }
 
         overviewG.append(wrap);
@@ -1965,6 +1937,15 @@ backButton.addEventListener("click", zoomBack);
 overviewButton.addEventListener("click", zoomToOverview);
 detailClose.addEventListener("click", zoomBack);
 detailBack.addEventListener("click", zoomBack);
+
+function openActionMenu() {
+    const details = document.getElementById("detAction");
+    if (!details) {
+        return;
+    }
+
+    details.setAttribute("open", "open");
+}
 
 document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
