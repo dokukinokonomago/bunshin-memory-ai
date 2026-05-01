@@ -2,6 +2,7 @@
 
 @section('title', '記憶ステータス | 分身AI MVP')
 @section('page_class', 'page-memory-status-wide')
+@section('hide_auth_dock', '1')
 
 @php
     use Illuminate\Support\Str;
@@ -170,16 +171,22 @@
                         @endif
 
                         @if (count($logEntries) > 1)
-                            <details class="memory-log-more">
+                            <details class="memory-log-more" data-memory-log-more>
                                 <summary>過去ログを表示</summary>
-                                <div class="memory-log-more-list">
-                                    @foreach (array_slice($logEntries, 1) as $entry)
-                                        <article class="memory-log-item">
-                                            <span class="memory-log-time">{{ $entry['time'] }}</span>
-                                            <strong>{{ $entry['title'] }}</strong>
-                                            <p>{{ $entry['body'] }}</p>
-                                        </article>
-                                    @endforeach
+                                <div class="memory-log-more-panel">
+                                    <div class="memory-log-more-head">
+                                        <strong>過去ログ</strong>
+                                        <button class="memory-log-more-close" type="button" data-close-memory-log>閉じる</button>
+                                    </div>
+                                    <div class="memory-log-more-list">
+                                        @foreach (array_slice($logEntries, 1) as $entry)
+                                            <article class="memory-log-item">
+                                                <span class="memory-log-time">{{ $entry['time'] }}</span>
+                                                <strong>{{ $entry['title'] }}</strong>
+                                                <p>{{ $entry['body'] }}</p>
+                                            </article>
+                                        @endforeach
+                                    </div>
                                 </div>
                             </details>
                         @endif
@@ -664,12 +671,47 @@
             display: none;
         }
 
-        .memory-log-more-list {
+        .memory-log-more-panel {
             display: grid;
             gap: 10px;
             padding: 0 12px 12px;
-            max-height: 188px;
+        }
+
+        .memory-log-more-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding-top: 2px;
+        }
+
+        .memory-log-more-head strong {
+            color: rgba(232, 241, 255, 0.92);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+        }
+
+        .memory-log-more-close {
+            min-height: 30px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(129, 201, 255, 0.16);
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(215, 230, 252, 0.86);
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .memory-log-more-list {
+            display: grid;
+            gap: 10px;
+            max-height: 220px;
             overflow: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+            padding-right: 4px;
         }
 
         .memory-core-panel {
@@ -1113,4 +1155,17 @@
             }
         }
     </style>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('[data-close-memory-log]').forEach((button) => {
+                    button.addEventListener('click', () => {
+                        const details = button.closest('[data-memory-log-more]');
+                        details?.removeAttribute('open');
+                    });
+                });
+            });
+        </script>
+    @endpush
 @endsection
