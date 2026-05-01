@@ -315,6 +315,10 @@
                 linear-gradient(180deg, #02050d 0%, #040914 38%, #081223 100%);
             box-shadow: 0 36px 90px rgba(3, 7, 18, 0.46);
             isolation: isolate;
+            opacity: 0;
+            transform: translateY(14px) scale(0.987);
+            filter: blur(10px);
+            animation: memoryStatusEnter 0.46s cubic-bezier(0.22, 0.8, 0.28, 1) 0.04s forwards;
         }
 
         .memory-dashboard::before,
@@ -331,6 +335,19 @@
             inset: 0;
             border: 1px solid rgba(180, 220, 255, 0.06);
             border-radius: inherit;
+        }
+
+        @keyframes memoryStatusEnter {
+            from {
+                opacity: 0;
+                transform: translateY(14px) scale(0.987);
+                filter: blur(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
         }
 
         .memory-dashboard-decor {
@@ -1020,6 +1037,15 @@
         @keyframes memoryStarBlink {
             0%, 100% { opacity: 0.36; transform: scale(1); }
             50% { opacity: 1; transform: scale(1.18); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .memory-dashboard {
+                opacity: 1;
+                transform: none;
+                filter: none;
+                animation: none;
+            }
         }
 
         @media (max-width: 1240px) {

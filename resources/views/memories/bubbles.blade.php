@@ -6,6 +6,7 @@
 @section('content')
 <div class="mem-universe" id="memUniverse">
     <canvas id="starCanvas" class="star-canvas" aria-hidden="true"></canvas>
+    <div class="mem-transition-screen" data-page-transition aria-hidden="true"></div>
 
     <nav class="mem-nav">
         <div class="mem-nav-left">
@@ -240,6 +241,38 @@
     overflow: hidden;
     font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
     transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mem-nav,
+.mem-stage {
+    transition:
+        opacity 0.24s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.34s cubic-bezier(0.22, 0.8, 0.28, 1),
+        filter 0.34s cubic-bezier(0.22, 0.8, 0.28, 1);
+}
+
+.mem-transition-screen {
+    position: absolute;
+    inset: 0;
+    z-index: 24;
+    opacity: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 50% 48%, rgba(150, 210, 255, 0.12), transparent 22%),
+        linear-gradient(180deg, rgba(4, 10, 24, 0.08), rgba(2, 6, 18, 0.72));
+    transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mem-universe.is-page-transitioning .mem-transition-screen {
+    opacity: 1;
+}
+
+.mem-universe.is-page-transitioning .mem-nav,
+.mem-universe.is-page-transitioning .mem-stage {
+    opacity: 0;
+    transform: scale(0.988) translateY(10px);
+    filter: blur(8px);
+    pointer-events: none;
 }
 
 .star-canvas {
@@ -1211,6 +1244,14 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     }
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .mem-nav,
+    .mem-stage,
+    .mem-transition-screen {
+        transition: none;
+    }
+}
+
 @media (max-width: 640px) {
     body.page-bubbles-full .app-auth-dock {
         top: auto;
@@ -1304,6 +1345,7 @@ const overviewG = document.getElementById("memOverviewNodes");
 const eraG = document.getElementById("memEraNodes");
 const clusterG = document.getElementById("memClusterNodes");
 const stage = document.getElementById("memStage");
+const transitionScreen = universe.querySelector("[data-page-transition]");
 const hud = stage.querySelector(".mem-hud");
 const modeKicker = stage.querySelector("[data-mode-kicker]");
 const modeTitle = stage.querySelector("[data-mode-title]");
@@ -1363,7 +1405,8 @@ const state = {
     memoryTransition: {
         active: false,
         targetId: null
-    }
+    },
+    pageTransitioning: false
 };
 
 const runtime = {
@@ -2040,7 +2083,24 @@ function zoomToMemory(memoryId) {
         return;
     }
 
-    window.location.href = entry.memory.url;
+    startPageTransition(entry.memory.url);
+}
+
+function startPageTransition(url) {
+    if (!url || state.pageTransitioning) {
+        return;
+    }
+
+    state.pageTransitioning = true;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    closeDetails("detAction");
+    universe.classList.add("is-page-transitioning");
+    transitionScreen?.setAttribute("data-state", "active");
+
+    window.setTimeout(() => {
+        window.location.assign(url);
+    }, reducedMotion ? 0 : 240);
 }
 
 function zoomBack() {
