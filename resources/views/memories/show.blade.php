@@ -1039,10 +1039,14 @@
             background:
                 radial-gradient(circle at center, rgba(255, 255, 255, 0.08) 0 40%, transparent 41%),
                 conic-gradient(from -90deg,
-                    rgba(29, 126, 255, 0.96) 0 calc(var(--value) * 0.58%),
-                    rgba(30, 196, 255, 0.98) calc(var(--value) * 0.58%) calc(var(--value) * 0.84%),
-                    rgba(55, 255, 162, 0.96) calc(var(--value) * 0.84%) calc(var(--value) * 1%),
-                    rgba(75, 92, 132, 0.20) calc(var(--value) * 1%) 100%);
+                    rgba(26, 108, 255, 0.98) 0,
+                    rgba(34, 132, 255, 0.98) calc(var(--value) * 0.18%),
+                    rgba(37, 166, 255, 0.98) calc(var(--value) * 0.38%),
+                    rgba(39, 205, 255, 0.98) calc(var(--value) * 0.62%),
+                    rgba(47, 232, 235, 0.97) calc(var(--value) * 0.8%),
+                    rgba(76, 248, 192, 0.96) calc(var(--value) * 0.96%),
+                    rgba(76, 248, 192, 0.92) calc(var(--value) * 1%),
+                    rgba(75, 92, 132, 0.20) calc(var(--value) * 1.04%) 100%);
             box-shadow:
                 inset 0 0 0 1px rgba(147, 191, 255, 0.12),
                 inset 0 0 30px rgba(12, 28, 58, 0.34),
