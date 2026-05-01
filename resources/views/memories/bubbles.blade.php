@@ -2094,7 +2094,8 @@ function startPageTransition(url) {
     state.pageTransitioning = true;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    closeDetails("detAction");
+    const actionMenu = document.getElementById("detAction");
+    actionMenu?.removeAttribute("open");
     universe.classList.add("is-page-transitioning");
     transitionScreen?.setAttribute("data-state", "active");
 
