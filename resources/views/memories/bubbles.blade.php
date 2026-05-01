@@ -1061,10 +1061,15 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     transition: transform 0.28s ease, filter 0.28s ease, opacity 0.28s ease;
 }
 
+.mg-era-body {
+    transform-box: view-box;
+    transform-origin: var(--hover-origin-x, 50%) var(--hover-origin-y, 50%);
+}
+
 .mg-era-anchor:hover .mg-era-body,
 .mg-overview-anchor:hover .mg-overview-body {
-    transform: scale(1.03);
-    filter: brightness(1.08);
+    transform: scale(1.06);
+    filter: brightness(1.1) saturate(1.06);
 }
 
 .mg-era-shell-fill {
@@ -1735,7 +1740,10 @@ function drawEraNodes() {
             class: "mg-era-anchor",
             "data-era-anchor": era.period
         });
-        const body = el("g", { class: "mg-era-body" });
+        const body = el("g", {
+            class: "mg-era-body",
+            style: `--hover-origin-x:${era.x}px; --hover-origin-y:${era.y}px;`
+        });
         const clipId = `era-clip-${eraIndex}`;
         const clipPath = el("clipPath", { id: clipId });
         clipPath.append(el("circle", { cx: era.x, cy: era.y, r: era.r - 14 }));
