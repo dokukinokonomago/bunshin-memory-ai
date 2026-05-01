@@ -34,19 +34,14 @@
                     <a class="mem-drop-item" href="{{ route('memories.bubbles') }}">
                         <span class="mem-drop-icon">◎</span>全体俯瞰へ
                     </a>
-                </div>
-            </details>
-
-            <details class="mem-details" id="detFilter">
-                <summary class="mem-glass-pill mem-glass-pill--purple">
-                    <span>{{ $selectedPeriod === 'すべて' ? '年代を選ぶ' : $selectedPeriod }}</span>
-                    <svg class="mem-chevron" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
-                </summary>
-                <div class="mem-dropdown mem-dropdown--filter">
-                    <a class="mem-filter-chip {{ $selectedPeriod === 'すべて' ? 'is-on' : '' }}" href="{{ route('memories.bubbles') }}">すべて</a>
-                    @foreach($periods as $period)
-                        <a class="mem-filter-chip {{ $selectedPeriod === $period ? 'is-on' : '' }}" href="{{ route('memories.bubbles', ['period' => $period]) }}">{{ $period }}</a>
-                    @endforeach
+                    <div class="mem-dropdown-divider"></div>
+                    <div class="mem-dropdown-label">年代を選ぶ</div>
+                    <div class="mem-dropdown mem-dropdown--filter mem-dropdown--inline">
+                        <a class="mem-filter-chip {{ $selectedPeriod === 'すべて' ? 'is-on' : '' }}" href="{{ route('memories.bubbles') }}">すべて</a>
+                        @foreach($periods as $period)
+                            <a class="mem-filter-chip {{ $selectedPeriod === $period ? 'is-on' : '' }}" href="{{ route('memories.bubbles', ['period' => $period]) }}">{{ $period }}</a>
+                        @endforeach
+                    </div>
                 </div>
             </details>
         </div>
@@ -203,6 +198,10 @@ body.page-bubbles-full .app-auth-dock {
     top: 104px;
     right: 22px;
     z-index: 24;
+}
+
+body.page-bubbles-full .app-auth-dock .app-auth-link {
+    display: none;
 }
 
 .mem-nav-left {
@@ -436,6 +435,31 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     min-width: 280px;
 }
 
+.mem-dropdown--inline {
+    position: static;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+.mem-dropdown-divider {
+    height: 1px;
+    margin: 8px 4px 10px;
+    background: linear-gradient(90deg, transparent, rgba(180, 216, 255, 0.24), transparent);
+}
+
+.mem-dropdown-label {
+    margin: 0 4px 10px;
+    color: rgba(156, 204, 255, 0.82);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+}
+
 .mem-filter-chip {
     display: inline-flex;
     align-items: center;
@@ -464,7 +488,7 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 .mem-hud {
     position: absolute;
     right: 22px;
-    top: 170px;
+    bottom: 28px;
     z-index: 14;
     width: min(284px, calc(100vw - 44px));
     padding: 16px 18px 15px;
@@ -543,7 +567,7 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 .mem-detail {
     position: absolute;
     right: 22px;
-    bottom: 24px;
+    bottom: 164px;
     z-index: 15;
     width: min(430px, calc(100vw - 44px));
 }
@@ -982,13 +1006,13 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     .mem-hud {
         right: 16px;
         width: auto;
-        top: 180px;
+        bottom: 74px;
     }
 
     .mem-detail {
         left: 16px;
         right: 16px;
-        bottom: 74px;
+        bottom: 184px;
         width: auto;
     }
 }
