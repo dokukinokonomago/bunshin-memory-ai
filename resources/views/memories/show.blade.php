@@ -152,34 +152,25 @@
                     </div>
                 </section>
 
-                <section class="memory-side-block memory-side-block-log">
-                    <div class="memory-side-heading">
+                <section class="memory-side-block memory-side-block-log" data-memory-log-block>
+                    <div class="memory-side-heading memory-side-heading-log">
                         <span class="memory-side-index">03</span>
                         <div>
                             <h2>アーカイブログ</h2>
                             <p>保存時の処理ログ</p>
                         </div>
+                        @if (count($logEntries) > 0)
+                            <button class="memory-log-heading-close" type="button" data-close-memory-log hidden>閉じる</button>
+                        @endif
                     </div>
 
                     <div class="memory-log-list">
-                        @if (isset($logEntries[0]))
-                            <article class="memory-log-item">
-                                <span class="memory-log-time">{{ $logEntries[0]['time'] }}</span>
-                                <strong>{{ $logEntries[0]['title'] }}</strong>
-                                <p>{{ $logEntries[0]['body'] }}</p>
-                            </article>
-                        @endif
-
-                        @if (count($logEntries) > 1)
+                        @if (count($logEntries) > 0)
                             <details class="memory-log-more" data-memory-log-more>
                                 <summary>過去ログを表示</summary>
                                 <div class="memory-log-more-panel">
-                                    <div class="memory-log-more-head">
-                                        <strong>過去ログ</strong>
-                                        <button class="memory-log-more-close" type="button" data-close-memory-log>閉じる</button>
-                                    </div>
                                     <div class="memory-log-more-list">
-                                        @foreach (array_slice($logEntries, 1) as $entry)
+                                        @foreach ($logEntries as $entry)
                                             <article class="memory-log-item">
                                                 <span class="memory-log-time">{{ $entry['time'] }}</span>
                                                 <strong>{{ $entry['title'] }}</strong>
@@ -495,8 +486,12 @@
         .memory-side-panel {
             padding: 4px;
             display: grid;
-            gap: 10px;
+            gap: 6px;
             min-height: 0;
+        }
+
+        .memory-side-panel-left {
+            grid-template-rows: auto auto minmax(0, 1fr);
         }
 
         .memory-side-block {
@@ -517,6 +512,10 @@
             gap: 10px;
             align-items: center;
             margin-bottom: 10px;
+        }
+
+        .memory-side-heading-log {
+            grid-template-columns: auto 1fr auto;
         }
 
         .memory-side-index {
@@ -607,7 +606,8 @@
 
         .memory-log-list {
             display: grid;
-            gap: 10px;
+            gap: 8px;
+            min-height: 0;
         }
 
         .memory-log-item {
@@ -651,10 +651,17 @@
         }
 
         .memory-log-more {
+            display: grid;
             border-radius: 16px;
             border: 1px solid rgba(129, 201, 255, 0.08);
             background: rgba(9, 16, 32, 0.18);
             overflow: hidden;
+        }
+
+        .memory-side-block-log {
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
+            min-height: 0;
         }
 
         .memory-log-more summary {
@@ -671,28 +678,17 @@
             display: none;
         }
 
+        .memory-log-more[open] summary {
+            display: none;
+        }
+
         .memory-log-more-panel {
             display: grid;
-            gap: 10px;
-            padding: 0 12px 12px;
+            min-height: 0;
+            padding: 6px 12px 12px;
         }
 
-        .memory-log-more-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            padding-top: 2px;
-        }
-
-        .memory-log-more-head strong {
-            color: rgba(232, 241, 255, 0.92);
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-        }
-
-        .memory-log-more-close {
+        .memory-log-heading-close {
             min-height: 30px;
             padding: 0 12px;
             border-radius: 999px;
@@ -707,11 +703,12 @@
         .memory-log-more-list {
             display: grid;
             gap: 10px;
-            max-height: 220px;
+            min-height: 0;
+            max-height: 340px;
             overflow: auto;
             overscroll-behavior: contain;
             -webkit-overflow-scrolling: touch;
-            padding-right: 4px;
+            padding: 2px 4px 0 0;
         }
 
         .memory-core-panel {
@@ -1033,17 +1030,49 @@
 
         .memory-gauge-ring {
             --ring-bg: rgba(84, 101, 140, 0.28);
+            position: relative;
             width: 116px;
             aspect-ratio: 1 / 1;
             border-radius: 50%;
             display: grid;
             place-items: center;
             background:
-                radial-gradient(circle at center, rgba(255, 255, 255, 0.08) 0 42%, transparent 43%),
-                conic-gradient(from -90deg, rgba(92, 210, 255, 0.96) calc(var(--value) * 1%), rgba(112, 145, 214, 0.18) 0);
+                radial-gradient(circle at center, rgba(255, 255, 255, 0.08) 0 40%, transparent 41%),
+                conic-gradient(from -90deg,
+                    rgba(29, 126, 255, 0.96) 0 calc(var(--value) * 0.58%),
+                    rgba(30, 196, 255, 0.98) calc(var(--value) * 0.58%) calc(var(--value) * 0.84%),
+                    rgba(55, 255, 162, 0.96) calc(var(--value) * 0.84%) calc(var(--value) * 1%),
+                    rgba(75, 92, 132, 0.20) calc(var(--value) * 1%) 100%);
             box-shadow:
                 inset 0 0 0 1px rgba(147, 191, 255, 0.12),
-                0 0 24px rgba(68, 156, 255, 0.14);
+                inset 0 0 30px rgba(12, 28, 58, 0.34),
+                0 0 30px rgba(46, 162, 255, 0.14);
+            overflow: hidden;
+        }
+
+        .memory-gauge-ring::before,
+        .memory-gauge-ring::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .memory-gauge-ring::before {
+            inset: 6px;
+            background:
+                radial-gradient(circle at 24% 22%, rgba(255, 255, 255, 0.28), transparent 20%),
+                radial-gradient(circle at 68% 76%, rgba(20, 224, 255, 0.14), transparent 24%);
+            filter: blur(2px);
+            opacity: 0.88;
+        }
+
+        .memory-gauge-ring::after {
+            inset: 10px 18px 58px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0));
+            filter: blur(8px);
+            transform: rotate(-18deg);
+            opacity: 0.78;
         }
 
         .memory-gauge-inner {
@@ -1055,7 +1084,10 @@
             background:
                 linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01)),
                 rgba(7, 14, 28, 0.92);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                inset 0 -8px 18px rgba(16, 30, 56, 0.42),
+                0 0 0 1px rgba(109, 154, 225, 0.10);
         }
 
         .memory-gauge-inner strong {
@@ -1159,11 +1191,24 @@
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', () => {
-                document.querySelectorAll('[data-close-memory-log]').forEach((button) => {
-                    button.addEventListener('click', () => {
-                        const details = button.closest('[data-memory-log-more]');
-                        details?.removeAttribute('open');
+                document.querySelectorAll('[data-memory-log-block]').forEach((block) => {
+                    const details = block.querySelector('[data-memory-log-more]');
+                    const closeButton = block.querySelector('[data-close-memory-log]');
+
+                    if (!details || !closeButton) {
+                        return;
+                    }
+
+                    const syncState = () => {
+                        closeButton.hidden = !details.open;
+                    };
+
+                    details.addEventListener('toggle', syncState);
+                    closeButton.addEventListener('click', () => {
+                        details.removeAttribute('open');
                     });
+
+                    syncState();
                 });
             });
         </script>
