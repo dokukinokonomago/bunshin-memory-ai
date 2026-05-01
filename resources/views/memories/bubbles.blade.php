@@ -1972,7 +1972,7 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
-["detAction", "detFilter"].forEach((id) => {
+["detAction"].forEach((id) => {
     const details = document.getElementById(id);
     if (!details) {
         return;
@@ -1983,7 +1983,7 @@ document.addEventListener("keydown", (event) => {
             return;
         }
 
-        ["detAction", "detFilter"].forEach((otherId) => {
+        ["detAction"].forEach((otherId) => {
             const other = document.getElementById(otherId);
             if (other && other !== details) {
                 other.removeAttribute("open");
@@ -1993,7 +1993,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 document.addEventListener("click", (event) => {
-    ["detAction", "detFilter"].forEach((id) => {
+    ["detAction"].forEach((id) => {
         const details = document.getElementById(id);
         if (details && !details.contains(event.target)) {
             details.removeAttribute("open");
