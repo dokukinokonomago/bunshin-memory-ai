@@ -1295,15 +1295,6 @@ function drawParallaxBack() {
 function drawOverviewNodes() {
     const nodes = [
         {
-            id: "count",
-            x: 306,
-            y: 214,
-            r: 96,
-            title: String(allCount),
-            copy: "全記憶数 / 宇宙をただよう記録",
-            actions: []
-        },
-        {
             id: "cta",
             x: 700,
             y: 418,
