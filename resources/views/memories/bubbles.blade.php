@@ -463,20 +463,21 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 
 .mem-hud {
     position: absolute;
-    left: 22px;
-    top: 118px;
+    left: 28px;
+    top: 154px;
     z-index: 14;
-    width: min(380px, calc(100vw - 44px));
-    padding: 18px 18px 16px;
-    border-radius: 24px;
-    border: 1px solid rgba(106, 174, 255, 0.18);
+    width: min(312px, calc(100vw - 44px));
+    padding: 16px 18px 15px;
+    border-radius: 26px;
+    border: 1px solid rgba(173, 214, 255, 0.12);
     background:
-        linear-gradient(180deg, rgba(10, 18, 48, 0.86), rgba(4, 8, 26, 0.88)),
-        radial-gradient(circle at 16% 10%, rgba(255,255,255,0.12), transparent 34%);
+        linear-gradient(180deg, rgba(14, 22, 48, 0.42), rgba(5, 10, 26, 0.28)),
+        radial-gradient(circle at 20% 0%, rgba(255,255,255,0.16), transparent 34%),
+        radial-gradient(circle at 100% 100%, rgba(113, 173, 255, 0.12), transparent 40%);
     box-shadow:
-        0 24px 50px rgba(0,0,0,0.34),
-        inset 0 1px 0 rgba(255,255,255,0.08);
-    backdrop-filter: blur(18px);
+        0 18px 34px rgba(0,0,0,0.18),
+        inset 0 1px 0 rgba(255,255,255,0.10);
+    backdrop-filter: blur(28px) saturate(1.08);
 }
 
 .mem-hud-copy {
@@ -493,15 +494,16 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 }
 
 .mem-hud-copy strong {
-    color: rgba(246, 249, 255, 0.98);
-    font-size: 22px;
-    font-weight: 800;
-    line-height: 1.28;
+    color: rgba(242, 247, 255, 0.92);
+    font-size: 20px;
+    font-weight: 760;
+    line-height: 1.34;
+    letter-spacing: 0.01em;
 }
 
 .mem-hud-copy p {
-    color: rgba(202, 220, 248, 0.76);
-    font-size: 13px;
+    color: rgba(209, 224, 248, 0.64);
+    font-size: 12px;
     line-height: 1.7;
 }
 
@@ -839,6 +841,7 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 
 .mg-era-title,
 .mg-era-count,
+.mg-era-count-unit,
 .mg-era-caption,
 .mg-overview-title,
 .mg-overview-copy,
@@ -856,19 +859,30 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 
 .mg-era-title,
 .mg-overview-title {
-    fill: rgba(247, 250, 255, 0.98);
-    font-weight: 900;
-    letter-spacing: 0.05em;
+    fill: rgba(241, 246, 255, 0.94);
+    font-weight: 760;
+    letter-spacing: 0.16em;
+    font-family: "Avenir Next", "SF Pro Display", "Hiragino Sans", sans-serif;
 }
 
 .mg-era-count {
-    fill: rgba(255,255,255,0.98);
-    font-weight: 900;
+    fill: rgba(242, 248, 255, 0.88);
+    font-weight: 700;
+    font-family: "Avenir Next", "SF Pro Display", sans-serif;
+}
+
+.mg-era-count-unit {
+    fill: rgba(201, 218, 244, 0.64);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    font-family: "Avenir Next", "SF Pro Display", sans-serif;
+    stroke-width: 2px;
 }
 
 .mg-era-caption,
 .mg-overview-copy {
-    fill: rgba(205, 222, 250, 0.82);
+    fill: rgba(214, 228, 250, 0.74);
     font-size: 12px;
     line-height: 1.6;
 }
@@ -891,8 +905,8 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 }
 
 .mg-cluster-halo {
-    fill: rgba(120, 176, 255, 0.05);
-    stroke: rgba(174, 212, 255, 0.16);
+    fill: rgba(120, 176, 255, 0.06);
+    stroke: rgba(174, 212, 255, 0.18);
     stroke-width: 1;
     stroke-dasharray: 6 10;
 }
@@ -973,7 +987,7 @@ details[open] .mem-chevron { transform: rotate(180deg); }
         left: 16px;
         right: 16px;
         width: auto;
-        top: 160px;
+        top: 170px;
     }
 
     .mem-detail {
@@ -1032,13 +1046,13 @@ const ERA_SCALE = 2.35;
 const MEMORY_SCALE = 4.8;
 
 const ERA_ANCHORS = {
-    "幼少期": { x: 190, y: 250, r: 114 },
-    "小学生": { x: 300, y: 640, r: 118 },
-    "中学生": { x: 610, y: 630, r: 122 },
-    "高校生": { x: 890, y: 560, r: 126 },
-    "大学生": { x: 1090, y: 250, r: 118 },
-    "成人期": { x: 1235, y: 455, r: 114 },
-    "不明": { x: 705, y: 195, r: 106 }
+    "幼少期": { x: 248, y: 298, r: 148 },
+    "小学生": { x: 338, y: 708, r: 152 },
+    "中学生": { x: 642, y: 668, r: 154 },
+    "高校生": { x: 930, y: 592, r: 158 },
+    "大学生": { x: 1076, y: 286, r: 148 },
+    "成人期": { x: 1238, y: 476, r: 146 },
+    "不明": { x: 724, y: 214, r: 136 }
 };
 
 const ERA_PALETTES = {
@@ -1052,14 +1066,14 @@ const ERA_PALETTES = {
 };
 
 const CLUSTER_SLOT_OFFSETS = [
-    { x: -140, y: -92 },
-    { x: 132, y: -122 },
-    { x: 182, y: 42 },
-    { x: 12, y: 156 },
-    { x: -170, y: 102 },
-    { x: -28, y: -176 },
-    { x: 154, y: 154 },
-    { x: -208, y: -26 }
+    { x: -0.26, y: -0.22 },
+    { x: 0.22, y: -0.24 },
+    { x: 0.30, y: 0.02 },
+    { x: 0.08, y: 0.24 },
+    { x: -0.24, y: 0.20 },
+    { x: -0.08, y: -0.32 },
+    { x: 0.22, y: 0.28 },
+    { x: -0.34, y: -0.02 }
 ];
 
 const universe = document.getElementById("memUniverse");
@@ -1219,16 +1233,16 @@ function buildWorld() {
         const clusters = Array.from(clusterMap.entries()).slice(0, CLUSTER_SLOT_OFFSETS.length).map(([key, clusterMemories], clusterIndex) => {
             const slot = CLUSTER_SLOT_OFFSETS[clusterIndex] ?? CLUSTER_SLOT_OFFSETS[clusterIndex % CLUSTER_SLOT_OFFSETS.length];
             const clusterSeed = seeded((eraIndex + 1) * 901 + clusterIndex * 37);
-            const jitterX = (clusterSeed() - 0.5) * 32;
-            const jitterY = (clusterSeed() - 0.5) * 24;
-            const centerX = anchor.x + slot.x + jitterX;
-            const centerY = anchor.y + slot.y + jitterY;
+            const jitterX = (clusterSeed() - 0.5) * 12;
+            const jitterY = (clusterSeed() - 0.5) * 10;
+            const centerX = anchor.x + slot.x * anchor.r * 0.9 + jitterX;
+            const centerY = anchor.y + slot.y * anchor.r * 0.9 + jitterY;
 
             const items = clusterMemories.map((memory, memoryIndex) => {
                 const rand = seeded(memory.id * 761 + memoryIndex * 97);
                 const angle = (Math.PI * 2 * memoryIndex) / Math.max(clusterMemories.length, 1) + rand() * 0.42;
-                const orbit = 26 + Math.floor(memoryIndex / 3) * 22 + rand() * 10;
-                const radius = Math.max(18, 26 + (memory.tags?.length ?? 0) * 1.8 + rand() * 10);
+                const orbit = 14 + Math.floor(memoryIndex / 3) * 16 + rand() * 5;
+                const radius = Math.max(16, 20 + (memory.tags?.length ?? 0) * 1.4 + rand() * 7);
 
                 return {
                     ...memory,
@@ -1402,11 +1416,17 @@ function drawEraNodes() {
             "data-era-anchor": era.period
         });
         const body = el("g", { class: "mg-era-body" });
+        const clipId = `era-clip-${eraIndex}`;
+        const clipPath = el("clipPath", { id: clipId });
+        clipPath.append(el("circle", { cx: era.x, cy: era.y, r: era.r - 14 }));
+        defs.append(clipPath);
 
         body.append(
-            el("circle", { cx: era.x, cy: era.y, r: era.r + 28, fill: `url(#${gradients.auraId})`, filter: "url(#fAura)" }),
+            el("circle", { cx: era.x, cy: era.y, r: era.r + 34, fill: `url(#${gradients.auraId})`, filter: "url(#fAura)", opacity: "0.94" }),
+            el("circle", { cx: era.x, cy: era.y, r: era.r + 14, fill: "rgba(218,235,255,0.09)", filter: "url(#fAura)", opacity: "0.78" }),
             el("circle", { cx: era.x, cy: era.y, r: era.r, class: "mg-era-shell-fill", fill: `url(#${gradients.bodyId})` }),
-            el("circle", { cx: era.x, cy: era.y, r: era.r - 8, class: "mg-era-shell-rim", stroke: `url(#${gradients.rimId})` })
+            el("circle", { cx: era.x, cy: era.y, r: era.r - 7, class: "mg-era-shell-rim", stroke: `url(#${gradients.rimId})` }),
+            el("circle", { cx: era.x, cy: era.y, r: era.r - 22, fill: "rgba(220,236,255,0.035)", stroke: "rgba(255,255,255,0.08)", "stroke-width": "1.1" })
         );
 
         era.preview.forEach((memory, previewIndex) => {
@@ -1425,25 +1445,33 @@ function drawEraNodes() {
 
         const title = el("text", {
             x: era.x,
-            y: era.y - era.r * 0.42,
+            y: era.y - era.r - 18,
             class: "mg-era-title",
-            "font-size": Math.max(22, era.r * 0.23)
+            "font-size": Math.max(18, era.r * 0.14)
         });
         title.textContent = era.period;
         body.append(title);
 
         const count = el("text", {
             x: era.x,
-            y: era.y + 2,
+            y: era.y + era.r + 18,
             class: "mg-era-count",
-            "font-size": Math.max(40, era.r * 0.54)
+            "font-size": Math.max(18, era.r * 0.20)
         });
         count.textContent = String(era.count);
         body.append(count);
 
+        const countUnit = el("text", {
+            x: era.x,
+            y: era.y + era.r + 38,
+            class: "mg-era-count-unit"
+        });
+        countUnit.textContent = "MEMORY ORBS";
+        body.append(countUnit);
+
         const caption = el("text", {
             x: era.x,
-            y: era.y + era.r * 0.46,
+            y: era.y + 4,
             class: "mg-era-caption"
         });
         caption.textContent = era.count > 0 ? "クリックして潜る" : "まだ記憶はありません";
@@ -1460,6 +1488,7 @@ function drawEraNodes() {
 
         era.wrap = wrap;
         era.body = body;
+        era.clipId = clipId;
     });
 }
 
@@ -1471,8 +1500,11 @@ function drawClusterNodes() {
                 "data-era-cluster": era.period,
                 style: `--delay:${(clusterIndex * 0.05).toFixed(2)}s`
             });
+            const clipped = el("g", {
+                "clip-path": `url(#${era.clipId})`
+            });
 
-            wrap.append(
+            clipped.append(
                 el("circle", {
                     cx: cluster.centerX,
                     cy: cluster.centerY,
@@ -1489,7 +1521,7 @@ function drawClusterNodes() {
                 "font-size": "13"
             });
             clusterLabel.textContent = cluster.key;
-            wrap.append(clusterLabel);
+                wrap.append(clusterLabel);
 
             cluster.items.forEach((memory, memoryIndex) => {
                 const gradients = makeGradientSet(`memory-${memory.id}`, memory.colors, false);
@@ -1546,7 +1578,7 @@ function drawClusterNodes() {
 
                 anchor.append(body);
                 node.append(anchor);
-                wrap.append(node);
+                clipped.append(node);
 
                 node.addEventListener("click", (event) => {
                     event.preventDefault();
@@ -1564,6 +1596,7 @@ function drawClusterNodes() {
                 });
             });
 
+            wrap.append(clipped);
             clusterG.append(wrap);
             runtime.clusterRefs.push({ era: era.period, wrap, cluster });
         });
@@ -1651,6 +1684,13 @@ function updateEraVisibility() {
         wrap.style.opacity = visible ? (state.zoomLevel === 2 ? "0.18" : "1") : "0";
         wrap.style.pointerEvents = visible ? "auto" : "none";
         wrap.classList.toggle("is-muted", state.zoomLevel === 2 && visible);
+    });
+
+    runtime.memoryRefs.forEach((ref) => {
+        const visible = state.selectedEra === ref.era;
+        ref.node.style.opacity = visible ? "1" : "0";
+        ref.node.style.pointerEvents = visible ? "auto" : "none";
+        ref.body.style.opacity = state.zoomLevel === 2 && state.selectedMemory !== ref.id ? "0.42" : "1";
     });
 
     runtime.overviewRefs.forEach((wrap) => {
@@ -1745,11 +1785,7 @@ function updatePointerEffects(time) {
     const pointerWorld = state.pointer.active ? screenToWorld(state.pointer) : null;
 
     runtime.memoryRefs.forEach((ref) => {
-        const visible = state.selectedEra === ref.era;
-        ref.node.style.opacity = visible ? "1" : "0";
-        ref.node.style.pointerEvents = visible ? "auto" : "none";
-
-        if (!visible) {
+        if (state.selectedEra !== ref.era) {
             return;
         }
 
@@ -1757,9 +1793,6 @@ function updatePointerEffects(time) {
         const driftY = Math.sin(time * ref.memory.driftSpeed * 1.08 + ref.memory.driftPhase) * ref.memory.driftY;
         const x = ref.memory.baseX + driftX;
         const y = ref.memory.baseY + driftY;
-
-        const labelSize = Math.max(10, ref.memory.radius * 0.3);
-        const metaSize = Math.max(8, ref.memory.radius * 0.17);
 
         let scale = 1;
         let glow = false;
@@ -1781,9 +1814,6 @@ function updatePointerEffects(time) {
 
         ref.body.setAttribute("transform", `translate(${x - ref.memory.baseX} ${y - ref.memory.baseY}) scale(${scale.toFixed(3)} ${scale.toFixed(3)} ${ref.memory.baseX} ${ref.memory.baseY})`);
         ref.body.classList.toggle("is-near", glow || state.selectedMemory === ref.id);
-        ref.label.setAttribute("font-size", `${labelSize * scale}`);
-        ref.meta.setAttribute("font-size", `${metaSize * scale}`);
-        ref.body.style.opacity = state.zoomLevel === 2 && state.selectedMemory !== ref.id ? "0.42" : "1";
     });
 }
 
