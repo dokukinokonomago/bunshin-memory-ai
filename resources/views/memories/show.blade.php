@@ -986,18 +986,65 @@
 
         .memory-bar-track {
             position: relative;
-            height: 10px;
+            height: 12px;
             border-radius: 999px;
             overflow: hidden;
-            background: rgba(77, 101, 146, 0.24);
-            border: 1px solid rgba(139, 184, 255, 0.06);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01)),
+                rgba(77, 101, 146, 0.24);
+            border: 1px solid rgba(139, 184, 255, 0.08);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.10),
+                inset 0 -6px 12px rgba(8, 18, 36, 0.28),
+                0 8px 18px rgba(0, 0, 0, 0.10);
+        }
+
+        .memory-bar-track::before {
+            content: "";
+            position: absolute;
+            inset: 1px 10% auto;
+            height: 46%;
+            border-radius: 999px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0));
+            pointer-events: none;
+            z-index: 2;
         }
 
         .memory-bar-fill {
             display: block;
+            position: relative;
             height: 100%;
             border-radius: inherit;
-            box-shadow: 0 0 16px currentColor;
+            box-shadow:
+                0 0 16px currentColor,
+                inset 0 1px 0 rgba(255, 255, 255, 0.28),
+                inset 0 -6px 10px rgba(255, 255, 255, 0.10);
+        }
+
+        .memory-bar-fill::before,
+        .memory-bar-fill::after {
+            content: "";
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .memory-bar-fill::before {
+            inset: 1px 10% auto;
+            height: 46%;
+            border-radius: inherit;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0));
+            opacity: 0.92;
+        }
+
+        .memory-bar-fill::after {
+            top: 12%;
+            left: 8%;
+            width: 34%;
+            height: 70%;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            filter: blur(6px);
+            opacity: 0.72;
         }
 
         .memory-bar-fill.accent-cool {
