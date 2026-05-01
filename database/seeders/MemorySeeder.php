@@ -74,23 +74,24 @@ class MemorySeeder extends Seeder
 
         Memory::query()->truncate();
 
-        $entries = [];
         $baseTime = Carbon::create(2026, 4, 17, 9, 0, 0, 'Asia/Tokyo')->subDays(400);
 
         foreach ($periods as $period) {
-            $emotion = $this->pickEmotion($emotionPools);
-            $entries[] = $this->buildMemoryEntry($period, $emotion, $moments, $actions, $details, $unknownOpeners, $baseTime->copy());
-            $baseTime->addHours(13);
+            for ($index = 0; $index < 10; $index++) {
+                $emotion = $this->pickEmotion($emotionPools);
+                Memory::query()->create($this->buildMemoryEntry(
+                    $period,
+                    $emotion,
+                    $moments,
+                    $actions,
+                    $details,
+                    $unknownOpeners,
+                    $baseTime->copy(),
+                    $index + 1
+                ));
+                $baseTime->addHours(mt_rand(7, 19));
+            }
         }
-
-        while (count($entries) < 50) {
-            $period = $periods[array_rand($periods)];
-            $emotion = $this->pickEmotion($emotionPools);
-            $entries[] = $this->buildMemoryEntry($period, $emotion, $moments, $actions, $details, $unknownOpeners, $baseTime->copy());
-            $baseTime->addHours(mt_rand(7, 19));
-        }
-
-        Memory::query()->insert($entries);
     }
 
     private function pickEmotion(array $emotionPools): string
@@ -108,7 +109,8 @@ class MemorySeeder extends Seeder
         array $actions,
         array $details,
         array $unknownOpeners,
-        Carbon $timestamp
+        Carbon $timestamp,
+        int $sequence
     ): array {
         $prefix = $period === '不明'
             ? $unknownOpeners[array_rand($unknownOpeners)] . '、'
@@ -125,6 +127,7 @@ class MemorySeeder extends Seeder
             'period' => $period,
             'emotion' => $emotion,
             'content' => $content,
+            'tags' => ['DEMO', 'seed', 'dummy-' . $sequence],
             'created_at' => $timestamp->copy()->utc(),
             'updated_at' => $timestamp->copy()->utc(),
         ];
