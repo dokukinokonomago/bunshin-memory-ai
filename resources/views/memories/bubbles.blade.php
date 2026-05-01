@@ -1795,15 +1795,6 @@ function drawEraNodes() {
             );
         });
 
-        const title = el("text", {
-            x: era.x,
-            y: era.y - era.r - 18,
-            class: "mg-era-title",
-            "font-size": Math.max(18, era.r * 0.14)
-        });
-        title.textContent = era.period;
-        body.append(title);
-
         const count = el("text", {
             x: era.x,
             y: era.y + era.r + 18,
@@ -1812,14 +1803,6 @@ function drawEraNodes() {
         });
         count.textContent = String(era.count);
         body.append(count);
-
-        const countUnit = el("text", {
-            x: era.x,
-            y: era.y + era.r + 38,
-            class: "mg-era-count-unit"
-        });
-        countUnit.textContent = "MEMORY ORBS";
-        body.append(countUnit);
 
         const caption = el("text", {
             x: era.x,
