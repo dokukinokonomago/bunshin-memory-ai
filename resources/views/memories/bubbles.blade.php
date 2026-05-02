@@ -94,6 +94,7 @@
                     <p data-mode-body>気になる年代のシャボン玉をクリックして、その中へ潜ってください。</p>
                 </div>
                 <div class="mem-hud-actions">
+                    <button class="mem-hud-button" type="button" data-timeline-button hidden>時系列にほどく</button>
                     <button class="mem-hud-button" type="button" data-back-button hidden>ひとつ戻る</button>
                     <button class="mem-hud-button mem-hud-button-ghost" type="button" data-overview-button hidden>全体へ戻る</button>
                 </div>
@@ -1695,6 +1696,7 @@ const hud = stage.querySelector(".mem-hud");
 const modeKicker = stage.querySelector("[data-mode-kicker]");
 const modeTitle = stage.querySelector("[data-mode-title]");
 const modeBody = stage.querySelector("[data-mode-body]");
+const timelineButton = stage.querySelector("[data-timeline-button]");
 const backButton = stage.querySelector("[data-back-button]");
 const overviewButton = stage.querySelector("[data-overview-button]");
 const detail = stage.querySelector("[data-memory-detail]");
@@ -1757,6 +1759,10 @@ const state = {
         targetId: null
     },
     timelineMode: false,
+    timelineTap: {
+        period: null,
+        at: 0
+    },
     pageTransitioning: false
 };
 
@@ -2228,18 +2234,21 @@ function drawEraNodes() {
         wrap.addEventListener("click", (event) => {
             event.preventDefault();
             if (focusMode && era.period === selectedPeriod) {
+                const now = Date.now();
+                const isDoubleActivate =
+                    state.timelineTap.period === era.period
+                    && now - state.timelineTap.at < 360;
+
+                state.timelineTap.period = era.period;
+                state.timelineTap.at = now;
+
+                if (isDoubleActivate) {
+                    enterTimelineMode();
+                }
                 return;
             }
             zoomToEra(era.period);
         });
-
-        if (focusMode && era.period === selectedPeriod && era.count > 0) {
-            wrap.addEventListener("dblclick", (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                enterTimelineMode();
-            });
-        }
 
         era.wrap = wrap;
         era.body = body;
@@ -2524,6 +2533,7 @@ function updateHud() {
         modeKicker.textContent = "TIMELINE";
         modeTitle.textContent = `${selectedPeriod}の記憶が時系列にほどけています`;
         modeBody.textContent = "ふわっと並び直した記憶玉から、気になる一粒を選ぶと詳細へ移動します。";
+        timelineButton.hidden = true;
         backButton.textContent = "シャボンへ戻る";
         backButton.hidden = false;
         overviewButton.hidden = false;
@@ -2538,6 +2548,7 @@ function updateHud() {
         modeBody.textContent = focusMode
             ? "記憶玉を選ぶと専用の詳細画面へ移動します。シャボンをダブルクリックすると入力順にほどけます。"
             : "気になる年代のシャボン玉をクリックして、その年代専用画面へ移動してください。";
+        timelineButton.hidden = !(focusMode && (runtime.eras.find((era) => era.period === selectedPeriod)?.count ?? 0) > 0);
         backButton.textContent = focusMode ? "全体俯瞰へ戻る" : "ひとつ戻る";
         backButton.hidden = !focusMode;
         overviewButton.hidden = true;
@@ -2567,6 +2578,7 @@ function updateHud() {
     modeKicker.textContent = "LEVEL 2";
     modeTitle.textContent = `${memory.period}の記憶へ入っています`;
     modeBody.textContent = "他の記憶は静かに退き、選んだ記憶だけが前景に残っています。";
+    timelineButton.hidden = true;
     backButton.hidden = false;
     overviewButton.hidden = false;
 }
@@ -2993,6 +3005,7 @@ svg.addEventListener("touchend", () => {
 
 backButton.addEventListener("click", zoomBack);
 overviewButton.addEventListener("click", goToOverview);
+timelineButton.addEventListener("click", enterTimelineMode);
 detailClose.addEventListener("click", zoomBack);
 detailBack.addEventListener("click", zoomBack);
 
