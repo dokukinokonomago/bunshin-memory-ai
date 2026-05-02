@@ -281,6 +281,9 @@
                     <filter id="fShadow" x="-80%" y="-80%" width="260%" height="260%">
                         <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#000008" flood-opacity="0.75"/>
                     </filter>
+                    <filter id="fTimelineShadow" x="-80%" y="-80%" width="260%" height="260%">
+                        <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#06132e" flood-opacity="0.28"/>
+                    </filter>
                     <filter id="fSpec" x="-120%" y="-120%" width="340%" height="340%">
                         <feGaussianBlur stdDeviation="9"/>
                     </filter>
@@ -289,9 +292,9 @@
                     </filter>
                 </defs>
 
-                <ellipse cx="700" cy="450" rx="520" ry="460" fill="rgba(10,20,80,0.22)" filter="url(#fBgGlow)"/>
-                <ellipse cx="200" cy="780" rx="220" ry="170" fill="rgba(0,30,160,0.14)" filter="url(#fBgGlow)"/>
-                <ellipse cx="1240" cy="130" rx="190" ry="150" fill="rgba(60,0,180,0.10)" filter="url(#fBgGlow)"/>
+                <ellipse class="mem-static-glow" cx="700" cy="450" rx="520" ry="460" fill="rgba(10,20,80,0.22)" filter="url(#fBgGlow)"/>
+                <ellipse class="mem-static-glow" cx="200" cy="780" rx="220" ry="170" fill="rgba(0,30,160,0.14)" filter="url(#fBgGlow)"/>
+                <ellipse class="mem-static-glow" cx="1240" cy="130" rx="190" ry="150" fill="rgba(60,0,180,0.10)" filter="url(#fBgGlow)"/>
 
                 <g id="memViewport">
                     <g id="memParallaxBack"></g>
@@ -339,6 +342,20 @@
     overflow: hidden;
     font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
     transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mem-universe.is-arranged-view {
+    background:
+        radial-gradient(circle at 18% 18%, rgba(76, 186, 255, 0.10), transparent 30%),
+        radial-gradient(circle at 82% 14%, rgba(136, 132, 255, 0.08), transparent 28%),
+        radial-gradient(circle at 50% 84%, rgba(255, 190, 136, 0.06), transparent 34%),
+        linear-gradient(180deg, #081120 0%, #040914 58%, #02050c 100%);
+}
+
+.mem-universe.is-arranged-view .mem-static-glow,
+.mem-universe.is-arranged-view #memParallaxBack,
+.mem-universe.is-arranged-view #memGrid {
+    opacity: 0.16;
 }
 
 .mem-nav,
@@ -1451,6 +1468,12 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     filter: brightness(1.18) saturate(1.22);
 }
 
+.mg-timeline-core .mg-memory-label,
+.mg-timeline-core .mg-timeline-date,
+.mg-timeline-core .mg-timeline-index {
+    stroke: rgba(8, 16, 34, 0.46);
+}
+
 .mg-timeline-date,
 .mg-timeline-index {
     text-anchor: middle;
@@ -1710,6 +1733,10 @@ const graveComposeOpeners = stage.querySelectorAll("[data-open-grave-compose]");
 const graveComposeClosers = stage.querySelectorAll("[data-close-grave-compose]");
 const gravePeriodSelect = stage.querySelector("[data-grave-period-select]");
 const gravePeriodHidden = stage.querySelector("[data-grave-period-hidden]");
+
+if (arrangedMode) {
+    universe.classList.add("is-arranged-view");
+}
 
 const detailFields = {
     period: stage.querySelector("[data-detail-period]"),
@@ -2440,7 +2467,8 @@ function drawTimelineNodes() {
 
         body.append(
             el("circle", { cx: memory.timelineX, cy: memory.timelineY, r: memory.radius + 14, fill: `url(#${gradients.auraId})`, filter: "url(#fAura)", opacity: "0.76" }),
-            el("circle", { cx: memory.timelineX, cy: memory.timelineY, r: memory.radius, fill: `url(#${gradients.bodyId})`, filter: "url(#fShadow)", opacity: "0.97" }),
+            el("circle", { cx: memory.timelineX, cy: memory.timelineY, r: memory.radius + 3, fill: `url(#${gradients.auraId})`, filter: "url(#fAura)", opacity: "0.30" }),
+            el("circle", { cx: memory.timelineX, cy: memory.timelineY, r: memory.radius, fill: `url(#${gradients.bodyId})`, filter: "url(#fTimelineShadow)", opacity: "0.99" }),
             el("circle", { cx: memory.timelineX, cy: memory.timelineY, r: memory.radius - 2.2, class: "mg-memory-rim", filter: "url(#fSpec)" }),
             el("ellipse", {
                 cx: (memory.timelineX - memory.radius * 0.24).toFixed(2),
@@ -2449,6 +2477,15 @@ function drawTimelineNodes() {
                 ry: Math.max(3, memory.radius * 0.1).toFixed(2),
                 fill: "rgba(255,255,255,0.34)",
                 transform: `rotate(-20 ${memory.timelineX - memory.radius * 0.24} ${memory.timelineY - memory.radius * 0.24})`
+            }),
+            el("ellipse", {
+                cx: (memory.timelineX + memory.radius * 0.18).toFixed(2),
+                cy: (memory.timelineY + memory.radius * 0.26).toFixed(2),
+                rx: Math.max(8, memory.radius * 0.34).toFixed(2),
+                ry: Math.max(3, memory.radius * 0.12).toFixed(2),
+                fill: "rgba(255, 214, 165, 0.16)",
+                filter: "url(#fSpec)",
+                transform: `rotate(16 ${memory.timelineX + memory.radius * 0.18} ${memory.timelineY + memory.radius * 0.26})`
             }),
             el("circle", {
                 cx: (memory.timelineX - memory.radius * 0.28).toFixed(2),
@@ -2614,7 +2651,8 @@ function updateEraVisibility() {
         const isFocused = state.selectedEra === era.period;
         era.wrap.classList.toggle("is-focused", isFocused);
         era.wrap.classList.toggle("is-muted", Boolean(state.selectedEra) && !isFocused);
-        era.wrap.style.opacity = state.timelineMode && isFocused ? "0.4" : "1";
+        era.wrap.style.opacity = state.timelineMode ? "0" : "1";
+        era.wrap.style.pointerEvents = state.timelineMode ? "none" : "auto";
     });
 
     runtime.clusterRefs.forEach(({ era, wrap }) => {
