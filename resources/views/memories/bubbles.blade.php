@@ -5,7 +5,7 @@
 
 @section('content')
 @php($shouldOpenGraveComposer = old('grave_form') === '1')
-<div class="mem-universe" id="memUniverse">
+<div class="mem-universe {{ $arrangedMode ? 'is-arranged-view' : '' }}" id="memUniverse">
     <canvas id="starCanvas" class="star-canvas" aria-hidden="true"></canvas>
     <div class="mem-transition-screen" data-page-transition aria-hidden="true"></div>
 
@@ -292,9 +292,11 @@
                     </filter>
                 </defs>
 
-                <ellipse class="mem-static-glow" cx="700" cy="450" rx="520" ry="460" fill="rgba(10,20,80,0.22)" filter="url(#fBgGlow)"/>
-                <ellipse class="mem-static-glow" cx="200" cy="780" rx="220" ry="170" fill="rgba(0,30,160,0.14)" filter="url(#fBgGlow)"/>
-                <ellipse class="mem-static-glow" cx="1240" cy="130" rx="190" ry="150" fill="rgba(60,0,180,0.10)" filter="url(#fBgGlow)"/>
+                @unless($arrangedMode)
+                    <ellipse class="mem-static-glow" cx="700" cy="450" rx="520" ry="460" fill="rgba(10,20,80,0.22)" filter="url(#fBgGlow)"/>
+                    <ellipse class="mem-static-glow" cx="200" cy="780" rx="220" ry="170" fill="rgba(0,30,160,0.14)" filter="url(#fBgGlow)"/>
+                    <ellipse class="mem-static-glow" cx="1240" cy="130" rx="190" ry="150" fill="rgba(60,0,180,0.10)" filter="url(#fBgGlow)"/>
+                @endunless
 
                 <g id="memViewport">
                     <g id="memParallaxBack"></g>
@@ -352,10 +354,12 @@
         linear-gradient(180deg, #081120 0%, #040914 58%, #02050c 100%);
 }
 
-.mem-universe.is-arranged-view .mem-static-glow,
 .mem-universe.is-arranged-view #memParallaxBack,
-.mem-universe.is-arranged-view #memGrid {
-    opacity: 0.16;
+.mem-universe.is-arranged-view #memGrid,
+.mem-universe.is-arranged-view #memEraNodes,
+.mem-universe.is-arranged-view #memClusterNodes {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .mem-nav,
@@ -1734,10 +1738,6 @@ const graveComposeClosers = stage.querySelectorAll("[data-close-grave-compose]")
 const gravePeriodSelect = stage.querySelector("[data-grave-period-select]");
 const gravePeriodHidden = stage.querySelector("[data-grave-period-hidden]");
 
-if (arrangedMode) {
-    universe.classList.add("is-arranged-view");
-}
-
 const detailFields = {
     period: stage.querySelector("[data-detail-period]"),
     title: stage.querySelector("[data-detail-title]"),
@@ -1860,6 +1860,39 @@ function makeGradientSet(prefix, colors, shell = false) {
         el("stop", { offset: "0%", "stop-color": rgba(c0, 0) }),
         el("stop", { offset: "62%", "stop-color": rgba(c0, shell ? 0.08 : 0.18) }),
         el("stop", { offset: "100%", "stop-color": rgba(c1, shell ? 0.16 : 0.30) })
+    );
+
+    defs.append(body, rim, aura);
+    return { bodyId, rimId, auraId };
+}
+
+function makeTimelineGradientSet(prefix, colors, auraColors) {
+    const [c0, c1] = colors;
+    const [a0, a1] = auraColors;
+    const bodyId = `${prefix}-body`;
+    const rimId = `${prefix}-rim`;
+    const auraId = `${prefix}-aura`;
+
+    const body = el("radialGradient", { id: bodyId, cx: "32%", cy: "24%", r: "78%" });
+    body.append(
+        el("stop", { offset: "0%", "stop-color": rgba("#ffffff", 0.92) }),
+        el("stop", { offset: "20%", "stop-color": rgba(c0, 0.94) }),
+        el("stop", { offset: "56%", "stop-color": rgba("#ffffff", 0.34) }),
+        el("stop", { offset: "100%", "stop-color": rgba(c1, 0.98) })
+    );
+
+    const rim = el("linearGradient", { id: rimId, x1: "0%", y1: "0%", x2: "100%", y2: "100%" });
+    rim.append(
+        el("stop", { offset: "0%", "stop-color": rgba("#ffffff", 0.94) }),
+        el("stop", { offset: "40%", "stop-color": rgba(c0, 0.86) }),
+        el("stop", { offset: "100%", "stop-color": rgba(c1, 0.96) })
+    );
+
+    const aura = el("radialGradient", { id: auraId, cx: "50%", cy: "50%", r: "50%" });
+    aura.append(
+        el("stop", { offset: "0%", "stop-color": rgba(a0, 0) }),
+        el("stop", { offset: "60%", "stop-color": rgba(a0, 0.22) }),
+        el("stop", { offset: "100%", "stop-color": rgba(a1, 0.34) })
     );
 
     defs.append(body, rim, aura);
@@ -2449,7 +2482,11 @@ function drawTimelineNodes() {
     timelineG.append(track);
 
     era.chronological.forEach((memory, index) => {
-        const gradients = makeGradientSet(`timeline-memory-${memory.id}`, memory.colors, false);
+        const gradients = makeTimelineGradientSet(
+            `timeline-memory-${memory.id}`,
+            memory.periodColors ?? memory.colors,
+            memory.colors
+        );
         const wrap = el("g", {
             class: "mg-timeline-node",
             "data-timeline-memory": String(memory.id),
@@ -3193,12 +3230,16 @@ document.addEventListener("click", (event) => {
 })();
 
 buildWorld();
-drawParallaxBack();
-drawGrid();
+if (!arrangedMode) {
+    drawParallaxBack();
+    drawGrid();
+}
 drawOverviewNodes();
 drawGraveModeBubble();
-drawEraNodes();
-drawClusterNodes();
+if (!arrangedMode) {
+    drawEraNodes();
+    drawClusterNodes();
+}
 drawTimelineNodes();
 
 if (focusMode) {
