@@ -530,6 +530,7 @@ class MemoryController extends Controller
             'excerpt' => Str::limit(trim($memory->content), 58, '…'),
             'comment' => $this->memoryCompanionComment($memory, $cluster, $theme),
             'createdAt' => optional($memory->created_at)->timezone('Asia/Tokyo')->format('Y.m.d H:i') ?? '--.--.-- --:--',
+            'createdAtTs' => optional($memory->created_at)->getTimestamp() ?? 0,
             'tone' => $tone,
             'colors' => $this->toneColors($tone),
             'periodColors' => $this->periodColors($memory->period),

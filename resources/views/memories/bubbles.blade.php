@@ -299,6 +299,7 @@
                     <g id="memOverviewNodes"></g>
                     <g id="memEraNodes"></g>
                     <g id="memClusterNodes"></g>
+                    <g id="memTimelineNodes"></g>
                 </g>
             </svg>
 
@@ -1247,7 +1248,8 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 .mg-overview-node,
 .mg-era-node,
 .mg-cluster-node,
-.mg-memory-node {
+.mg-memory-node,
+.mg-timeline-node {
     opacity: 0;
     animation: mgReveal 0.88s cubic-bezier(0.22, 0.85, 0.32, 1) var(--delay, 0s) forwards;
 }
@@ -1274,6 +1276,7 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 
 .mg-era-anchor,
 .mg-memory-anchor,
+.mg-timeline-anchor,
 .mg-overview-anchor {
     cursor: pointer;
     text-decoration: none;
@@ -1281,14 +1284,16 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 
 .mg-era-shell,
 .mg-overview-shell,
-.mg-cluster-shell {
+.mg-cluster-shell,
+.mg-timeline-shell {
     transform-box: fill-box;
     transform-origin: center;
 }
 
 .mg-era-body,
 .mg-overview-body,
-.mg-memory-core {
+.mg-memory-core,
+.mg-timeline-core {
     transition: transform 0.28s ease, filter 0.28s ease, opacity 0.28s ease;
 }
 
@@ -1380,6 +1385,96 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 
 .mg-memory-core.is-near {
     filter: brightness(1.18) saturate(1.22);
+}
+
+#memTimelineNodes {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#memTimelineNodes.is-active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.mg-timeline-track {
+    fill: none;
+    stroke: rgba(156, 220, 255, 0.30);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 10 12;
+    filter: url(#fAura);
+    opacity: 0.84;
+}
+
+.mg-timeline-track-glow {
+    fill: none;
+    stroke: rgba(114, 196, 255, 0.14);
+    stroke-width: 18;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: url(#fAura);
+}
+
+.mg-timeline-settle {
+    transform: translate(var(--entry-offset-x, 0px), var(--entry-offset-y, 0px));
+    transform-box: fill-box;
+    transform-origin: center;
+    transition:
+        transform 0.82s cubic-bezier(0.22, 0.82, 0.24, 1),
+        opacity 0.28s ease;
+}
+
+#memTimelineNodes.is-active .mg-timeline-settle {
+    transform: translate(0px, 0px);
+}
+
+.mg-timeline-node {
+    transition: opacity 0.24s ease;
+}
+
+.mg-timeline-node.is-muted {
+    opacity: 0.16;
+}
+
+.mg-timeline-node.is-selected {
+    opacity: 1;
+}
+
+.mg-timeline-node.is-selected .mg-timeline-core {
+    filter: brightness(1.16) saturate(1.14);
+}
+
+.mg-timeline-core.is-near {
+    filter: brightness(1.18) saturate(1.22);
+}
+
+.mg-timeline-date,
+.mg-timeline-index {
+    text-anchor: middle;
+    dominant-baseline: middle;
+    paint-order: stroke;
+    stroke: rgba(4, 10, 24, 0.74);
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+.mg-timeline-date {
+    fill: rgba(214, 228, 250, 0.80);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    stroke-width: 2px;
+}
+
+.mg-timeline-index {
+    fill: rgba(142, 212, 255, 0.66);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    stroke-width: 2px;
 }
 
 .mg-cluster-halo {
@@ -1593,6 +1688,7 @@ const gridG = document.getElementById("memGrid");
 const overviewG = document.getElementById("memOverviewNodes");
 const eraG = document.getElementById("memEraNodes");
 const clusterG = document.getElementById("memClusterNodes");
+const timelineG = document.getElementById("memTimelineNodes");
 const stage = document.getElementById("memStage");
 const transitionScreen = universe.querySelector("[data-page-transition]");
 const hud = stage.querySelector(".mem-hud");
@@ -1660,6 +1756,7 @@ const state = {
         active: false,
         targetId: null
     },
+    timelineMode: false,
     pageTransitioning: false
 };
 
@@ -1667,6 +1764,7 @@ const runtime = {
     eras: [],
     memoryRefs: [],
     clusterRefs: [],
+    timelineRefs: [],
     overviewRefs: [],
     graveRef: null
 };
@@ -1800,6 +1898,61 @@ function buildWorld() {
             };
         });
 
+        const memoryLayout = new Map();
+        clusters.forEach((cluster) => {
+            cluster.items.forEach((item) => {
+                memoryLayout.set(item.id, item);
+            });
+        });
+
+        const chronological = [...list]
+            .sort((left, right) => {
+                const leftTs = Number(left.createdAtTs ?? 0);
+                const rightTs = Number(right.createdAtTs ?? 0);
+                if (leftTs !== rightTs) {
+                    return leftTs - rightTs;
+                }
+
+                return Number(left.id) - Number(right.id);
+            })
+            .map((memory, timelineIndex) => {
+                const source = memoryLayout.get(memory.id) ?? {
+                    baseX: anchor.x,
+                    baseY: anchor.y,
+                    radius: Math.max(18, anchor.r * 0.15),
+                };
+                const count = Math.max(list.length, 1);
+                const rows = count > 8 ? 2 : 1;
+                const perRow = rows === 1 ? count : Math.ceil(count / rows);
+                const row = rows === 1 ? 0 : Math.floor(timelineIndex / perRow);
+                const column = rows === 1 ? timelineIndex : timelineIndex % perRow;
+                const rowCount = rows === 1
+                    ? count
+                    : (row === 0 ? Math.min(perRow, count) : Math.max(1, count - perRow));
+                const span = rowCount <= 1 ? 0 : 680;
+                const startX = 700 - span / 2;
+                const ratio = rowCount <= 1 ? 0.5 : column / (rowCount - 1);
+                const timelineX = rowCount <= 1 ? 700 : startX + span * ratio;
+                const wave = rowCount <= 1 ? 0 : Math.sin(ratio * Math.PI) * 24;
+                const baseTimelineY = rows === 1 ? 492 : (row === 0 ? 446 : 592);
+                const sway = row % 2 === 0 ? 1 : -1;
+                const timelineY = baseTimelineY + wave * sway + (column % 2 === 0 ? -10 : 10);
+
+                return {
+                    ...memory,
+                    baseX: source.baseX,
+                    baseY: source.baseY,
+                    radius: Math.min(34, Math.max(22, source.radius + 1)),
+                    driftX: 4 + ((timelineIndex % 3) * 1.6),
+                    driftY: 3 + ((timelineIndex % 4) * 1.4),
+                    driftSpeed: 0.44 + (timelineIndex % 5) * 0.07,
+                    driftPhase: (timelineIndex + 1) * 0.72,
+                    timelineX,
+                    timelineY,
+                    timelineIndex,
+                };
+            });
+
         return {
             period,
             x: anchor.x,
@@ -1807,7 +1960,8 @@ function buildWorld() {
             r: anchor.r,
             count,
             preview,
-            clusters
+            clusters,
+            chronological
         };
     });
 }
@@ -2062,7 +2216,9 @@ function drawEraNodes() {
             y: era.y + 4,
             class: "mg-era-caption"
         });
-        caption.textContent = era.count > 0 ? "クリックして潜る" : "まだ記憶はありません";
+        caption.textContent = focusMode
+            ? (era.count > 0 ? "ダブルクリックで時系列にほどく" : "まだ記憶はありません")
+            : (era.count > 0 ? "クリックして潜る" : "まだ記憶はありません");
         body.append(caption);
 
         anchor.append(body);
@@ -2071,8 +2227,19 @@ function drawEraNodes() {
 
         wrap.addEventListener("click", (event) => {
             event.preventDefault();
+            if (focusMode && era.period === selectedPeriod) {
+                return;
+            }
             zoomToEra(era.period);
         });
+
+        if (focusMode && era.period === selectedPeriod && era.count > 0) {
+            wrap.addEventListener("dblclick", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                enterTimelineMode();
+            });
+        }
 
         era.wrap = wrap;
         era.body = body;
@@ -2191,6 +2358,136 @@ function drawClusterNodes() {
     });
 }
 
+function timelinePath(items) {
+    if (items.length === 0) {
+        return "";
+    }
+
+    if (items.length === 1) {
+        const item = items[0];
+        return `M ${item.timelineX} ${item.timelineY}`;
+    }
+
+    return items.map((item, index) => {
+        if (index === 0) {
+            return `M ${item.timelineX} ${item.timelineY}`;
+        }
+
+        const previous = items[index - 1];
+        const controlX = ((previous.timelineX + item.timelineX) / 2).toFixed(2);
+        return `C ${controlX} ${previous.timelineY.toFixed(2)} ${controlX} ${item.timelineY.toFixed(2)} ${item.timelineX.toFixed(2)} ${item.timelineY.toFixed(2)}`;
+    }).join(" ");
+}
+
+function drawTimelineNodes() {
+    if (!focusMode || selectedPeriod === "すべて") {
+        return;
+    }
+
+    const era = runtime.eras.find((entry) => entry.period === selectedPeriod);
+    if (!era || era.chronological.length === 0) {
+        return;
+    }
+
+    const track = el("g", { class: "mg-timeline-track-wrap" });
+    const glowPath = el("path", {
+        d: timelinePath(era.chronological),
+        class: "mg-timeline-track-glow"
+    });
+    const path = el("path", {
+        d: timelinePath(era.chronological),
+        class: "mg-timeline-track"
+    });
+    track.append(glowPath, path);
+    timelineG.append(track);
+
+    era.chronological.forEach((memory, index) => {
+        const gradients = makeGradientSet(`timeline-memory-${memory.id}`, memory.colors, false);
+        const wrap = el("g", {
+            class: "mg-timeline-node",
+            "data-timeline-memory": String(memory.id),
+            style: `--delay:${(index * 0.04).toFixed(2)}s`
+        });
+        const anchor = el("a", {
+            class: "mg-timeline-anchor",
+            "data-memory-anchor": String(memory.id)
+        });
+        const settle = el("g", {
+            class: "mg-timeline-settle",
+            style: `--entry-offset-x:${(memory.baseX - memory.timelineX).toFixed(2)}px; --entry-offset-y:${(memory.baseY - memory.timelineY).toFixed(2)}px;`
+        });
+        const body = el("g", { class: "mg-timeline-core" });
+
+        body.append(
+            el("circle", { cx: memory.timelineX, cy: memory.timelineY, r: memory.radius + 14, fill: `url(#${gradients.auraId})`, filter: "url(#fAura)", opacity: "0.76" }),
+            el("circle", { cx: memory.timelineX, cy: memory.timelineY, r: memory.radius, fill: `url(#${gradients.bodyId})`, filter: "url(#fShadow)", opacity: "0.97" }),
+            el("circle", { cx: memory.timelineX, cy: memory.timelineY, r: memory.radius - 2.2, class: "mg-memory-rim", filter: "url(#fSpec)" }),
+            el("ellipse", {
+                cx: (memory.timelineX - memory.radius * 0.24).toFixed(2),
+                cy: (memory.timelineY - memory.radius * 0.24).toFixed(2),
+                rx: Math.max(6, memory.radius * 0.24).toFixed(2),
+                ry: Math.max(3, memory.radius * 0.1).toFixed(2),
+                fill: "rgba(255,255,255,0.34)",
+                transform: `rotate(-20 ${memory.timelineX - memory.radius * 0.24} ${memory.timelineY - memory.radius * 0.24})`
+            }),
+            el("circle", {
+                cx: (memory.timelineX - memory.radius * 0.28).toFixed(2),
+                cy: (memory.timelineY - memory.radius * 0.30).toFixed(2),
+                r: Math.max(3, memory.radius * 0.15).toFixed(2),
+                fill: "rgba(255,255,255,0.88)",
+                filter: "url(#fSpec)"
+            }),
+            el("circle", { cx: memory.timelineX, cy: memory.timelineY, r: memory.radius + 18, "data-hit": "true" })
+        );
+
+        const label = el("text", {
+            x: memory.timelineX,
+            y: memory.timelineY - 2,
+            class: "mg-memory-label",
+            "font-size": Math.max(11, memory.radius * 0.28)
+        });
+        label.textContent = memory.label;
+        body.append(label);
+
+        const date = el("text", {
+            x: memory.timelineX,
+            y: memory.timelineY + memory.radius + 18,
+            class: "mg-timeline-date"
+        });
+        date.textContent = memory.createdAt;
+        body.append(date);
+
+        const order = el("text", {
+            x: memory.timelineX,
+            y: memory.timelineY - memory.radius - 16,
+            class: "mg-timeline-index"
+        });
+        order.textContent = `${index + 1}`;
+        body.append(order);
+
+        settle.append(body);
+        anchor.append(settle);
+        wrap.append(anchor);
+        timelineG.append(wrap);
+
+        wrap.addEventListener("click", (event) => {
+            event.preventDefault();
+            zoomToMemory(memory.id);
+        });
+
+        runtime.timelineRefs.push({
+            id: memory.id,
+            memory,
+            wrap,
+            settle,
+            body,
+            label,
+            date,
+            order
+        });
+    });
+}
+
 function setUniversePalette(period) {
     const palette = period ? (ERA_PALETTES[period] ?? ERA_PALETTES["高校生"]) : ["rgba(68, 146, 255, 0.18)", "rgba(132, 104, 255, 0.14)", "rgba(255, 186, 124, 0.09)"];
     universe.style.setProperty("--era-a", palette[0]);
@@ -2198,13 +2495,48 @@ function setUniversePalette(period) {
     universe.style.setProperty("--era-c", palette[2]);
 }
 
+function enterTimelineMode() {
+    if (!focusMode || selectedPeriod === "すべて" || state.timelineMode || state.pageTransitioning) {
+        return;
+    }
+
+    state.timelineMode = true;
+    detail.hidden = true;
+    timelineG.classList.add("is-active");
+    updateEraVisibility();
+    updateHud();
+}
+
+function exitTimelineMode() {
+    if (!state.timelineMode) {
+        return;
+    }
+
+    state.timelineMode = false;
+    timelineG.classList.remove("is-active");
+    updateEraVisibility();
+    updateHud();
+}
+
 function updateHud() {
+    if (state.timelineMode && focusMode) {
+        hud.classList.remove("is-dormant");
+        modeKicker.textContent = "TIMELINE";
+        modeTitle.textContent = `${selectedPeriod}の記憶が時系列にほどけています`;
+        modeBody.textContent = "ふわっと並び直した記憶玉から、気になる一粒を選ぶと詳細へ移動します。";
+        backButton.textContent = "シャボンへ戻る";
+        backButton.hidden = false;
+        overviewButton.hidden = false;
+        detail.hidden = true;
+        return;
+    }
+
     if (state.zoomLevel === 0) {
         hud.classList.remove("is-dormant");
         modeKicker.textContent = focusMode ? "ERA VIEW" : "LEVEL 0";
         modeTitle.textContent = focusMode ? `${selectedPeriod}の記憶だけを表示しています` : "人生全体を俯瞰しています";
         modeBody.textContent = focusMode
-            ? "記憶玉を選ぶと専用の詳細画面へ移動します。"
+            ? "記憶玉を選ぶと専用の詳細画面へ移動します。シャボンをダブルクリックすると入力順にほどけます。"
             : "気になる年代のシャボン玉をクリックして、その年代専用画面へ移動してください。";
         backButton.textContent = focusMode ? "全体俯瞰へ戻る" : "ひとつ戻る";
         backButton.hidden = !focusMode;
@@ -2271,10 +2603,18 @@ function updateEraVisibility() {
         const isFocused = state.selectedEra === era.period;
         era.wrap.classList.toggle("is-focused", isFocused);
         era.wrap.classList.toggle("is-muted", Boolean(state.selectedEra) && !isFocused);
+        era.wrap.style.opacity = state.timelineMode && isFocused ? "0.4" : "1";
     });
 
     runtime.clusterRefs.forEach(({ era, wrap }) => {
         const visible = state.selectedEra === era;
+        if (state.timelineMode) {
+            wrap.style.opacity = "0";
+            wrap.style.pointerEvents = "none";
+            wrap.classList.remove("is-muted");
+            return;
+        }
+
         const clusterOpacity = state.zoomLevel === 2
             ? (state.memoryTransition.active ? "0" : "0.18")
             : "1";
@@ -2285,6 +2625,13 @@ function updateEraVisibility() {
 
     runtime.memoryRefs.forEach((ref) => {
         const visible = state.selectedEra === ref.era;
+        if (state.timelineMode) {
+            ref.node.style.opacity = "0";
+            ref.node.style.pointerEvents = "none";
+            ref.body.style.opacity = "0";
+            return;
+        }
+
         const keepOnlySelected = state.zoomLevel === 2 && state.memoryTransition.active;
         const nodeVisible = visible && (!keepOnlySelected || state.selectedMemory === ref.id);
         ref.node.style.opacity = nodeVisible ? "1" : "0";
@@ -2294,6 +2641,18 @@ function updateEraVisibility() {
             : "1";
     });
 
+    runtime.timelineRefs.forEach((ref) => {
+        const showTimeline = state.timelineMode;
+        const keepOnlySelected = showTimeline && state.memoryTransition.active;
+        const nodeVisible = showTimeline && (!keepOnlySelected || state.selectedMemory === ref.id);
+        ref.wrap.style.opacity = nodeVisible ? "1" : "0";
+        ref.wrap.style.pointerEvents = nodeVisible ? "auto" : "none";
+        ref.wrap.classList.toggle("is-selected", state.selectedMemory === ref.id);
+        ref.wrap.classList.toggle("is-muted", showTimeline && state.selectedMemory !== null && state.selectedMemory !== ref.id && !state.memoryTransition.active);
+    });
+
+    timelineG.classList.toggle("is-active", state.timelineMode);
+
     runtime.overviewRefs.forEach((wrap) => {
         wrap.style.opacity = state.zoomLevel === 0 ? "1" : "0.14";
         wrap.style.pointerEvents = state.zoomLevel === 0 ? "auto" : "none";
@@ -2301,6 +2660,11 @@ function updateEraVisibility() {
 }
 
 function zoomToOverview() {
+    if (state.timelineMode) {
+        exitTimelineMode();
+        return;
+    }
+
     if (focusMode) {
         window.location.href = overviewUrl;
         return;
@@ -2318,6 +2682,10 @@ function zoomToOverview() {
 }
 
 function zoomToEra(period) {
+    if (focusMode && period === selectedPeriod) {
+        return;
+    }
+
     if (periodUrls[period]) {
         window.location.href = periodUrls[period];
         return;
@@ -2330,12 +2698,25 @@ function zoomToEra(period) {
 }
 
 function zoomToMemory(memoryId) {
-    const entry = runtime.memoryRefs.find((ref) => ref.id === memoryId);
+    if (state.pageTransitioning || state.memoryTransition.active) {
+        return;
+    }
+
+    const entry = runtime.memoryRefs.find((ref) => ref.id === memoryId)
+        ?? runtime.timelineRefs.find((ref) => ref.id === memoryId);
     if (!entry) {
         return;
     }
 
-    startPageTransition(entry.memory.url);
+    state.selectedMemory = memoryId;
+    state.memoryTransition.active = true;
+    state.memoryTransition.targetId = memoryId;
+    updateEraVisibility();
+    updateHud();
+
+    window.setTimeout(() => {
+        startPageTransition(entry.memory.url);
+    }, 190);
 }
 
 function startPageTransition(url) {
@@ -2357,6 +2738,20 @@ function startPageTransition(url) {
 }
 
 function zoomBack() {
+    if (state.timelineMode) {
+        exitTimelineMode();
+        return;
+    }
+
+    zoomToOverview();
+}
+
+function goToOverview() {
+    if (focusMode) {
+        window.location.href = overviewUrl;
+        return;
+    }
+
     zoomToOverview();
 }
 
@@ -2421,6 +2816,33 @@ function updatePointerEffects(time) {
         }
 
         ref.body.setAttribute("transform", `translate(${x - ref.memory.baseX} ${y - ref.memory.baseY}) scale(${scale.toFixed(3)} ${scale.toFixed(3)} ${ref.memory.baseX} ${ref.memory.baseY})`);
+        ref.body.classList.toggle("is-near", glow || state.selectedMemory === ref.id);
+    });
+
+    runtime.timelineRefs.forEach((ref) => {
+        let scale = 1;
+        let glow = false;
+        const driftX = Math.cos(time * ref.memory.driftSpeed + ref.memory.driftPhase) * ref.memory.driftX;
+        const driftY = Math.sin(time * ref.memory.driftSpeed * 1.04 + ref.memory.driftPhase) * ref.memory.driftY;
+        const x = ref.memory.timelineX + driftX;
+        const y = ref.memory.timelineY + driftY;
+
+        if (pointerWorld && state.timelineMode && !state.memoryTransition.active) {
+            const dx = pointerWorld.x - x;
+            const dy = pointerWorld.y - y;
+            const distance = Math.hypot(dx, dy);
+            if (distance < ref.memory.radius * 1.7) {
+                const ratio = 1 - distance / (ref.memory.radius * 1.7);
+                scale = 1 + ratio * 0.12;
+                glow = true;
+            }
+        }
+
+        if (state.selectedMemory === ref.id) {
+            scale *= 1.04;
+        }
+
+        ref.body.setAttribute("transform", `translate(${(x - ref.memory.timelineX).toFixed(2)} ${(y - ref.memory.timelineY).toFixed(2)}) scale(${scale.toFixed(3)} ${scale.toFixed(3)} ${ref.memory.timelineX} ${ref.memory.timelineY})`);
         ref.body.classList.toggle("is-near", glow || state.selectedMemory === ref.id);
     });
 }
@@ -2570,7 +2992,7 @@ svg.addEventListener("touchend", () => {
 });
 
 backButton.addEventListener("click", zoomBack);
-overviewButton.addEventListener("click", zoomToOverview);
+overviewButton.addEventListener("click", goToOverview);
 detailClose.addEventListener("click", zoomBack);
 detailBack.addEventListener("click", zoomBack);
 
@@ -2728,6 +3150,7 @@ drawOverviewNodes();
 drawGraveModeBubble();
 drawEraNodes();
 drawClusterNodes();
+drawTimelineNodes();
 
 if (focusMode) {
     setUniversePalette(selectedPeriod);
