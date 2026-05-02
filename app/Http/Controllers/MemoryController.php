@@ -132,6 +132,7 @@ class MemoryController extends Controller
     {
         $selectedPeriod = $request->string('period')->toString();
         $selectedPeriod = in_array($selectedPeriod, array_merge(['すべて'], self::PERIODS), true) ? $selectedPeriod : 'すべて';
+        $arrangedMode = $selectedPeriod !== 'すべて' && $request->string('view')->toString() === 'all';
         $showGraveBubble = (bool) $request->session()->get(self::SESSION_GRAVE_VISIBLE, false);
         $graveUnlocked = (bool) $request->session()->get(self::SESSION_GRAVE_UNLOCKED, false);
         $emotionToneMap = $this->emotionToneMap();
@@ -157,11 +158,12 @@ class MemoryController extends Controller
             'periodBubbleCounts' => $allMemories->countBy('period')->all(),
             'periods' => self::PERIODS,
             'selectedPeriod' => $selectedPeriod,
-            'currentLayer' => 1,
+            'currentLayer' => $arrangedMode ? 2 : 1,
             'layerCount' => 1,
             'hasPreviousLayer' => false,
             'hasNextLayer' => false,
             'focusMode' => $selectedPeriod !== 'すべて',
+            'arrangedMode' => $arrangedMode,
             'graveMode' => $showGraveBubble ? $this->graveModePayload($graveUnlocked) : null,
             'showGraveBubble' => $showGraveBubble,
             'graveUnlocked' => $graveUnlocked,
@@ -172,7 +174,7 @@ class MemoryController extends Controller
             'graveUnlockSuccess' => $request->session()->get('grave_unlock_success'),
             'graveCreateSuccess' => $request->session()->get('grave_create_success'),
             'selectedPeriodStatus' => $selectedPeriod !== 'すべて'
-                ? $this->selectedPeriodStatus($matchingMemories, $emotionToneMap, $selectedPeriod, 1, 1)
+                ? $this->selectedPeriodStatus($matchingMemories, $emotionToneMap, $selectedPeriod, $arrangedMode ? 2 : 1, 2)
                 : null,
             'emotionGroups' => self::EMOTION_GROUPS,
         ]);
