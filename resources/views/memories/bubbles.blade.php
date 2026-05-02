@@ -1272,11 +1272,6 @@ details[open] .mem-chevron { transform: rotate(180deg); }
     filter: brightness(1.08) saturate(1.08);
 }
 
-.mg-era-node.is-timeline-shell {
-    opacity: 0.18;
-    filter: saturate(0.76) blur(0.2px);
-}
-
 .mg-era-anchor,
 .mg-memory-anchor,
 .mg-overview-anchor {
@@ -1385,10 +1380,6 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 
 .mg-memory-core.is-near {
     filter: brightness(1.18) saturate(1.22);
-}
-
-.mg-memory-node.is-timeline {
-    opacity: 1;
 }
 
 .mg-cluster-halo {
@@ -1638,7 +1629,6 @@ const state = {
     zoomLevel: focusMode ? 0 : (selectedPeriod === "すべて" ? 0 : 1),
     selectedEra: selectedPeriod === "すべて" ? null : selectedPeriod,
     selectedMemory: null,
-    timelineMode: false,
     camera: {
         x: focusMode ? FOCUS_ERA_ANCHOR.x : 700,
         y: focusMode ? FOCUS_ERA_ANCHOR.y : 450,
@@ -1763,7 +1753,7 @@ function buildWorld() {
 
     runtime.eras = visiblePeriods.map((period, eraIndex) => {
         const anchor = getEraAnchor(period);
-        const list = (grouped.get(period) ?? []).slice().sort((a, b) => (a.createdAtTs ?? 0) <=> (b.createdAtTs ?? 0));
+        const list = grouped.get(period) ?? [];
         const count = periodCounts[period] ?? list.length;
         const preview = list.slice(0, 4);
         const clusterMap = new Map();
@@ -1794,8 +1784,6 @@ function buildWorld() {
                     ...memory,
                     baseX: centerX + Math.cos(angle) * orbit,
                     baseY: centerY + Math.sin(angle) * orbit,
-                    layoutX: centerX + Math.cos(angle) * orbit,
-                    layoutY: centerY + Math.sin(angle) * orbit,
                     radius,
                     driftX: 6 + rand() * 9,
                     driftY: 5 + rand() * 8,
@@ -1819,42 +1807,8 @@ function buildWorld() {
             r: anchor.r,
             count,
             preview,
-            clusters,
-            sortedMemories: list
+            clusters
         };
-    });
-
-    runtime.eras.forEach((era) => {
-        const sorted = era.sortedMemories ?? [];
-        if (sorted.length === 0) {
-            return;
-        }
-
-        const columns = Math.min(4, Math.max(3, Math.ceil(Math.sqrt(sorted.length))));
-        const gapX = Math.min(132, Math.max(86, era.r * 0.44));
-        const gapY = Math.min(118, Math.max(78, era.r * 0.34));
-        const rowCount = Math.ceil(sorted.length / columns);
-        const spanX = gapX * Math.max(columns - 1, 1);
-        const spanY = gapY * Math.max(rowCount - 1, 1);
-        const startX = era.x - spanX / 2;
-        const startY = era.y - Math.min(88, spanY / 2) - 20;
-
-        sorted.forEach((memory, index) => {
-            const column = index % columns;
-            const row = Math.floor(index / columns);
-            const timelineX = startX + column * gapX + Math.sin((row + 1) * 0.7 + column * 0.4) * 12;
-            const timelineY = startY + row * gapY + Math.cos((column + 1) * 0.9 + row * 0.35) * 10;
-            memory.timelineX = timelineX;
-            memory.timelineY = timelineY;
-
-            era.clusters.forEach((cluster) => {
-                const item = cluster.items.find((clusterMemory) => clusterMemory.id === memory.id);
-                if (item) {
-                    item.timelineX = timelineX;
-                    item.timelineY = timelineY;
-                }
-            });
-        });
     });
 }
 
@@ -2108,9 +2062,7 @@ function drawEraNodes() {
             y: era.y + 4,
             class: "mg-era-caption"
         });
-        caption.textContent = era.count > 0
-            ? (focusMode ? "ダブルクリックで時系列にひらく" : "クリックして潜る")
-            : "まだ記憶はありません";
+        caption.textContent = era.count > 0 ? "クリックして潜る" : "まだ記憶はありません";
         body.append(caption);
 
         anchor.append(body);
@@ -2119,27 +2071,12 @@ function drawEraNodes() {
 
         wrap.addEventListener("click", (event) => {
             event.preventDefault();
-            if (focusMode && era.period === selectedPeriod) {
-                return;
-            }
             zoomToEra(era.period);
-        });
-
-        wrap.addEventListener("dblclick", (event) => {
-            event.preventDefault();
-            if (!focusMode || era.period !== selectedPeriod || era.count === 0) {
-                return;
-            }
-
-            state.timelineMode = true;
-            updateEraVisibility();
-            updateHud();
         });
 
         era.wrap = wrap;
         era.body = body;
         era.clipId = clipId;
-        era.caption = caption;
     });
 }
 
@@ -2155,14 +2092,15 @@ function drawClusterNodes() {
                 "clip-path": `url(#${era.clipId})`
             });
 
-            const halo = el("circle", {
-                cx: cluster.centerX,
-                cy: cluster.centerY,
-                r: Math.max(54, cluster.items.length * 15),
-                class: "mg-cluster-halo",
-                filter: "url(#fAura)"
-            });
-            clipped.append(halo);
+            clipped.append(
+                el("circle", {
+                    cx: cluster.centerX,
+                    cy: cluster.centerY,
+                    r: Math.max(54, cluster.items.length * 15),
+                    class: "mg-cluster-halo",
+                    filter: "url(#fAura)"
+                })
+            );
 
             const clusterLabel = el("text", {
                 x: cluster.centerX,
@@ -2248,7 +2186,7 @@ function drawClusterNodes() {
 
             wrap.append(clipped);
             clusterG.append(wrap);
-            runtime.clusterRefs.push({ era: era.period, wrap, cluster, clipped, clusterLabel, halo, clipId: era.clipId });
+            runtime.clusterRefs.push({ era: era.period, wrap, cluster });
         });
     });
 }
@@ -2263,18 +2201,12 @@ function setUniversePalette(period) {
 function updateHud() {
     if (state.zoomLevel === 0) {
         hud.classList.remove("is-dormant");
-        modeKicker.textContent = focusMode
-            ? (state.timelineMode ? "TIMELINE VIEW" : "ERA VIEW")
-            : "LEVEL 0";
-        modeTitle.textContent = focusMode
-            ? (state.timelineMode ? `${selectedPeriod}の記憶が時系列にひらいています` : `${selectedPeriod}の記憶だけを表示しています`)
-            : "人生全体を俯瞰しています";
+        modeKicker.textContent = focusMode ? "ERA VIEW" : "LEVEL 0";
+        modeTitle.textContent = focusMode ? `${selectedPeriod}の記憶だけを表示しています` : "人生全体を俯瞰しています";
         modeBody.textContent = focusMode
-            ? (state.timelineMode
-                ? "古い記憶から新しい記憶へ、ふわふわ整列しています。気になる記憶玉を選んでください。"
-                : "シャボンをダブルクリックすると、記憶玉たちが時系列順にひらきます。")
+            ? "記憶玉を選ぶと専用の詳細画面へ移動します。"
             : "気になる年代のシャボン玉をクリックして、その年代専用画面へ移動してください。";
-        backButton.textContent = focusMode ? (state.timelineMode ? "シャボンへ戻る" : "全体俯瞰へ戻る") : "ひとつ戻る";
+        backButton.textContent = focusMode ? "全体俯瞰へ戻る" : "ひとつ戻る";
         backButton.hidden = !focusMode;
         overviewButton.hidden = true;
         detail.hidden = true;
@@ -2339,13 +2271,9 @@ function updateEraVisibility() {
         const isFocused = state.selectedEra === era.period;
         era.wrap.classList.toggle("is-focused", isFocused);
         era.wrap.classList.toggle("is-muted", Boolean(state.selectedEra) && !isFocused);
-        era.wrap.classList.toggle("is-timeline-shell", state.timelineMode && isFocused);
-        if (era.caption) {
-            era.caption.style.opacity = state.timelineMode && isFocused ? "0" : "1";
-        }
     });
 
-    runtime.clusterRefs.forEach(({ era, wrap, clipped, clusterLabel, halo, clipId }) => {
+    runtime.clusterRefs.forEach(({ era, wrap }) => {
         const visible = state.selectedEra === era;
         const clusterOpacity = state.zoomLevel === 2
             ? (state.memoryTransition.active ? "0" : "0.18")
@@ -2353,15 +2281,6 @@ function updateEraVisibility() {
         wrap.style.opacity = visible ? clusterOpacity : "0";
         wrap.style.pointerEvents = visible ? "auto" : "none";
         wrap.classList.toggle("is-muted", state.zoomLevel === 2 && visible);
-        if (visible && state.timelineMode) {
-            clipped.removeAttribute("clip-path");
-            clusterLabel.style.opacity = "0";
-            halo.style.opacity = "0";
-        } else {
-            clipped.setAttribute("clip-path", `url(#${clipId})`);
-            clusterLabel.style.opacity = visible ? "1" : "0";
-            halo.style.opacity = visible ? "0.8" : "0";
-        }
     });
 
     runtime.memoryRefs.forEach((ref) => {
@@ -2370,7 +2289,6 @@ function updateEraVisibility() {
         const nodeVisible = visible && (!keepOnlySelected || state.selectedMemory === ref.id);
         ref.node.style.opacity = nodeVisible ? "1" : "0";
         ref.node.style.pointerEvents = nodeVisible ? "auto" : "none";
-        ref.node.classList.toggle("is-timeline", state.timelineMode && visible);
         ref.body.style.opacity = state.zoomLevel === 2
             ? (state.selectedMemory !== ref.id ? (state.memoryTransition.active ? "0" : "0.42") : "1")
             : "1";
@@ -2439,13 +2357,6 @@ function startPageTransition(url) {
 }
 
 function zoomBack() {
-    if (focusMode && state.timelineMode) {
-        state.timelineMode = false;
-        updateEraVisibility();
-        updateHud();
-        return;
-    }
-
     zoomToOverview();
 }
 
@@ -2486,16 +2397,10 @@ function updatePointerEffects(time) {
             return;
         }
 
-        const targetBaseX = state.timelineMode ? (ref.memory.timelineX ?? ref.memory.baseX) : ref.memory.baseX;
-        const targetBaseY = state.timelineMode ? (ref.memory.timelineY ?? ref.memory.baseY) : ref.memory.baseY;
-        ref.memory.layoutX += (targetBaseX - ref.memory.layoutX) * 0.1;
-        ref.memory.layoutY += (targetBaseY - ref.memory.layoutY) * 0.1;
-
-        const driftScale = state.timelineMode ? 0.5 : 1;
-        const driftX = Math.cos(time * ref.memory.driftSpeed + ref.memory.driftPhase) * ref.memory.driftX * driftScale;
-        const driftY = Math.sin(time * ref.memory.driftSpeed * 1.08 + ref.memory.driftPhase) * ref.memory.driftY * driftScale;
-        const x = ref.memory.layoutX + driftX;
-        const y = ref.memory.layoutY + driftY;
+        const driftX = Math.cos(time * ref.memory.driftSpeed + ref.memory.driftPhase) * ref.memory.driftX;
+        const driftY = Math.sin(time * ref.memory.driftSpeed * 1.08 + ref.memory.driftPhase) * ref.memory.driftY;
+        const x = ref.memory.baseX + driftX;
+        const y = ref.memory.baseY + driftY;
 
         let scale = 1;
         let glow = false;
