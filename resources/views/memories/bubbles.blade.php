@@ -273,7 +273,7 @@
             <svg id="memSvg" class="mem-svg" viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg" aria-label="記憶宇宙">
                 <defs id="memDefs">
                     <filter id="fAura" x="-200%" y="-200%" width="500%" height="500%">
-                        <feGaussianBlur stdDeviation="32"/>
+                        <feGaussianBlur stdDeviation="24"/>
                     </filter>
                     <filter id="fRimGlow" x="-80%" y="-80%" width="260%" height="260%">
                         <feGaussianBlur stdDeviation="6"/>
@@ -1392,9 +1392,10 @@ details[open] .mem-chevron { transform: rotate(180deg); }
 }
 
 .mg-memory-label {
-    fill: rgba(255,255,255,0.98);
-    font-weight: 800;
-    stroke-width: 2.4px;
+    fill: rgba(246, 250, 255, 0.88);
+    font-weight: 760;
+    letter-spacing: 0.03em;
+    stroke-width: 1.8px;
 }
 
 .mg-memory-meta,
@@ -1786,6 +1787,7 @@ const state = {
         targetId: null
     },
     timelineMode: arrangedMode,
+    interactionCooldownUntil: 0,
     pageTransitioning: false
 };
 
@@ -1824,6 +1826,10 @@ function rgba(hex, alpha) {
     const g = parseInt(raw.slice(2, 4), 16);
     const b = parseInt(raw.slice(4, 6), 16);
     return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function markInteraction(duration = 220) {
+    state.interactionCooldownUntil = Date.now() + duration;
 }
 
 function seeded(seed) {
@@ -1938,7 +1944,7 @@ function buildWorld() {
                 const rand = seeded(memory.id * 761 + memoryIndex * 97);
                 const angle = (Math.PI * 2 * memoryIndex) / Math.max(clusterMemories.length, 1) + rand() * 0.42;
                 const orbit = 14 + Math.floor(memoryIndex / 3) * 16 + rand() * 5;
-                const radius = Math.max(16, 20 + (memory.tags?.length ?? 0) * 1.4 + rand() * 7);
+                const radius = Math.max(18, 23 + (memory.tags?.length ?? 0) * 1.6 + rand() * 8);
 
                 return {
                     ...memory,
@@ -2004,7 +2010,7 @@ function buildWorld() {
                     ...memory,
                     baseX: source.baseX,
                     baseY: source.baseY,
-                    radius: Math.min(34, Math.max(22, source.radius + 1)),
+                    radius: Math.min(38, Math.max(24, source.radius + 3)),
                     driftX: 4 + ((timelineIndex % 3) * 1.6),
                     driftY: 3 + ((timelineIndex % 4) * 1.4),
                     driftSpeed: 0.44 + (timelineIndex % 5) * 0.07,
@@ -2255,7 +2261,7 @@ function drawEraNodes() {
             const offsetAngle = ((Math.PI * 2) / Math.max(era.preview.length, 1)) * previewIndex - Math.PI / 2;
             const previewX = era.x + Math.cos(offsetAngle) * era.r * 0.32;
             const previewY = era.y + Math.sin(offsetAngle) * era.r * 0.32;
-            const previewR = Math.max(18, era.r * 0.18 - previewIndex * 2);
+            const previewR = Math.max(20, era.r * 0.2 - previewIndex * 2);
             body.append(
                 el("circle", { cx: previewX, cy: previewY, r: previewR + 10, fill: `url(#${previewGradients.auraId})`, filter: "url(#fAura)", opacity: "0.55" }),
                 el("circle", { cx: previewX, cy: previewY, r: previewR, fill: `url(#${previewGradients.bodyId})`, opacity: "0.92" }),
@@ -2263,6 +2269,15 @@ function drawEraNodes() {
                 el("circle", { cx: previewX - previewR * 0.28, cy: previewY - previewR * 0.30, r: Math.max(3, previewR * 0.16), fill: "rgba(255,255,255,0.82)", filter: "url(#fSpec)" })
             );
         });
+
+        const title = el("text", {
+            x: era.x,
+            y: era.y - era.r * 0.48,
+            class: "mg-era-title",
+            "font-size": Math.max(18, era.r * 0.17)
+        });
+        title.textContent = era.period;
+        body.append(title);
 
         if (!focusMode) {
             const count = el("text", {
@@ -2397,19 +2412,10 @@ function drawClusterNodes() {
                     x: memory.baseX,
                     y: memory.baseY - 2,
                     class: "mg-memory-label",
-                    "font-size": Math.max(10, memory.radius * 0.3)
+                    "font-size": Math.max(11, memory.radius * 0.26)
                 });
                 label.textContent = memory.label;
                 body.append(label);
-
-                const meta = el("text", {
-                    x: memory.baseX,
-                    y: memory.baseY + memory.radius * 0.28,
-                    class: "mg-memory-meta",
-                    "font-size": Math.max(8, memory.radius * 0.17)
-                });
-                meta.textContent = memory.emotion;
-                body.append(meta);
 
                 anchor.append(body);
                 node.append(anchor);
@@ -2427,7 +2433,7 @@ function drawClusterNodes() {
                     node,
                     body,
                     label,
-                    meta
+                    meta: null
                 });
             });
 
@@ -2538,7 +2544,7 @@ function drawTimelineNodes() {
             x: memory.timelineX,
             y: memory.timelineY - 2,
             class: "mg-memory-label",
-            "font-size": Math.max(11, memory.radius * 0.28)
+            "font-size": Math.max(12, memory.radius * 0.24)
         });
         label.textContent = memory.label;
         body.append(label);
@@ -2872,6 +2878,7 @@ function applyCamera() {
 
 function updatePointerEffects(time) {
     const pointerWorld = state.pointer.active ? screenToWorld(state.pointer) : null;
+    const suppressGlow = Date.now() < state.interactionCooldownUntil;
 
     runtime.memoryRefs.forEach((ref) => {
         if (state.selectedEra !== ref.era) {
@@ -2886,7 +2893,7 @@ function updatePointerEffects(time) {
         let scale = 1;
         let glow = false;
 
-        if (pointerWorld && !state.memoryTransition.active) {
+        if (pointerWorld && !state.memoryTransition.active && !suppressGlow) {
             const dx = pointerWorld.x - x;
             const dy = pointerWorld.y - y;
             const distance = Math.hypot(dx, dy);
@@ -2913,7 +2920,7 @@ function updatePointerEffects(time) {
         const x = ref.memory.timelineX + driftX;
         const y = ref.memory.timelineY + driftY;
 
-        if (pointerWorld && state.timelineMode && !state.memoryTransition.active) {
+        if (pointerWorld && state.timelineMode && !state.memoryTransition.active && !suppressGlow) {
             const dx = pointerWorld.x - x;
             const dy = pointerWorld.y - y;
             const distance = Math.hypot(dx, dy);
@@ -2964,6 +2971,7 @@ svg.addEventListener("wheel", (event) => {
     }
 
     event.preventDefault();
+    markInteraction();
     const point = svgPoint(event.clientX, event.clientY);
     const factor = event.deltaY < 0 ? 1.12 : 0.9;
     setCameraTargetFromZoom(state.targetCamera.scale * factor, point);
@@ -3006,6 +3014,7 @@ svg.addEventListener("pointermove", (event) => {
     const dy = (point.y - state.drag.startY) / state.targetCamera.scale;
     state.targetCamera.x = state.drag.startCameraX - dx;
     state.targetCamera.y = state.drag.startCameraY - dy;
+    markInteraction(180);
 });
 
 function endPointerDrag() {
@@ -3059,6 +3068,7 @@ svg.addEventListener("touchmove", (event) => {
             setCameraTargetFromZoom(nextScale, center);
         }
         state.touch.pinchDistance = distance;
+        markInteraction();
         return;
     }
 
@@ -3068,6 +3078,7 @@ svg.addEventListener("touchmove", (event) => {
         const dy = (point.y - state.drag.startY) / state.targetCamera.scale;
         state.targetCamera.x = state.drag.startCameraX - dx;
         state.targetCamera.y = state.drag.startCameraY - dy;
+        markInteraction(180);
     }
 }, { passive: true });
 

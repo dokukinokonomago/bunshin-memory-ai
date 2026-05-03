@@ -409,23 +409,15 @@ class MemoryController extends Controller
 
     private function bubbleKeyword(Memory $memory): string
     {
-        $content = trim(preg_replace('/\s+/u', ' ', $memory->content) ?? '');
-        $parts = preg_split('/[、。,.!?\s「」『』（）()]+/u', $content) ?: [];
+        $content = trim((string) preg_replace('/\s+/u', '', $memory->content));
+        $content = preg_replace('/^(demo|test)[\-_ ]*/iu', '', $content) ?? $content;
+        $content = preg_replace('/^(幼少期|小学生|中学生|高校生|大学生|成人期|不明)/u', '', $content) ?? $content;
 
-        foreach ($parts as $part) {
-            $word = trim($part);
-
-            if (
-                $word !== ''
-                && !preg_match('/^\d+$/u', $word)
-                && !preg_match('/^(demo|test)$/iu', $word)
-                && mb_strlen($word) >= 2
-            ) {
-                return Str::limit($word, 6, '');
-            }
+        if ($content !== '') {
+            return mb_substr($content, 0, 3);
         }
 
-        return Str::limit($memory->emotion, 6, '');
+        return mb_substr($memory->emotion, 0, 3);
     }
 
     private function memoryTheme(Memory $memory): string
