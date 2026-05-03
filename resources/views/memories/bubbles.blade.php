@@ -1814,7 +1814,8 @@ const runtime = {
     clusterRefs: [],
     timelineRefs: [],
     overviewRefs: [],
-    graveRef: null
+    graveRef: null,
+    orbMotionPaused: false
 };
 
 function stagePeriods() {
@@ -1847,6 +1848,28 @@ function rgba(hex, alpha) {
 
 function markInteraction(duration = 220) {
     state.interactionCooldownUntil = Date.now() + duration;
+}
+
+function setOrbMotionPaused(paused) {
+    if (runtime.orbMotionPaused === paused) {
+        return;
+    }
+
+    runtime.orbMotionPaused = paused;
+
+    if (!paused) {
+        return;
+    }
+
+    runtime.memoryRefs.forEach((ref) => {
+        ref.body.setAttribute("transform", `translate(0 0) scale(1 1 ${ref.memory.baseX} ${ref.memory.baseY})`);
+        ref.body.classList.remove("is-near");
+    });
+
+    runtime.timelineRefs.forEach((ref) => {
+        ref.body.setAttribute("transform", `translate(0 0) scale(1 1 ${ref.memory.timelineX} ${ref.memory.timelineY})`);
+        ref.body.classList.remove("is-near");
+    });
 }
 
 function seeded(seed) {
@@ -2314,7 +2337,7 @@ function drawEraNodes() {
         });
         caption.textContent = focusMode
             ? (arrangedMode ? "記憶が時系列にほどけています" : (era.count > 0 ? "気になる記憶玉を選んでください" : "まだ記憶はありません"))
-            : (era.count > 0 ? "クリックして潜る" : "まだ記憶はありません");
+            : "";
         body.append(caption);
 
         if (focusMode && !arrangedMode && era.count > 0) {
@@ -2897,6 +2920,10 @@ function updatePointerEffects(time) {
     const pointerWorld = state.pointer.active ? screenToWorld(state.pointer) : null;
     const suppressGlow = state.cameraMotionActive || Date.now() < state.interactionCooldownUntil;
 
+    if (state.cameraMotionActive) {
+        return;
+    }
+
     runtime.memoryRefs.forEach((ref) => {
         if (state.selectedEra !== ref.era) {
             return;
@@ -2972,6 +2999,7 @@ function tick(timeMs) {
     if (state.cameraMotionActive !== shouldReduceEffects) {
         state.cameraMotionActive = shouldReduceEffects;
         universe.classList.toggle("is-camera-moving", shouldReduceEffects);
+        setOrbMotionPaused(shouldReduceEffects);
     }
 
     state.camera.x += (state.targetCamera.x - state.camera.x) * EASE;
