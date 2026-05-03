@@ -82,6 +82,7 @@ class MemoryController extends Controller
         $keyword = trim($request->string('q')->toString());
         $selectedPeriod = $request->string('period')->toString();
         $selectedPeriod = in_array($selectedPeriod, array_merge(['すべて'], self::PERIODS), true) ? $selectedPeriod : 'すべて';
+        $emotionToneMap = $this->emotionToneMap();
 
         $query = $this->visibleMemoriesQuery()->latest();
 
@@ -101,7 +102,8 @@ class MemoryController extends Controller
 
         return view('memories.index', [
             'memories' => $query->get(),
-            'emotionToneMap' => $this->emotionToneMap(),
+            'emotionToneMap' => $emotionToneMap,
+            'emotionColorMap' => $this->emotionPaletteMap(),
             'allCount' => $this->visibleMemoriesQuery()->count(),
             'searchQuery' => $keyword,
             'periods' => self::PERIODS,
@@ -275,7 +277,7 @@ class MemoryController extends Controller
             'memory' => $memory,
             'emotionToneMap' => $emotionToneMap,
             'tone' => $tone,
-            'colors' => $this->toneColors($tone),
+            'colors' => $this->emotionColors($memory->emotion, $tone),
             'theme' => $this->memoryTheme($memory),
         ]);
     }
@@ -338,14 +340,55 @@ class MemoryController extends Controller
     private function toneColors(string $tone): array
     {
         if (str_contains($tone, 'ポジティブ')) {
-            return ['#ffe2c8', '#f08b4f'];
+            return ['#ff7a6e', '#ffd08a'];
         }
 
         if (str_contains($tone, 'ネガティブ')) {
-            return ['#eadfff', '#8f7cff'];
+            return ['#bfe0ff', '#5a46c9'];
         }
 
-        return ['#dce9ff', '#63a6ff'];
+        return ['#ffe989', '#a9e7a4'];
+    }
+
+    private function emotionPaletteMap(): array
+    {
+        return [
+            '感動' => ['#ff6b75', '#ff9a63'],
+            '嬉しい' => ['#ff746f', '#ffa06a'],
+            '楽しい' => ['#ff8168', '#ffad72'],
+            '安心' => ['#ff8e6c', '#ffba79'],
+            'ホッとした' => ['#ff9871', '#ffc480'],
+            '幸せ' => ['#ffa676', '#ffcf86'],
+            '満足' => ['#ffb27b', '#ffd88d'],
+            'ワクワク' => ['#ff875f', '#ffaf68'],
+            '感謝' => ['#ff9668', '#ffc073'],
+            '誇らしい' => ['#ff7078', '#ff9765'],
+            '自信がある' => ['#ff667f', '#ff9062'],
+            '普通' => ['#ffe784', '#d8f08e'],
+            'なんとなく' => ['#f7ea87', '#d2ef90'],
+            '落ち着いている' => ['#edf08c', '#c6ee96'],
+            'ぼーっとした' => ['#e2ef93', '#b9e99d'],
+            '考え中' => ['#d4ec98', '#a8e2a0'],
+            'モヤモヤ' => ['#caecff', '#9fc8ff'],
+            '少し不安' => ['#bee4ff', '#8fb8ff'],
+            '疲れた' => ['#b3dcff', '#83adff'],
+            '迷い' => ['#a9d3ff', '#7d9fff'],
+            '気まずい' => ['#9ec8ff', '#768fff'],
+            '引っかかる' => ['#92bcff', '#6f7eff'],
+            '不安' => ['#a3c2ff', '#6a74ff'],
+            '悲しい' => ['#98b4ff', '#635ff1'],
+            'イライラ' => ['#8fa8ff', '#5d49df'],
+            '怒り' => ['#8798ff', '#553acb'],
+            '落ち込み' => ['#7e88f5', '#4d31b8'],
+            '孤独' => ['#746fdd', '#46299f'],
+            '無力感' => ['#685ec7', '#3f238d'],
+            '自信がない' => ['#5b4eac', '#341c76'],
+        ];
+    }
+
+    private function emotionColors(string $emotion, ?string $tone = null): array
+    {
+        return $this->emotionPaletteMap()[$emotion] ?? $this->toneColors($tone ?? ($this->emotionToneMap()[$emotion] ?? 'ニュートラル'));
     }
 
     /** 年代ごとに虹色順でカラーを割り当てる */
@@ -534,7 +577,7 @@ class MemoryController extends Controller
             'createdAt' => optional($memory->created_at)->timezone('Asia/Tokyo')->format('Y.m.d H:i') ?? '--.--.-- --:--',
             'createdAtTs' => optional($memory->created_at)->getTimestamp() ?? 0,
             'tone' => $tone,
-            'colors' => $this->toneColors($tone),
+            'colors' => $this->emotionColors($memory->emotion, $tone),
             'periodColors' => $this->periodColors($memory->period),
             'tags' => $storedTags
                 ->prepend($memory->emotion)
@@ -699,6 +742,7 @@ class MemoryController extends Controller
         return view($view, array_merge([
             'periods' => self::PERIODS,
             'emotionGroups' => self::EMOTION_GROUPS,
+            'emotionColorMap' => $this->emotionPaletteMap(),
         ], $this->createComposerViewData($request)));
     }
 

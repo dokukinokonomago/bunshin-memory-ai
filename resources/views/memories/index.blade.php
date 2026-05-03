@@ -135,7 +135,7 @@
                                 @php
                                     $tone = $emotionToneMap[$memory->emotion] ?? 'ニュートラル';
                                     $badgeClass = str_contains($tone, 'ポジティブ') ? 'badge-positive' : (str_contains($tone, 'ニュートラル') ? 'badge-neutral' : 'badge-negative');
-                                    $orbColors = $periodColors[$memory->period] ?? ['#dce9ff', '#63a6ff'];
+                                    $orbColors = $emotionColorMap[$memory->emotion] ?? ['#dce9ff', '#63a6ff'];
                                 @endphp
                                 <article class="memory-entry">
                                     <div class="memory-entry-shell">

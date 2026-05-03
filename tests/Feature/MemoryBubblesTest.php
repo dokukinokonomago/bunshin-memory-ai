@@ -169,4 +169,32 @@ class MemoryBubblesTest extends TestCase
         $response->assertSessionMissing('memories.grave.visible');
         $response->assertSessionMissing('memories.grave.unlocked');
     }
+
+    public function test_bubbles_payload_uses_emotion_specific_palette(): void
+    {
+        Memory::query()->create([
+            'period' => '高校生',
+            'content' => '赤寄りの良い記憶',
+            'emotion' => '嬉しい',
+        ]);
+
+        Memory::query()->create([
+            'period' => '高校生',
+            'content' => '黄緑寄りの普通の記憶',
+            'emotion' => '普通',
+        ]);
+
+        Memory::query()->create([
+            'period' => '高校生',
+            'content' => '青紫寄りの悪い記憶',
+            'emotion' => '悲しい',
+        ]);
+
+        $response = $this->get(route('memories.bubbles'));
+
+        $response->assertOk();
+        $response->assertSee('#ff746f');
+        $response->assertSee('#d8f08e');
+        $response->assertSee('#635ff1');
+    }
 }

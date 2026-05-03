@@ -2484,7 +2484,7 @@ function drawTimelineNodes() {
     era.chronological.forEach((memory, index) => {
         const gradients = makeTimelineGradientSet(
             `timeline-memory-${memory.id}`,
-            memory.periodColors ?? memory.colors,
+            memory.colors,
             memory.colors
         );
         const wrap = el("g", {
