@@ -394,6 +394,22 @@
     pointer-events: none;
 }
 
+.mem-universe.is-camera-moving .mg-memory-label,
+.mem-universe.is-camera-moving .mg-memory-meta,
+.mem-universe.is-camera-moving .mg-cluster-label,
+.mem-universe.is-camera-moving .mg-timeline-date,
+.mem-universe.is-camera-moving .mg-timeline-index,
+.mem-universe.is-camera-moving .mg-era-caption {
+    opacity: 0;
+}
+
+.mem-universe.is-camera-moving .mg-cluster-halo,
+.mem-universe.is-camera-moving .mg-timeline-track-glow,
+.mem-universe.is-camera-moving .mg-era-shell-rim,
+.mem-universe.is-camera-moving .mg-memory-rim {
+    opacity: 0.22;
+}
+
 .star-canvas {
     position: absolute;
     inset: 0;
@@ -1787,6 +1803,7 @@ const state = {
         targetId: null
     },
     timelineMode: arrangedMode,
+    cameraMotionActive: false,
     interactionCooldownUntil: 0,
     pageTransitioning: false
 };
@@ -2878,15 +2895,15 @@ function applyCamera() {
 
 function updatePointerEffects(time) {
     const pointerWorld = state.pointer.active ? screenToWorld(state.pointer) : null;
-    const suppressGlow = Date.now() < state.interactionCooldownUntil;
+    const suppressGlow = state.cameraMotionActive || Date.now() < state.interactionCooldownUntil;
 
     runtime.memoryRefs.forEach((ref) => {
         if (state.selectedEra !== ref.era) {
             return;
         }
 
-        const driftX = Math.cos(time * ref.memory.driftSpeed + ref.memory.driftPhase) * ref.memory.driftX;
-        const driftY = Math.sin(time * ref.memory.driftSpeed * 1.08 + ref.memory.driftPhase) * ref.memory.driftY;
+        const driftX = suppressGlow ? 0 : Math.cos(time * ref.memory.driftSpeed + ref.memory.driftPhase) * ref.memory.driftX;
+        const driftY = suppressGlow ? 0 : Math.sin(time * ref.memory.driftSpeed * 1.08 + ref.memory.driftPhase) * ref.memory.driftY;
         const x = ref.memory.baseX + driftX;
         const y = ref.memory.baseY + driftY;
 
@@ -2915,8 +2932,8 @@ function updatePointerEffects(time) {
     runtime.timelineRefs.forEach((ref) => {
         let scale = 1;
         let glow = false;
-        const driftX = Math.cos(time * ref.memory.driftSpeed + ref.memory.driftPhase) * ref.memory.driftX;
-        const driftY = Math.sin(time * ref.memory.driftSpeed * 1.04 + ref.memory.driftPhase) * ref.memory.driftY;
+        const driftX = suppressGlow ? 0 : Math.cos(time * ref.memory.driftSpeed + ref.memory.driftPhase) * ref.memory.driftX;
+        const driftY = suppressGlow ? 0 : Math.sin(time * ref.memory.driftSpeed * 1.04 + ref.memory.driftPhase) * ref.memory.driftY;
         const x = ref.memory.timelineX + driftX;
         const y = ref.memory.timelineY + driftY;
 
@@ -2942,6 +2959,21 @@ function updatePointerEffects(time) {
 
 function tick(timeMs) {
     const time = timeMs * 0.001;
+    const movingX = Math.abs(state.targetCamera.x - state.camera.x);
+    const movingY = Math.abs(state.targetCamera.y - state.camera.y);
+    const movingScale = Math.abs(state.targetCamera.scale - state.camera.scale);
+    const shouldReduceEffects = state.drag.active
+        || state.touch.mode !== null
+        || movingX > 0.8
+        || movingY > 0.8
+        || movingScale > 0.008
+        || Date.now() < state.interactionCooldownUntil;
+
+    if (state.cameraMotionActive !== shouldReduceEffects) {
+        state.cameraMotionActive = shouldReduceEffects;
+        universe.classList.toggle("is-camera-moving", shouldReduceEffects);
+    }
+
     state.camera.x += (state.targetCamera.x - state.camera.x) * EASE;
     state.camera.y += (state.targetCamera.y - state.camera.y) * EASE;
     state.camera.scale += (state.targetCamera.scale - state.camera.scale) * EASE;
