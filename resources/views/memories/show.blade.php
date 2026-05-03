@@ -54,6 +54,7 @@
         ->values();
     $manualTags = collect($memory->tags ?? [])
         ->map(fn ($tag) => trim((string) $tag))
+        ->reject(fn ($tag) => strtoupper($tag) === 'DEMO')
         ->filter()
         ->values();
 

@@ -67,7 +67,7 @@
                         id="tags"
                         type="text"
                         name="tags"
-                        value="{{ old('tags', implode(', ', $memory->tags ?? [])) }}"
+                        value="{{ old('tags', implode(', ', collect($memory->tags ?? [])->reject(fn ($tag) => strtoupper(trim((string) $tag)) === 'DEMO')->all())) }}"
                         placeholder="例：家族, 夏祭り, 部活"
                     >
                 </div>

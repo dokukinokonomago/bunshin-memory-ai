@@ -18,6 +18,7 @@ class MemoryController extends Controller
     private const SESSION_GRAVE_UNLOCKED = 'memories.grave.unlocked';
     private const GRAVE_PASSCODE = '1234';
     private const GRAVE_TAG = '__grave_hidden__';
+    private const DEMO_TAG = 'DEMO';
     private const CREATE_COMPOSER_GROUP_META = [
         'warm' => [
             'label' => 'あたたかい',
@@ -423,6 +424,8 @@ class MemoryController extends Controller
     private function memoryTheme(Memory $memory): string
     {
         $content = trim(preg_replace('/\s+/u', ' ', $memory->content) ?? '');
+        $content = preg_replace('/^(demo|test)[\-_ ]*/iu', '', $content) ?? $content;
+        $content = preg_replace('/^(幼少期|小学生|中学生|高校生|大学生|成人期|不明)\s*/u', '', $content) ?? $content;
 
         if ($content === '') {
             return $memory->emotion;
@@ -550,7 +553,7 @@ class MemoryController extends Controller
         $tone = $emotionToneMap[$memory->emotion] ?? 'ニュートラル';
         $storedTags = collect($memory->tags ?? [])
             ->map(fn (mixed $tag): string => trim((string) $tag))
-            ->reject(fn (string $tag): bool => $tag === self::GRAVE_TAG)
+            ->reject(fn (string $tag): bool => in_array($tag, [self::GRAVE_TAG, self::DEMO_TAG], true))
             ->filter()
             ->values();
         $cluster = $this->memoryClusterLabel($memory, $storedTags);

@@ -2312,7 +2312,7 @@ function drawEraNodes() {
 
         const title = el("text", {
             x: era.x,
-            y: era.y - era.r * 0.48,
+            y: era.y - era.r - 18,
             class: "mg-era-title",
             "font-size": Math.max(18, era.r * 0.17)
         });
@@ -2425,6 +2425,7 @@ function drawClusterNodes() {
                     "data-memory-anchor": String(memory.id)
                 });
                 const body = el("g", { class: "mg-memory-core" });
+                const shouldShowBubbleLabel = focusMode || arrangedMode;
 
                 body.append(
                     el("circle", { cx: memory.baseX, cy: memory.baseY, r: memory.radius + 13, fill: `url(#${gradients.auraId})`, filter: "url(#fAura)", opacity: "0.78" }),
@@ -2448,14 +2449,17 @@ function drawClusterNodes() {
                     el("circle", { cx: memory.baseX, cy: memory.baseY, r: memory.radius + 16, "data-hit": "true" })
                 );
 
-                const label = el("text", {
-                    x: memory.baseX,
-                    y: memory.baseY - 2,
-                    class: "mg-memory-label",
-                    "font-size": Math.max(11, memory.radius * 0.26)
-                });
-                label.textContent = memory.label;
-                body.append(label);
+                let label = null;
+                if (shouldShowBubbleLabel) {
+                    label = el("text", {
+                        x: memory.baseX,
+                        y: memory.baseY - 2,
+                        class: "mg-memory-label",
+                        "font-size": Math.max(11, memory.radius * 0.26)
+                    });
+                    label.textContent = memory.label;
+                    body.append(label);
+                }
 
                 anchor.append(body);
                 node.append(anchor);

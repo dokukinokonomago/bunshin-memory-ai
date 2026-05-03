@@ -167,7 +167,7 @@
                                                 <div class="memory-entry-chips">
                                                     <span class="memory-entry-period">{{ $periodShortLabels[$memory->period] ?? $memory->period }}</span>
                                                     <span class="badge {{ $badgeClass }}">{{ $memory->emotion }}</span>
-                                                    @foreach (($memory->tags ?? []) as $tag)
+                                                    @foreach (collect($memory->tags ?? [])->reject(fn ($tag) => strtoupper(trim((string) $tag)) === 'DEMO') as $tag)
                                                         <span class="memory-entry-period">{{ $tag }}</span>
                                                     @endforeach
                                                 </div>
