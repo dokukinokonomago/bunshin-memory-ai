@@ -6,6 +6,19 @@
 
 @php
     $eras = ['幼少期', '小学生', '中学生', '高校生', '大学生', '成人期', '不明'];
+    $hexToRgba = static function (string $hex, float $alpha): string {
+        $raw = ltrim($hex, '#');
+
+        if (strlen($raw) === 3) {
+            $raw = $raw[0] . $raw[0] . $raw[1] . $raw[1] . $raw[2] . $raw[2];
+        }
+
+        $r = hexdec(substr($raw, 0, 2));
+        $g = hexdec(substr($raw, 2, 2));
+        $b = hexdec(substr($raw, 4, 2));
+
+        return sprintf('rgba(%d, %d, %d, %.2f)', $r, $g, $b, $alpha);
+    };
 
     $emotionGroups = [
         'positive' => [
@@ -122,6 +135,7 @@
 
     $initialEra = (string) old('period', '高校生');
     $initialContent = old('content', '');
+    $initialTags = (string) old('tags', '');
     $initialEmotion = (string) old('emotion', '普通');
     $initialEmotionBucket = (string) old('emotion_group', $emotionBucketMap[$initialEmotion] ?? 'normal');
 
@@ -145,6 +159,15 @@
     }
 
     $initialTone = $emotionToneMap[$initialEmotion] ?? 'neutral';
+    $emotionBucketPalettes = collect($emotionBuckets)->mapWithKeys(function ($bucket, $bucketKey) use ($emotionColorMap) {
+        $first = $bucket['items'][0]['label'] ?? null;
+        $last = $bucket['items'][count($bucket['items']) - 1]['label'] ?? null;
+
+        return [$bucketKey => [
+            'start' => $emotionColorMap[$first][0] ?? '#dce9ff',
+            'end' => $emotionColorMap[$last][1] ?? '#63a6ff',
+        ]];
+    })->all();
 
     $contentLength = mb_strlen(trim($initialContent));
     $filledLevel = $contentLength === 0
@@ -301,6 +324,19 @@
                                 placeholder="思い出の場所、会話、感じたことなどを入力してください..."
                             >{{ $initialContent }}</textarea>
                         </div>
+
+                        <label class="mcv2-tag-field">
+                            <span class="mcv2-tag-field-label">関連タグ</span>
+                            <input
+                                class="mcv2-tag-input"
+                                type="text"
+                                name="tags"
+                                value="{{ $initialTags }}"
+                                data-tag-input
+                                placeholder="例：家族, 夏祭り, 部活"
+                            >
+                            <small>カンマ区切りで入力すると、あとで記憶を探しやすくなります。</small>
+                        </label>
                     </section>
 
                     <section class="mcv2-section">
@@ -311,6 +347,7 @@
 
                         <div class="mcv2-emotion-picker">
                             @foreach ($emotionBuckets as $bucketKey => $bucket)
+                                @php($bucketPalette = $emotionBucketPalettes[$bucketKey] ?? ['start' => '#dce9ff', 'end' => '#63a6ff'])
                                 <button
                                     class="mcv2-emotion-trigger tone-{{ $bucket['tone'] }} {{ $initialEmotionBucket === $bucketKey ? 'is-active' : '' }}"
                                     type="button"
@@ -318,6 +355,7 @@
                                     data-group-label="{{ $bucket['label'] }}"
                                     aria-haspopup="dialog"
                                     aria-pressed="{{ $initialEmotionBucket === $bucketKey ? 'true' : 'false' }}"
+                                    style="--mcv2-trigger-orb: radial-gradient(circle at 60% 60%, {{ $hexToRgba($bucketPalette['start'], 0.80) }}, {{ $hexToRgba($bucketPalette['end'], 0.28) }} 64%, transparent 82%);"
                                 >
                                     <span class="mcv2-emotion-trigger-label">{{ $bucket['label'] }}</span>
                                     <span class="mcv2-emotion-trigger-copy">{{ $bucket['summary'] }}</span>
@@ -380,10 +418,11 @@
                                     @foreach ($bucket['items'] as $index => $emotion)
                                         @php
                                             $layout = $bucket['layout'][$index];
+                                            $palette = $emotionColorMap[$emotion['label']] ?? ['#dce9ff', '#63a6ff'];
                                         @endphp
                                         <label
                                             class="mcv2-emotion-orb tone-{{ $bucket['tone'] }}"
-                                            style="--orb-left: {{ $layout['left'] }}%; --orb-top: {{ $layout['top'] }}%; --orb-size: {{ $layout['size'] }}px; --orb-delay: {{ $layout['delay'] }};"
+                                            style="--orb-left: {{ $layout['left'] }}%; --orb-top: {{ $layout['top'] }}%; --orb-size: {{ $layout['size'] }}px; --orb-delay: {{ $layout['delay'] }}; --mcv2-orb-start: {{ $hexToRgba($palette[0], 0.78) }}; --mcv2-orb-end: {{ $hexToRgba($palette[1], 0.44) }}; --mcv2-orb-core: rgba(255,255,255,0.28); --mcv2-orb-glow: {{ $hexToRgba($palette[0], 0.20) }};"
                                         >
                                             <input
                                                 type="radio"

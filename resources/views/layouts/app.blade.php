@@ -16,6 +16,32 @@
             --negative: #eadfff;
             --danger: #a93535;
             --shadow: 0 24px 60px rgba(37, 32, 52, 0.12);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --glass-border-soft: rgba(255, 255, 255, 0.22);
+            --glass-surface:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.34) 32%, rgba(255, 255, 255, 0.18) 62%, rgba(255, 255, 255, 0.26) 100%),
+                linear-gradient(135deg, rgba(255, 205, 129, 0.14), rgba(255, 255, 255, 0) 24%, rgba(110, 196, 255, 0.14) 62%, rgba(199, 180, 255, 0.12) 100%),
+                rgba(255, 255, 255, 0.28);
+            --glass-shadow:
+                0 16px 32px rgba(8, 18, 44, 0.12),
+                0 5px 12px rgba(255, 255, 255, 0.16),
+                inset 0 1px 0 rgba(255, 255, 255, 0.92),
+                inset 0 -9px 20px rgba(146, 181, 230, 0.22);
+            --glass-highlight:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.42) 42%, rgba(255, 255, 255, 0.08));
+            --glass-text: rgba(18, 31, 58, 0.88);
+            --glass-primary-tint:
+                radial-gradient(circle at 14% 100%, rgba(72, 154, 255, 0.48), transparent 42%),
+                radial-gradient(circle at 100% 0%, rgba(71, 220, 255, 0.42), transparent 44%),
+                linear-gradient(135deg, rgba(42, 124, 255, 0.64), rgba(88, 200, 255, 0.42) 52%, rgba(168, 213, 255, 0.3));
+            --glass-secondary-tint:
+                radial-gradient(circle at 14% 100%, rgba(255, 184, 116, 0.28), transparent 42%),
+                radial-gradient(circle at 100% 0%, rgba(155, 208, 255, 0.22), transparent 44%),
+                linear-gradient(135deg, rgba(255, 255, 255, 0.42), rgba(214, 233, 255, 0.18) 52%, rgba(255, 222, 175, 0.2));
+            --glass-danger-tint:
+                radial-gradient(circle at 14% 100%, rgba(255, 140, 164, 0.42), transparent 42%),
+                radial-gradient(circle at 100% 0%, rgba(255, 211, 122, 0.28), transparent 44%),
+                linear-gradient(135deg, rgba(255, 109, 132, 0.44), rgba(255, 170, 126, 0.24) 52%, rgba(255, 233, 187, 0.16));
         }
 
         * { box-sizing: border-box; }
@@ -57,6 +83,73 @@
             width: 100%;
             max-width: none;
             padding: 0;
+        }
+
+        .app-auth-dock {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)),
+                rgba(8, 14, 30, 0.56);
+            backdrop-filter: blur(18px) saturate(1.12);
+            box-shadow:
+                0 22px 42px rgba(0, 0, 0, 0.24),
+                inset 0 1px 0 rgba(255, 255, 255, 0.22);
+        }
+
+        .app-auth-user {
+            color: rgba(235, 243, 255, 0.78);
+            font-size: 12px;
+            letter-spacing: 0.06em;
+        }
+
+        .app-auth-link,
+        .app-auth-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 0 14px;
+            border-radius: 999px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            color: rgba(244, 248, 255, 0.96);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06)),
+                linear-gradient(135deg, rgba(112, 184, 255, 0.14), rgba(255, 225, 160, 0.08) 48%, rgba(187, 156, 255, 0.12)),
+                rgba(255, 255, 255, 0.06);
+            box-shadow:
+                0 12px 24px rgba(0, 0, 0, 0.16),
+                inset 0 1px 0 rgba(255, 255, 255, 0.36),
+                inset 0 -8px 18px rgba(102, 155, 255, 0.12);
+            backdrop-filter: blur(14px) saturate(1.08);
+        }
+
+        .app-auth-button {
+            cursor: pointer;
+        }
+
+        .app-auth-link::before,
+        .app-auth-button::before {
+            content: "";
+            position: absolute;
+            left: 10%;
+            right: 10%;
+            top: 1px;
+            height: 46%;
+            border-radius: inherit;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.12) 62%, transparent);
+            opacity: 0.82;
+            pointer-events: none;
         }
 
         .hero {
@@ -131,26 +224,73 @@
             justify-content: center;
             padding: 12px 18px;
             border-radius: 999px;
-            border: 1px solid transparent;
+            border: 1px solid var(--glass-border);
             cursor: pointer;
-            transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+            transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+            background: var(--glass-surface);
+            color: var(--glass-text);
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(18px) saturate(1.14);
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.28);
         }
 
-        .btn:hover, .chip-link:hover, .chip-button:hover { transform: translateY(-1px); }
+        .btn::before, .chip-link::before, .chip-button::before {
+            content: "";
+            position: absolute;
+            left: 10%;
+            right: 10%;
+            top: 1px;
+            height: 46%;
+            border-radius: inherit;
+            background: var(--glass-highlight);
+            opacity: 0.84;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .btn::after, .chip-link::after, .chip-button::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background:
+                radial-gradient(circle at 0% 100%, rgba(255, 194, 102, 0.2), transparent 34%),
+                radial-gradient(circle at 100% 0%, rgba(110, 199, 255, 0.2), transparent 34%);
+            opacity: 0.72;
+            pointer-events: none;
+            z-index: -2;
+        }
+
+        .btn:hover, .chip-link:hover, .chip-button:hover {
+            transform: translateY(-1px);
+            box-shadow:
+                0 20px 36px rgba(8, 18, 44, 0.16),
+                0 5px 12px rgba(255, 255, 255, 0.16),
+                inset 0 1px 0 rgba(255, 255, 255, 0.94),
+                inset 0 -10px 20px rgba(134, 169, 220, 0.24);
+        }
         .btn-primary {
-            background: linear-gradient(135deg, var(--accent), #f39a63);
-            color: white;
-            box-shadow: 0 12px 28px rgba(240, 111, 90, 0.28);
+            background: var(--glass-primary-tint), var(--glass-surface);
+            color: rgba(246, 251, 255, 0.98);
+            border-color: rgba(186, 232, 255, 0.54);
+            box-shadow:
+                0 16px 34px rgba(26, 84, 173, 0.2),
+                0 0 24px rgba(92, 196, 255, 0.22),
+                inset 0 1px 0 rgba(255, 255, 255, 0.94),
+                inset 0 -10px 20px rgba(78, 137, 255, 0.18);
         }
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.9);
-            border-color: var(--line);
-            color: var(--ink);
+            background: var(--glass-secondary-tint), var(--glass-surface);
+            border-color: rgba(255, 255, 255, 0.44);
+            color: rgba(25, 36, 63, 0.92);
         }
         .btn-danger {
-            background: #fff1f1;
-            color: var(--danger);
-            border-color: rgba(169, 53, 53, 0.2);
+            background: var(--glass-danger-tint), var(--glass-surface);
+            color: rgba(98, 22, 42, 0.9);
+            border-color: rgba(255, 198, 210, 0.5);
         }
 
         .side-card, .panel { padding: 22px; }
@@ -223,16 +363,19 @@
         }
 
         .chip-link {
-            background: rgba(255, 255, 255, 0.86);
-            border-color: var(--line);
-            color: var(--subtle);
+            color: rgba(32, 46, 80, 0.76);
             font-size: 14px;
         }
 
         .chip-link.active, .chip-option input:checked + .chip-button {
-            background: var(--ink);
-            color: white;
-            border-color: var(--ink);
+            background: var(--glass-primary-tint), var(--glass-surface);
+            color: rgba(243, 249, 255, 0.98);
+            border-color: rgba(187, 229, 255, 0.58);
+            box-shadow:
+                0 16px 30px rgba(31, 77, 156, 0.18),
+                0 0 22px rgba(98, 197, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.94),
+                inset 0 -8px 18px rgba(82, 136, 250, 0.18);
         }
 
         .memory-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
@@ -255,9 +398,7 @@
         .chip-button {
             min-height: 44px;
             padding: 11px 16px;
-            background: rgba(255, 255, 255, 0.82);
-            border: 1px solid var(--line);
-            color: var(--ink);
+            color: rgba(24, 38, 70, 0.88);
             font-size: 14px;
         }
 
@@ -281,12 +422,39 @@
             padding: 8px 12px;
             border-radius: 999px;
             font-size: 13px;
-            font-weight: 600;
-            color: var(--ink);
+            font-weight: 700;
+            color: rgba(24, 36, 62, 0.86);
+            border: 1px solid rgba(255, 255, 255, 0.52);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.28)),
+                rgba(255, 255, 255, 0.16);
+            box-shadow:
+                0 10px 22px rgba(8, 18, 44, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.94),
+                inset 0 -8px 18px rgba(146, 181, 230, 0.18);
+            backdrop-filter: blur(16px);
         }
-        .badge-positive { background: var(--positive); }
-        .badge-neutral { background: var(--neutral); }
-        .badge-negative { background: var(--negative); }
+        .badge-positive {
+            background:
+                radial-gradient(circle at 0% 100%, rgba(255, 186, 121, 0.36), transparent 36%),
+                radial-gradient(circle at 100% 0%, rgba(255, 132, 174, 0.22), transparent 38%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 244, 232, 0.42)),
+                rgba(255, 255, 255, 0.18);
+        }
+        .badge-neutral {
+            background:
+                radial-gradient(circle at 0% 100%, rgba(124, 211, 255, 0.3), transparent 36%),
+                radial-gradient(circle at 100% 0%, rgba(146, 170, 255, 0.24), transparent 38%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(233, 243, 255, 0.42)),
+                rgba(255, 255, 255, 0.18);
+        }
+        .badge-negative {
+            background:
+                radial-gradient(circle at 0% 100%, rgba(199, 149, 255, 0.32), transparent 36%),
+                radial-gradient(circle at 100% 0%, rgba(255, 168, 202, 0.22), transparent 38%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(244, 237, 255, 0.42)),
+                rgba(255, 255, 255, 0.18);
+        }
 
         @media (max-width: 920px) {
             .hero, .layout { grid-template-columns: 1fr; }
@@ -298,12 +466,30 @@
             .hero-card, .side-card, .panel { padding: 18px; }
             .panel-header { flex-direction: column; }
             h1 { font-size: 30px; }
+            .app-auth-dock {
+                left: 12px;
+                right: 12px;
+                top: 12px;
+                justify-content: space-between;
+            }
         }
     </style>
     @stack('head')
     @stack('styles')
 </head>
-<body class="@yield('body_class')">
+<body class="@yield('body_class') @yield('page_class')">
+    @auth
+        @if (trim($__env->yieldContent('hide_auth_dock')) !== '1')
+        <div class="app-auth-dock">
+            <span class="app-auth-user">{{ auth()->user()->email }}</span>
+            <a class="app-auth-link" href="{{ route('memories.bubbles') }}">記憶の玉</a>
+            <form method="post" action="{{ route('logout') }}">
+                @csrf
+                <button class="app-auth-button" type="submit">ログアウト</button>
+            </form>
+        </div>
+        @endif
+    @endauth
     <div class="page @yield('page_class')">
         @yield('content')
     </div>

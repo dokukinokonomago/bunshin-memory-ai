@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = root.querySelector('[data-memory-form]');
   const toast = root.querySelector('[data-toast]');
   const contentInput = root.querySelector('[data-content-input]');
+  const tagInput = root.querySelector('[data-tag-input]');
   const cancelButton = root.querySelector('[data-cancel-button]');
   const previewPeriod = root.querySelector('[data-preview-period]');
   const previewEmotion = root.querySelector('[data-preview-emotion]');
@@ -269,6 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (sectionName === 'content') {
       if (contentInput) contentInput.value = '';
+      if (tagInput) tagInput.value = '';
       refreshPreview();
       showToast('内容をリセットしました。');
       return;
@@ -379,6 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (emotionGroupInput) emotionGroupInput.value = defaultEmotion.dataset.group || 'normal';
     }
     if (contentInput) contentInput.value = '';
+    if (tagInput) tagInput.value = '';
 
     closeEmotionModal();
     refreshPreview();
@@ -398,6 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   contentInput?.addEventListener('input', refreshPreview);
+  tagInput?.addEventListener('input', refreshPreview);
   addEmotionInput?.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();

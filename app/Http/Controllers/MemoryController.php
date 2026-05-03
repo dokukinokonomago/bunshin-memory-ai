@@ -12,10 +12,13 @@ use Illuminate\View\View;
 
 class MemoryController extends Controller
 {
-    private const BUBBLE_LAYER_SIZE = 100;
-    private const ACTIVE_CREATE_VIEW = 'memories.create';
-    private const PREVIEW_CREATE_VIEW = 'memories.create_v2';
+    private const ACTIVE_CREATE_VIEW = 'memories.create_v2';
     private const PERIODS = ['幼少期', '小学生', '中学生', '高校生', '大学生', '成人期', '不明'];
+    private const SESSION_GRAVE_VISIBLE = 'memories.grave.visible';
+    private const SESSION_GRAVE_UNLOCKED = 'memories.grave.unlocked';
+    private const GRAVE_PASSCODE = '1234';
+    private const GRAVE_TAG = '__grave_hidden__';
+    private const DEMO_TAG = 'DEMO';
     private const CREATE_COMPOSER_GROUP_META = [
         'warm' => [
             'label' => 'あたたかい',
@@ -75,18 +78,14 @@ class MemoryController extends Controller
         'ネガティブ（強め）' => ['不安', '悲しい', 'イライラ', '怒り', '落ち込み', '孤独', '無力感', '自信がない'],
     ];
 
-    public function home(): View
-    {
-        return view('home');
-    }
-
     public function index(Request $request): View
     {
         $keyword = trim($request->string('q')->toString());
         $selectedPeriod = $request->string('period')->toString();
         $selectedPeriod = in_array($selectedPeriod, array_merge(['すべて'], self::PERIODS), true) ? $selectedPeriod : 'すべて';
+        $emotionToneMap = $this->emotionToneMap();
 
-        $query = Memory::query()->latest();
+        $query = $this->visibleMemoriesQuery()->latest();
 
         if ($selectedPeriod !== 'すべて') {
             $query->where('period', $selectedPeriod);
@@ -97,14 +96,16 @@ class MemoryController extends Controller
                 $builder
                     ->where('content', 'like', '%' . $keyword . '%')
                     ->orWhere('period', 'like', '%' . $keyword . '%')
-                    ->orWhere('emotion', 'like', '%' . $keyword . '%');
+                    ->orWhere('emotion', 'like', '%' . $keyword . '%')
+                    ->orWhere('tags', 'like', '%' . $keyword . '%');
             });
         }
 
         return view('memories.index', [
             'memories' => $query->get(),
-            'emotionToneMap' => $this->emotionToneMap(),
-            'allCount' => Memory::query()->count(),
+            'emotionToneMap' => $emotionToneMap,
+            'emotionColorMap' => $this->emotionPaletteMap(),
+            'allCount' => $this->visibleMemoriesQuery()->count(),
             'searchQuery' => $keyword,
             'periods' => self::PERIODS,
             'selectedPeriod' => $selectedPeriod,
@@ -116,9 +117,9 @@ class MemoryController extends Controller
         return $this->renderCreateView($request, self::ACTIVE_CREATE_VIEW);
     }
 
-    public function createPreview(Request $request): View
+    public function createPreview(): RedirectResponse
     {
-        return $this->renderCreateView($request, self::PREVIEW_CREATE_VIEW);
+        return redirect()->route('memories.create');
     }
 
     public function edit(Memory $memory): View
@@ -134,51 +135,120 @@ class MemoryController extends Controller
     {
         $selectedPeriod = $request->string('period')->toString();
         $selectedPeriod = in_array($selectedPeriod, array_merge(['すべて'], self::PERIODS), true) ? $selectedPeriod : 'すべて';
-        $requestedLayer = max(1, $request->integer('layer', 1));
-
-        $query = Memory::query()->latest();
-
-        if ($selectedPeriod !== 'すべて') {
-            $query->where('period', $selectedPeriod);
-        }
-
+        $arrangedMode = $selectedPeriod !== 'すべて' && $request->string('view')->toString() === 'all';
+        $showGraveBubble = (bool) $request->session()->get(self::SESSION_GRAVE_VISIBLE, false);
+        $graveUnlocked = (bool) $request->session()->get(self::SESSION_GRAVE_UNLOCKED, false);
         $emotionToneMap = $this->emotionToneMap();
-        $matchingCount = (clone $query)->count();
-        $layerCount = max(1, (int) ceil($matchingCount / self::BUBBLE_LAYER_SIZE));
-        $currentLayer = min($requestedLayer, $layerCount);
-        $offset = ($currentLayer - 1) * self::BUBBLE_LAYER_SIZE;
-        $memories = (clone $query)
-            ->skip($offset)
-            ->take(self::BUBBLE_LAYER_SIZE)
+        $allMemories = $this->visibleMemoriesQuery()
+            ->latest()
             ->get();
-
-        $bubbleMemories = $memories->values()->map(function (Memory $memory) use ($emotionToneMap): array {
-            $tone = $emotionToneMap[$memory->emotion] ?? 'ニュートラル';
-
-            return [
-                'id' => $memory->id,
-                'period' => $memory->period,
-                'emotion' => $memory->emotion,
-                'content' => $memory->content,
-                'label' => $this->bubbleKeyword($memory),
-                'tone' => $tone,
-                'colors' => $this->toneColors($tone),
-                'tags' => [$memory->period, $memory->emotion],
-            ];
-        });
+        $graveMemories = $graveUnlocked
+            ? $this->graveMemoriesQuery()->latest()->get()
+            : collect();
+        $matchingMemories = $selectedPeriod === 'すべて'
+            ? $allMemories
+            : $allMemories->where('period', $selectedPeriod)->values();
+        $matchingCount = $matchingMemories->count();
+        $bubbleMemories = $allMemories
+            ->values()
+            ->map(fn (Memory $memory): array => $this->bubbleMemoryPayload($memory, $emotionToneMap));
 
         return view('memories.bubbles', [
             'bubbleMemories' => $bubbleMemories,
-            'allCount' => Memory::query()->count(),
+            'allCount' => $allMemories->count(),
             'displayCount' => $bubbleMemories->count(),
             'matchingCount' => $matchingCount,
+            'periodBubbleCounts' => $allMemories->countBy('period')->all(),
             'periods' => self::PERIODS,
             'selectedPeriod' => $selectedPeriod,
-            'currentLayer' => $currentLayer,
-            'layerCount' => $layerCount,
-            'hasPreviousLayer' => $currentLayer > 1,
-            'hasNextLayer' => $currentLayer < $layerCount,
+            'currentLayer' => $arrangedMode ? 2 : 1,
+            'layerCount' => 1,
+            'hasPreviousLayer' => false,
+            'hasNextLayer' => false,
+            'focusMode' => $selectedPeriod !== 'すべて',
+            'arrangedMode' => $arrangedMode,
+            'graveMode' => $showGraveBubble ? $this->graveModePayload($graveUnlocked) : null,
+            'showGraveBubble' => $showGraveBubble,
+            'graveUnlocked' => $graveUnlocked,
+            'graveMemories' => $graveMemories
+                ->map(fn (Memory $memory): array => $this->bubbleMemoryPayload($memory, $emotionToneMap))
+                ->values(),
+            'graveUnlockError' => $request->session()->get('grave_unlock_error'),
+            'graveUnlockSuccess' => $request->session()->get('grave_unlock_success'),
+            'graveCreateSuccess' => $request->session()->get('grave_create_success'),
+            'selectedPeriodStatus' => $selectedPeriod !== 'すべて'
+                ? $this->selectedPeriodStatus($matchingMemories, $emotionToneMap, $selectedPeriod, $arrangedMode ? 2 : 1, 2)
+                : null,
+            'emotionGroups' => self::EMOTION_GROUPS,
         ]);
+    }
+
+    public function revealAllBubbles(Request $request): RedirectResponse
+    {
+        $request->session()->put(self::SESSION_GRAVE_VISIBLE, true);
+
+        return redirect()->route('memories.bubbles', $this->bubblesRedirectParams($request));
+    }
+
+    public function unlockGraveMode(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'passcode' => ['required', 'string', 'max:20'],
+        ], [
+            'passcode.required' => 'パスコードを入力してください。',
+            'passcode.max' => 'パスコードが長すぎます。',
+        ]);
+
+        $request->session()->put(self::SESSION_GRAVE_VISIBLE, true);
+
+        if ($validated['passcode'] !== self::GRAVE_PASSCODE) {
+            $request->session()->forget(self::SESSION_GRAVE_UNLOCKED);
+
+            return redirect()
+                ->route('memories.bubbles', $this->bubblesRedirectParams($request))
+                ->with('grave_unlock_error', 'パスコードが違います。');
+        }
+
+        $request->session()->put(self::SESSION_GRAVE_UNLOCKED, true);
+
+        return redirect()
+            ->route('memories.bubbles', $this->bubblesRedirectParams($request))
+            ->with('grave_unlock_success', '墓場までモードを開きました。');
+    }
+
+    public function hideGraveMode(Request $request): RedirectResponse
+    {
+        $request->session()->forget([
+            self::SESSION_GRAVE_VISIBLE,
+            self::SESSION_GRAVE_UNLOCKED,
+        ]);
+
+        return redirect()->route('memories.bubbles', $this->bubblesRedirectParams($request));
+    }
+
+    public function storeGraveMemory(Request $request): RedirectResponse
+    {
+        if (! $request->session()->get(self::SESSION_GRAVE_UNLOCKED, false)) {
+            abort(403);
+        }
+
+        $validated = $this->validateMemory($request);
+        $tags = collect($validated['tags'])
+            ->prepend(self::GRAVE_TAG)
+            ->unique()
+            ->values()
+            ->all();
+
+        Memory::query()->create(array_merge($validated, [
+            'tags' => $tags,
+        ]));
+
+        $request->session()->put(self::SESSION_GRAVE_VISIBLE, true);
+        $request->session()->put(self::SESSION_GRAVE_UNLOCKED, true);
+
+        return redirect()
+            ->route('memories.bubbles', $this->bubblesRedirectParams($request))
+            ->with('grave_create_success', '墓場までの記憶玉を保存しました。');
     }
 
     public function store(Request $request): RedirectResponse
@@ -208,7 +278,7 @@ class MemoryController extends Controller
             'memory' => $memory,
             'emotionToneMap' => $emotionToneMap,
             'tone' => $tone,
-            'colors' => $this->toneColors($tone),
+            'colors' => $this->emotionColors($memory->emotion, $tone),
             'theme' => $this->memoryTheme($memory),
         ]);
     }
@@ -271,35 +341,91 @@ class MemoryController extends Controller
     private function toneColors(string $tone): array
     {
         if (str_contains($tone, 'ポジティブ')) {
-            return ['#ffe2c8', '#f08b4f'];
+            return ['#ff7a6e', '#ffd08a'];
         }
 
         if (str_contains($tone, 'ネガティブ')) {
-            return ['#eadfff', '#8f7cff'];
+            return ['#bfe0ff', '#5a46c9'];
         }
 
-        return ['#dce9ff', '#63a6ff'];
+        return ['#ffe989', '#a9e7a4'];
+    }
+
+    private function emotionPaletteMap(): array
+    {
+        return [
+            '感動' => ['#ff6b75', '#ff9a63'],
+            '嬉しい' => ['#ff746f', '#ffa06a'],
+            '楽しい' => ['#ff8168', '#ffad72'],
+            '安心' => ['#ff8e6c', '#ffba79'],
+            'ホッとした' => ['#ff9871', '#ffc480'],
+            '幸せ' => ['#ffa676', '#ffcf86'],
+            '満足' => ['#ffb27b', '#ffd88d'],
+            'ワクワク' => ['#ff875f', '#ffaf68'],
+            '感謝' => ['#ff9668', '#ffc073'],
+            '誇らしい' => ['#ff7078', '#ff9765'],
+            '自信がある' => ['#ff667f', '#ff9062'],
+            '普通' => ['#ffe784', '#d8f08e'],
+            'なんとなく' => ['#f7ea87', '#d2ef90'],
+            '落ち着いている' => ['#edf08c', '#c6ee96'],
+            'ぼーっとした' => ['#e2ef93', '#b9e99d'],
+            '考え中' => ['#d4ec98', '#a8e2a0'],
+            'モヤモヤ' => ['#caecff', '#9fc8ff'],
+            '少し不安' => ['#bee4ff', '#8fb8ff'],
+            '疲れた' => ['#b3dcff', '#83adff'],
+            '迷い' => ['#a9d3ff', '#7d9fff'],
+            '気まずい' => ['#9ec8ff', '#768fff'],
+            '引っかかる' => ['#92bcff', '#6f7eff'],
+            '不安' => ['#a3c2ff', '#6a74ff'],
+            '悲しい' => ['#98b4ff', '#635ff1'],
+            'イライラ' => ['#8fa8ff', '#5d49df'],
+            '怒り' => ['#8798ff', '#553acb'],
+            '落ち込み' => ['#7e88f5', '#4d31b8'],
+            '孤独' => ['#746fdd', '#46299f'],
+            '無力感' => ['#685ec7', '#3f238d'],
+            '自信がない' => ['#5b4eac', '#341c76'],
+        ];
+    }
+
+    private function emotionColors(string $emotion, ?string $tone = null): array
+    {
+        return $this->emotionPaletteMap()[$emotion] ?? $this->toneColors($tone ?? ($this->emotionToneMap()[$emotion] ?? 'ニュートラル'));
+    }
+
+    /** 年代ごとに虹色順でカラーを割り当てる */
+    private function periodColors(string $period): array
+    {
+        $map = [
+            '幼少期' => ['#ff6b6b', '#ff4757'], // 赤
+            '小学生' => ['#ffa94d', '#ff7c1f'], // オレンジ
+            '中学生' => ['#ffe066', '#ffbc00'], // 黄
+            '高校生' => ['#69db7c', '#2dbe4e'], // 緑
+            '大学生' => ['#4dabf7', '#1c7ed6'], // 青
+            '成人期' => ['#9775fa', '#6741d9'], // 紫
+            '不明'   => ['#f06595', '#c2255c'], // ピンク（虹の外側）
+        ];
+
+        return $map[$period] ?? ['#dce9ff', '#63a6ff'];
     }
 
     private function bubbleKeyword(Memory $memory): string
     {
-        $content = trim(preg_replace('/\s+/u', ' ', $memory->content) ?? '');
-        $parts = preg_split('/[、。,.!?\s「」『』（）()]+/u', $content) ?: [];
+        $content = trim((string) preg_replace('/\s+/u', '', $memory->content));
+        $content = preg_replace('/^(demo|test)[\-_ ]*/iu', '', $content) ?? $content;
+        $content = preg_replace('/^(幼少期|小学生|中学生|高校生|大学生|成人期|不明)/u', '', $content) ?? $content;
 
-        foreach ($parts as $part) {
-            $word = trim($part);
-
-            if ($word !== '') {
-                return Str::limit($word, 6, '');
-            }
+        if ($content !== '') {
+            return mb_substr($content, 0, 3);
         }
 
-        return Str::limit($memory->emotion, 6, '');
+        return mb_substr($memory->emotion, 0, 3);
     }
 
     private function memoryTheme(Memory $memory): string
     {
         $content = trim(preg_replace('/\s+/u', ' ', $memory->content) ?? '');
+        $content = preg_replace('/^(demo|test)[\-_ ]*/iu', '', $content) ?? $content;
+        $content = preg_replace('/^(幼少期|小学生|中学生|高校生|大学生|成人期|不明)\s*/u', '', $content) ?? $content;
 
         if ($content === '') {
             return $memory->emotion;
@@ -318,24 +444,245 @@ class MemoryController extends Controller
         return Str::limit($content, 20, '…');
     }
 
+    private function selectedPeriodStatus(
+        Collection $memories,
+        array $emotionToneMap,
+        string $selectedPeriod,
+        int $currentLayer,
+        int $layerCount
+    ): array {
+        $total = $memories->count();
+        $emotionCounts = $memories
+            ->countBy('emotion')
+            ->sortDesc();
+        $maxEmotionCount = max(1, (int) $emotionCounts->first());
+
+        $topEmotionBars = $emotionCounts
+            ->take(8)
+            ->map(fn (int $count, string $emotion): array => [
+                'label' => $emotion,
+                'count' => $count,
+                'ratio' => round(($count / $maxEmotionCount) * 100, 1),
+            ])
+            ->values()
+            ->all();
+
+        $toneBuckets = [
+            'ポジティブ' => 'ポジティブ',
+            'ニュートラル' => 'ニュートラル',
+            '軽い揺れ' => 'ネガティブ（軽め）',
+            '深い揺れ' => 'ネガティブ（強め）',
+        ];
+
+        $toneRings = collect($toneBuckets)
+            ->map(function (string $toneKey, string $label) use ($memories, $emotionToneMap, $total): array {
+                $count = $memories->filter(fn (Memory $memory): bool => ($emotionToneMap[$memory->emotion] ?? 'ニュートラル') === $toneKey)->count();
+
+                return [
+                    'label' => $label,
+                    'count' => $count,
+                    'ratio' => $total > 0 ? (int) round(($count / $total) * 100) : 0,
+                ];
+            })
+            ->values()
+            ->all();
+
+        $keywordCounts = $memories
+            ->map(fn (Memory $memory): string => $this->bubbleKeyword($memory))
+            ->countBy()
+            ->sortDesc();
+
+        $latest = $memories->sortByDesc('created_at')->take(3)->values();
+        $latestTimeline = $latest->map(fn (Memory $memory): array => [
+            'date' => optional($memory->created_at)->format('Y.m.d H:i') ?? '----.--.-- --:--',
+            'emotion' => $memory->emotion,
+            'excerpt' => Str::limit(trim($memory->content), 46, '…'),
+        ])->all();
+
+        $oldestDate = optional($memories->sortBy('created_at')->first()?->created_at)->format('Y.m.d') ?? '--.--.--';
+        $latestDate = optional($memories->sortByDesc('created_at')->first()?->created_at)->format('Y.m.d') ?? '--.--.--';
+        $avgLength = $total > 0
+            ? (int) round($memories->avg(fn (Memory $memory): int => mb_strlen(trim($memory->content))))
+            : 0;
+        $topEmotion = (string) ($emotionCounts->keys()->first() ?? '未分類');
+        $topKeyword = (string) ($keywordCounts->keys()->first() ?? '未設定');
+
+        return [
+            'period' => $selectedPeriod,
+            'total' => $total,
+            'uniqueEmotions' => $emotionCounts->count(),
+            'avgLength' => $avgLength,
+            'topEmotion' => $topEmotion,
+            'topKeyword' => $topKeyword,
+            'latestDate' => $latestDate,
+            'oldestDate' => $oldestDate,
+            'currentLayer' => $currentLayer,
+            'layerCount' => $layerCount,
+            'topEmotionBars' => $topEmotionBars,
+            'toneRings' => $toneRings,
+            'timeline' => $latestTimeline,
+        ];
+    }
+
     private function validateMemory(Request $request): array
     {
         $validated = $request->validate([
             'period' => ['required', Rule::in(self::PERIODS)],
             'content' => ['required', 'string'],
             'emotion' => ['required', 'string', 'max:20'],
+            'tags' => ['nullable', 'string', 'max:180'],
         ], [
             'period.required' => '年代を選択してください。',
             'period.in' => '年代を正しく選択してください。',
             'content.required' => '内容を入力してください。',
             'emotion.required' => '感情を選択してください。',
             'emotion.max' => '感情は20文字以内で入力してください。',
+            'tags.max' => '関連タグは180文字以内で入力してください。',
         ]);
 
         return [
             'period' => $validated['period'],
             'content' => trim($validated['content']),
             'emotion' => trim($validated['emotion']),
+            'tags' => $this->normalizeTags((string) ($validated['tags'] ?? '')),
+        ];
+    }
+
+    private function bubbleMemoryPayload(Memory $memory, array $emotionToneMap): array
+    {
+        $tone = $emotionToneMap[$memory->emotion] ?? 'ニュートラル';
+        $storedTags = collect($memory->tags ?? [])
+            ->map(fn (mixed $tag): string => trim((string) $tag))
+            ->reject(fn (string $tag): bool => in_array($tag, [self::GRAVE_TAG, self::DEMO_TAG], true))
+            ->filter()
+            ->values();
+        $cluster = $this->memoryClusterLabel($memory, $storedTags);
+        $theme = $this->memoryTheme($memory);
+
+        return [
+            'id' => $memory->id,
+            'period' => $memory->period,
+            'emotion' => $memory->emotion,
+            'content' => $memory->content,
+            'label' => $this->bubbleKeyword($memory),
+            'theme' => $theme,
+            'cluster' => $cluster,
+            'excerpt' => Str::limit(trim($memory->content), 58, '…'),
+            'comment' => $this->memoryCompanionComment($memory, $cluster, $theme),
+            'createdAt' => optional($memory->created_at)->timezone('Asia/Tokyo')->format('Y.m.d H:i') ?? '--.--.-- --:--',
+            'createdAtTs' => optional($memory->created_at)->getTimestamp() ?? 0,
+            'tone' => $tone,
+            'colors' => $this->emotionColors($memory->emotion, $tone),
+            'periodColors' => $this->periodColors($memory->period),
+            'tags' => $storedTags
+                ->prepend($memory->emotion)
+                ->prepend($memory->period)
+                ->unique()
+                ->take(6)
+                ->values()
+                ->all(),
+            'url' => route('memories.show', $memory),
+        ];
+    }
+
+    private function memoryClusterLabel(Memory $memory, Collection $storedTags): string
+    {
+        $tag = $storedTags
+            ->first(fn (string $value): bool => $value !== $memory->period && $value !== $memory->emotion);
+
+        if (is_string($tag) && $tag !== '') {
+            return Str::limit($tag, 12, '');
+        }
+
+        return Str::limit($memory->emotion, 12, '');
+    }
+
+    private function memoryCompanionComment(Memory $memory, string $cluster, string $theme): string
+    {
+        $templates = [
+            'ポジティブ' => [
+                'この記憶はまだやわらかく光っています。',
+                '近づくほど、当時の温度が戻ってくる記憶です。',
+                '明るさの奥に、{}の輪郭が残っています。',
+            ],
+            'ニュートラル' => [
+                '静かな出来事ほど、あとから意味を帯びます。',
+                '何気ない場面の中に、{}の気配が残っています。',
+                '派手ではないけれど、輪郭の確かな記憶です。',
+            ],
+            'ネガティブ' => [
+                '少し痛みを含みつつ、今も形を失っていません。',
+                '{}の感触が、まだ水面下で揺れています。',
+                '見返すには勇気がいるけれど、大事な記録です。',
+            ],
+        ];
+
+        $toneKey = str_contains($memory->emotion, '不安') || str_contains($memory->emotion, '悲') || str_contains($memory->emotion, '怒') || str_contains($memory->emotion, '落ち')
+            ? 'ネガティブ'
+            : (str_contains($memory->emotion, '嬉') || str_contains($memory->emotion, '楽') || str_contains($memory->emotion, '幸') || str_contains($memory->emotion, '感動')
+                ? 'ポジティブ'
+                : 'ニュートラル');
+        $variants = $templates[$toneKey];
+        $template = $variants[$memory->id % count($variants)];
+
+        return str_replace('{}', $cluster !== '' ? $cluster : $theme, $template);
+    }
+
+    private function normalizeTags(string $rawTags): array
+    {
+        return collect(preg_split('/[\r\n,、]+/u', $rawTags) ?: [])
+            ->map(fn (string $tag): string => trim(ltrim($tag, '#＃ ')))
+            ->reject(fn (string $tag): bool => $tag === self::GRAVE_TAG)
+            ->filter()
+            ->map(fn (string $tag): string => mb_substr($tag, 0, 20))
+            ->unique()
+            ->take(8)
+            ->values()
+            ->all();
+    }
+
+    private function visibleMemoriesQuery()
+    {
+        return Memory::query()
+            ->where(function ($query): void {
+                $query
+                    ->whereNull('tags')
+                    ->orWhere('tags', 'not like', '%"' . self::GRAVE_TAG . '"%');
+            });
+    }
+
+    private function graveMemoriesQuery()
+    {
+        return Memory::query()
+            ->where('tags', 'like', '%"' . self::GRAVE_TAG . '"%');
+    }
+
+    private function bubblesRedirectParams(Request $request): array
+    {
+        $selectedPeriod = $request->string('period_context')->toString();
+
+        if ($selectedPeriod === '') {
+            $selectedPeriod = $request->string('period')->toString();
+        }
+
+        if ($selectedPeriod !== '' && $selectedPeriod !== 'すべて' && in_array($selectedPeriod, self::PERIODS, true)) {
+            return ['period' => $selectedPeriod];
+        }
+
+        return [];
+    }
+
+    private function graveModePayload(bool $graveUnlocked): array
+    {
+        return [
+            'id' => 'grave-mode',
+            'label' => '墓場まで',
+            'status' => $graveUnlocked ? '解錠済み' : '鍵付き',
+            'hint' => $graveUnlocked ? '本人だけが触れられる隠し記憶' : '4桁パスコードで開く隠しシャボン',
+            'x' => 450,
+            'y' => 150,
+            'r' => 92,
+            'locked' => ! $graveUnlocked,
         ];
     }
 
@@ -390,6 +737,7 @@ class MemoryController extends Controller
         return view($view, array_merge([
             'periods' => self::PERIODS,
             'emotionGroups' => self::EMOTION_GROUPS,
+            'emotionColorMap' => $this->emotionPaletteMap(),
         ], $this->createComposerViewData($request)));
     }
 
