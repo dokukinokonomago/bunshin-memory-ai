@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class MemoryController extends Controller
@@ -540,9 +541,17 @@ class MemoryController extends Controller
             'tags.max' => '関連タグは180文字以内で入力してください。',
         ]);
 
+        $content = trim($validated['content']);
+
+        if ($content === '') {
+            throw ValidationException::withMessages([
+                'content' => '内容を入力してください。',
+            ]);
+        }
+
         return [
             'period' => $validated['period'],
-            'content' => trim($validated['content']),
+            'content' => $content,
             'emotion' => trim($validated['emotion']),
             'tags' => $this->normalizeTags((string) ($validated['tags'] ?? '')),
         ];

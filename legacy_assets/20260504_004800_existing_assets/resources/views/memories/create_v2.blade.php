@@ -347,7 +347,9 @@
 
                         <div class="mcv2-emotion-picker">
                             @foreach ($emotionBuckets as $bucketKey => $bucket)
-                                @php($bucketPalette = $emotionBucketPalettes[$bucketKey] ?? ['start' => '#dce9ff', 'end' => '#63a6ff'])
+                                @php
+                                    $bucketPalette = $emotionBucketPalettes[$bucketKey] ?? ['start' => '#dce9ff', 'end' => '#63a6ff'];
+                                @endphp
                                 <button
                                     class="mcv2-emotion-trigger tone-{{ $bucket['tone'] }} {{ $initialEmotionBucket === $bucketKey ? 'is-active' : '' }}"
                                     type="button"

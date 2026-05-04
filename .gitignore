@@ -1,11 +1,11 @@
 *.log
 .DS_Store
 .env
-.env.testing
 .env.backup
 .env.production
 .phpactor.json
 .phpunit.result.cache
+/.codex
 /.cursor/
 /.idea
 /.nova
@@ -20,6 +20,10 @@
 /storage/*.key
 /storage/pail
 /vendor
+legacy_assets/**/vendor/
+legacy_assets/**/node_modules/
+legacy_assets/**/database/*.sqlite*
+legacy_assets/**/.env
 _ide_helper.php
 Homestead.json
 Homestead.yaml

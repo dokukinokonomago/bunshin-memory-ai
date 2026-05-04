@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Memory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -52,6 +53,71 @@ class MemoryCreatePreviewTest extends TestCase
             'period' => '高校生',
             'content' => '放課後の教室で友達と話したことを思い出した。',
             'emotion' => '普通',
+        ]);
+    }
+
+    public function test_store_rejects_whitespace_only_content(): void
+    {
+        $token = 'test-token';
+
+        $response = $this
+            ->from(route('memories.create'))
+            ->withSession(['_token' => $token])
+            ->post(route('memories.store'), [
+                '_token' => $token,
+                'period' => '高校生',
+                'content' => " \n\t ",
+                'emotion' => '普通',
+            ]);
+
+        $response->assertRedirect(route('memories.create'));
+        $response->assertSessionHasErrors('content');
+        $this->assertDatabaseCount('memories', 0);
+    }
+
+    public function test_store_trims_content_before_saving(): void
+    {
+        $token = 'test-token';
+
+        $response = $this->withSession(['_token' => $token])->post(route('memories.store'), [
+            '_token' => $token,
+            'period' => '高校生',
+            'content' => "  放課後の教室で話した記憶。 \n",
+            'emotion' => '普通',
+        ]);
+
+        $response->assertRedirect(route('memories.index'));
+        $this->assertDatabaseHas('memories', [
+            'period' => '高校生',
+            'content' => '放課後の教室で話した記憶。',
+            'emotion' => '普通',
+        ]);
+    }
+
+    public function test_update_rejects_whitespace_only_content(): void
+    {
+        $memory = Memory::query()->create([
+            'period' => '高校生',
+            'content' => '保存済みの記憶',
+            'emotion' => '普通',
+        ]);
+        $token = 'test-token';
+
+        $response = $this
+            ->from(route('memories.edit', $memory))
+            ->withSession(['_token' => $token])
+            ->put(route('memories.update', $memory), [
+                '_token' => $token,
+                'period' => '高校生',
+                'content' => " \n\t ",
+                'emotion' => '普通',
+            ]);
+
+        $response->assertRedirect(route('memories.edit', $memory));
+        $response->assertSessionHasErrors('content');
+        $this->assertDatabaseHas('memories', [
+            'id' => $memory->id,
+            'content' => '保存済みの記憶',
         ]);
     }
 
