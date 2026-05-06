@@ -1,414 +1,154 @@
 # タスクボード
 
-最終更新: 2026-05-04 10:03:02 JST
+最終更新: 2026-05-06 15:19:03 JST
 
 ## 現在の目的
 
-既存 MVP 資材を legacy として保持しつつ、分身AIバックエンドを API-first の新規設計で実装する。
+既存 MVP 資材を legacy として保持しつつ、分身AIバックエンドを新規設計で実装する。`categories.parent_id` の migration / model / validation / tests baseline と、root category 削除時の「children あり削除禁止」実装は完了済み。local 開発環境で Bearer token を毎回貼り直さず、seed data 入りで確認できるよう、固定 dev token、sample category / memory / tag seed、localhost 自動補完を追加済み。
 
 ## 今回進める 1 task
 
-smoke test 作成物の削除可否を確認し、許可が明示されていない場合は delete flow を実行せず pause 状態を記録する。
+local 開発環境の seed に sample category / memory / tag data も追加し、管理画面モックアップと memory-space を開いた直後に確認できる状態にする。
 
 ## 完了条件
 
-- automation memory、task board、今回の automation 入力を確認し、削除許可が明示されているか判定する。
-- 許可が明示されていなければ、local DB の `Smoke memory updated` / `Smoke Test Updated` は削除しない。
-- read-only query で対象作成物の現状を確認する。
-- 確認結果、変更ファイル一覧、次回 automation メモを更新する。
+- `DatabaseSeeder` が local / testing だけ sample root category / subcategory、通常 memory、secret memory、tags を idempotent に作る。
+- `php artisan db:seed` 後、categories / memories / memory-space / tags API に sample data が返る。
+- seed regression test が通る。
+- docs に sample seed data の内容を記録する。
+- PHP tests / `git diff --check` が通る。
+- `task_board.md`、`run_log.md`、automation memory に実施結果と次回 task を残す。
+- `git diff --check` が通る。
 
 ## 未着手 task
 
-- smoke test で作成した test memory / category の削除許可を明示確認し、許可後に delete flow を実施する。
-- smoke test 結果から見つかった不一致の修正 task を切る。
-- `/api/v1` の 401 / 422 を `Accept: application/json` なしでも JSON で返す middleware / exception handling を検討する。
+- secret unlock password を account password と共用するか、専用 password に分離するかの人間判断を受ける。
 
 ## 進行中 task
 
-- なし。`Smoke memory updated` と `Smoke Test Updated` の削除許可待ちで pause。
+なし。
 
 ## 完了 task
 
-- 2026-05-04: smoke test 作成物の削除許可が今回入力にも明示されていないことを再確認し、delete flow を実行せず pause 状態を維持した。
+- 2026-05-06 15:19:03 JST: local seed に sample category / memory / tag data を追加した。root category 3 件、subcategory 5 件、通常 memory 3 件、secret memory 1 件、tags が seed され、memory-space で `locked_count=1` が出ることを確認した。`LocalDevSeederTest` を追加し、targeted tests と `git diff --check` は成功。
+- 2026-05-06 15:14:13 JST: local 開発用の固定 Bearer token `local-dev-token` を seed し、管理画面モックアップと memory-space が localhost では token 未設定 / 古い `id|...` token を自動補完するようにした。`php artisan db:seed` 実行済みで、protected API 200、PHP tests、Vite build、`git diff --check` は成功。
+- 2026-05-06 15:03:18 JST: secret unlock password 方針の人間判断が今回入力に含まれているか確認した。明示決定はなく、現状 baseline は account password hash 検証のままなので、code / API contract / OpenAPI の変更は保留した。`review_decision.md` に未決事項として選択肢を追加した。
+- 2026-05-06 14:13:17 JST: root category 削除方針をユーザー判断どおり「children あり削除禁止」に確定し、`CategoryController@destroy`、`CategoryApiTest`、API contract、OpenAPI を 422 方針へ更新した。targeted tests と `git diff --check` は成功。
+- 2026-05-06 14:01:37 JST: root category 削除方針の人間判断が今回入力に含まれているか確認した。明示決定はなく、現在の実装 / Feature test は root 昇格、API contract draft は 422 削除禁止、OpenAPI は delete 204/401/404 のみで差分が残るため、code / test / API contract / OpenAPI の変更は保留した。
+- 2026-05-06 13:01:47 JST: root category 削除方針の人間判断が今回入力に含まれているか確認した。明示決定はなく、現在の実装 / Feature test は root 昇格、API contract draft は 422 削除禁止、OpenAPI は delete 204/401/404 のみで差分が残るため、code / test / API contract / OpenAPI の変更は保留した。
+- 2026-05-06 12:02:45 JST: root category 削除方針の人間判断が今回入力に含まれているか確認した。明示決定はなく、現在の実装 / Feature test は root 昇格、API contract draft は 422 削除禁止、OpenAPI は delete 204/401/404 のみで差分が残るため、code / test / API contract / OpenAPI の変更は保留した。
+- 2026-05-06 11:01:39 JST: root category 削除方針の人間判断が今回入力に含まれているか確認した。明示決定はなく、現在の実装 / Feature test は root 昇格、API contract draft は 422 削除禁止、OpenAPI は delete 204/401/404 のみで差分が残るため、code / test / API contract / OpenAPI の変更は保留した。
+- 2026-05-06 10:02:50 JST: root category 削除方針の人間判断が今回入力に含まれているか確認した。明示決定はなく、現在の実装 / Feature test は root 昇格、API contract draft は 422 削除禁止、OpenAPI は delete 204/401/404 のみで差分が残るため、code / test / API contract / OpenAPI の変更は保留した。
+- 2026-05-06 09:03:00 JST: `categories.parent_id` の migration / model / validation / tests baseline を再検証し、追加 code change なしで完了済みであることを確認した。targeted tests、testing migration fresh、`git diff --check` は成功。root category 削除方針は未決のまま次回 task に残した。
+- 2026-05-06 08:03:43 JST: `categories.parent_id` の migration / model / validation / tests baseline を再検証し、追加 code change なしで完了済みであることを確認した。targeted tests、testing migration fresh、`git diff --check` は成功。root category 削除方針は未決のまま次回 task に残した。
+- 2026-05-06 07:03:39 JST: `categories.parent_id` の migration / model / validation / tests baseline を再検証し、追加 code change なしで完了済みであることを確認した。testing migration fresh、targeted tests、`git diff --check` は成功。root category 削除方針は未決のまま次回 task に残した。
+- 2026-05-06 06:03:25 JST: `categories.parent_id` の migration / model / validation / tests baseline を再検証し、05:04 JST 時点の追加 regression test まで含めて完了済みであることを確認した。追加 code change はなし。targeted tests と `git diff --check` は成功。root category 削除方針は未決のまま次回 task に残した。
+- 2026-05-06 05:04:28 JST: `categories.parent_id` の migration / model / validation / tests baseline を再確認し、PATCH で境界外 category や subcategory を親にできない regression test を `CategoryApiTest` に追加した。targeted tests と `git diff --check` は成功。root category 削除方針は未決のまま次回 task に残した。
+- 2026-05-06 04:01:13 JST: root category 削除方針の人間判断が今回入力に含まれているか確認した。明示決定はなく、現在の実装 / Feature test は root 昇格、API contract draft は 422 削除禁止で差分が残るため、code / test / API contract / OpenAPI の変更は保留した。
+- 2026-05-06 03:02:43 JST: root category 削除方針の人間判断が今回入力に含まれているか確認した。明示決定はなく、現在の実装 / Feature test は root 昇格、API contract draft は 422 削除禁止で差分が残るため、code / test / API contract / OpenAPI の変更は保留した。
+- 2026-05-06 02:02:59 JST: root category 削除方針の人間判断が今回入力に含まれているか確認した。明示決定はなく、現在の実装 / Feature test は root 昇格、API contract draft は 422 削除禁止で差分が残るため、code / test / API contract の変更は保留した。
+- 2026-05-06 01:04:00 JST: root category 削除方針の人間判断が今回入力に含まれているか確認した。明示決定はなく、現在の実装 / Feature test は root 昇格、API contract draft は 422 削除禁止で差分が残るため、code / test / API contract の変更は保留した。
+- 2026-05-06 00:06:48 JST: `categories.parent_id` の migration / model / validation / tests baseline を確認し、空文字 `parent_id` の create / update normalization test を `CategoryApiTest` に追加した。targeted tests と `git diff --check` は成功。root category 削除方針は今回入力にも明示決定がないため変更していない。
+- 2026-05-05 23:03:14 JST: root category 削除方針の人間判断が今回入力に含まれているか確認した。明示決定はなく、現在の実装 / Feature test は root 昇格、API contract draft は 422 削除禁止で差分が残るため、code / test / API contract の変更は保留した。`categories.parent_id` baseline の targeted tests は成功。
+- 2026-05-05 22:03:05 JST: root category 削除方針の人間判断が今回入力に含まれているか確認した。明示決定はなく、現在の実装 / Feature test は root 昇格、API contract draft は 422 削除禁止で差分が残るため、code / test / API contract の変更は保留した。
+- 2026-05-05 21:03:34 JST: `categories.parent_id` の migration / model / validation / tests を確認し、唯一不足していた `Category` model の integer casts と domain model test の parent / children assertion を追加した。targeted tests と `git diff --check` は成功。
+- 2026-05-05 20:03:06 JST: root category 削除方針の明示決定が今回入力 / `review_decision.md` / code / API contract にないことを確認し、未決 blocker として記録した。実装は保留。
+- 2026-05-05 19:10:14 JST: root category 削除時の child category 扱いを `review_decision.md` に整理し、現実装の root 昇格と API contract の 422 方針の差分、選択肢、推奨、決定待ち項目を記録した。
+- 2026-05-05 18:05:15 JST: `categories.parent_id` の migration / model / validation / tests が実装済みであることを確認し、`CategoryApiTest` と testing migration fresh を再検証した。追加実装は不要だった。
+- 2026-05-05 17:03:50 JST: smoke test 作成 category id `4` / `5` は引き続き残存し、参照 memory は 0 件であることを read-only query で確認した。今回入力にも destructive delete flow の明示許可はないため、削除は実行しなかった。
+- 2026-05-05 16:01:23 JST: smoke test 作成 category id `4` / `5` は引き続き残存し、参照 memory は 0 件であることを read-only query で確認した。今回入力にも destructive delete flow の明示許可はないため、削除は実行しなかった。
+- 2026-05-05 15:01:54 JST: smoke test 作成 category id `4` / `5` の残存と参照 memory なしを read-only query で確認し、明示削除許可がないため delete flow は実行しなかった。
+- 2026-05-05 14:04:34 JST: root category 削除時に child category の `parent_id` が `null` になることを `CategoryApiTest` に追加し、`categories.parent_id` baseline を再検証した。
+- 2026-05-05 13:03:16 JST: `categories.parent_id` の migration / model / validation / tests が既に実装済みであることを再確認し、targeted verification を実行した。
+- 2026-05-05 12:06:37 JST: 管理画面モックアップで `parent_id` create / update を browser smoke し、root 作成、subcategory 作成、subcategory 更新の request payload と一覧表示を確認した。
+- 2026-05-05 11:05:13 JST: 管理画面モックアップの Categories に `parent_id` の最小入力 / 表示を追加し、create / update payload に接続した。
+- 2026-05-05 10:05:25 JST: 管理画面モックアップで 401 / 422 表示を再 smoke し、`Accept: application/json` なしの raw request でも API が JSON を返すことを確認した。
+- 2026-05-05 09:06:06 JST: `/api/v1` の未認証 / validation exception を `Accept: application/json` なしでも JSON で返すようにした。
+- 2026-05-05 08:03:32 JST: `categories.parent_id` の migration / model / validation / tests が実装済みであることを確認し、targeted verification を再実行した。
+- 2026-05-05 07:10:04 JST: memory-space で WebGL context 作成に失敗しても API controls / list / detail が動く fallback を追加した。
+- 2026-05-05 06:15:58 JST: 記憶の海 / 宇宙画面を seed data 付きで browser smoke し、API token、list/detail、period / category filter、descendant toggle、secret unlock flow、401 表示を確認した。
+- 2026-05-05 05:17:10 JST: 記憶の海 / 宇宙 frontend を Laravel / Vite asset として実装し、実 API 接続 baseline を追加した。
+- 2026-05-05 04:10:26 JST: `POST /api/v1/secret-unlocks` の backend baseline と memory-space unlock token 検証を追加した。
+- 2026-05-05 03:09:18 JST: `GET /api/v1/memory-space` の read endpoint を追加した。
+- 2026-05-05 02:07:35 JST: category tree response と `include_descendants` filter を categories / memories API に追加した。
+- 2026-05-05 01:06:01 JST: `categories.parent_id` の migration / model / validation / tests を追加し、深さ 2 までの category hierarchy baseline を実装した。
+- 2026-05-05 00:31:59 JST: 記憶の海 / 宇宙画面の実装方針を automation scope に取り込み、設計 docs、参照資材、automation prompt、task board、run log を更新した。
+- 2026-05-05 00:01:29 JST: smoke test 作成物の削除許可が今回入力にも明示されていないことを再確認し、delete flow を実行せず pause 状態を維持した。
+- 2026-05-04: 現在の backend foundation を commit `f3ec7d8` (`Rebuild backend API foundation`) として作成した。
 - 2026-05-04: 管理画面モックアップから実 API への手動接続 smoke test の削除以外を実施した。
-- 2026-05-04: smoke test 作成物の削除許可が未確認であることを再確認し、delete flow を実行せず pause 状態を記録した。
-- 2026-05-04: 管理画面モックアップから実 API への手動接続 smoke test 手順を整理した。
+- 2026-05-04: 管理画面モックアップから実 API への手動 smoke test 手順を整理した。
 - 2026-05-04: `php artisan bunshin:issue-admin-token` を実装した。
-- 2026-05-04: 管理画面接続用の検証 token 発行運用を artisan command に決定した。
 - 2026-05-04: 管理画面モックアップの mock API layer を real API client に置き換えた。
 - 2026-05-04: Sanctum 相当の token auth を導入し、protected routes と Feature test helper を Bearer token 前提へ更新した。
-- 2026-05-04: Auth 方針の選択肢を `review_decision.md` に整理した。
-- 2026-05-04: Auth 方針の人間判断を確認し、未決のため実装を保留した。
-- 2026-05-04: Auth 方針の人間判断を再確認し、未決のため実装保留を継続した。
-- 2026-05-04: Auth 方針の人間判断を再確認し、未決のため実装保留を継続した。
-- 2026-05-04: Auth 方針の人間判断を再確認し、未決のため実装保留を継続した。
-- 2026-05-04: Auth 方針の人間判断を再確認し、未決のため実装保留を継続した。
-- 2026-05-04: Auth 方針の人間判断を再確認し、未決のため実装保留を継続した。
-- 2026-05-04: Auth 方針の人間判断を再確認し、未決のため実装保留を継続した。
-- 2026-05-04: Auth 方針の人間判断を再確認し、未決のため実装保留を継続した。
-- 2026-05-04: Auth 方針を token-first として確定した。
-- 2026-05-04: memories delete API を実装した。
-- 2026-05-04: memories update API を実装した。
-- 2026-05-04: memories detail API を実装した。
-- 2026-05-04: memories list API を実装した。
-- 2026-05-04: tags list API を実装した。
-- 2026-05-04: tags 正規化ロジックとテストを実装した。
-- 2026-05-04: categories API の CRUD を実装した。
-- 2026-05-04: `memories` 作成 API の request validation と Feature test を追加した。
-- 2026-05-04: `tenant_id` と `owner_user_id` によるデータ境界を実装した。
-- 2026-05-04: `memories` / `categories` / `tags` の migration と Eloquent model の最小セットを作成した。
-- 2026-05-04: 管理画面モックアップを `docs/references/admin-ui-mockup/` に配置し、Codex automation が backend API 実装時に参照するルールを TOML に追記した。
-- 2026-05-04: Claude 管理画面 HTML UI 指示に、システム概要、ドメイン概念、各ページの役割を追記した。
-- 2026-05-04: Claude に管理画面 HTML UI を作らせるための指示ファイルを追加した。
-- 2026-05-04: 旧 UI は完全破棄、frontend は別 automation、backend は API 実装までという判断を設計 docs に反映した。
-- 2026-05-04: `visibility=secret` は通常 API list から除外し、明示取得時のみ返す判断を設計 docs に反映した。
-- 2026-05-04: automation の実体 TOML `/Users/fukui/.codex/automations/ai-3/automation.toml` に既存資材退避と新規設計ルールを追記した。
-- 2026-05-04: 既存資材を `legacy_assets/20260504_004800_existing_assets/` に退避した。
-- 2026-05-04: 新規 Laravel backend skeleton を作成した。
-- 2026-05-04: 新規設計 docs と API health endpoint を作成した。
+- 2026-05-04: memories list / detail / create / update / delete API、categories CRUD、tags list、tag 正規化、tenant / owner 境界を実装した。
+- 2026-05-04: 新規 Laravel backend skeleton、設計 docs、OpenAPI draft、health endpoint を作成し、旧資材を `legacy_assets/20260504_004800_existing_assets/` に退避した。
 
 ## 変更ファイル一覧
 
-- `task_board.md`: 今回の削除許可再確認、read-only query 結果、次回メモを更新。
-- `run_log.md`: 今回の確認内容、未実行理由、動作確認結果を追記。
-- `/Users/fukui/.codex/automations/ai-3/memory.md`: 今回の実行 summary と次 task を更新。
-- `task_board.md`: 今回の削除許可確認結果、対象作成物、次回メモを更新。
-- `run_log.md`: 今回の確認内容、未実行理由、動作確認結果を追記。
-- `/Users/fukui/.codex/automations/ai-3/memory.md`: 今回の実行 summary と次 task を更新。
-- `task_board.md`: 今回 smoke test の結果、未完了理由、追加 task 候補、次回メモを更新。
-- `run_log.md`: 今回 smoke test の実施結果と引き継ぎを追記。
-- `/Users/fukui/.codex/automations/ai-3/memory.md`: 今回の実行 summary と次 task を更新。
-- `docs/references/admin-ui-mockup/manual-smoke-test.md`: local backend / static mockup 起動、token 発行、Settings、health、memories、categories、tags、401 / 422 確認の手順を追加。
-- `docs/references/admin-ui-mockup/README.md`: 手動 smoke test 手順書への参照を追加。
-- `docs/architecture/backend_design.md`: 手動確認手順の正を `manual-smoke-test.md` にし、次 task を手動 smoke test 実施へ更新。
-- `docs/architecture/api_contract.md`: API 契約から手動 smoke test 手順書を参照する注記を追加。
-- `task_board.md` / `run_log.md`: 今回 task の進行、確認結果、次回メモを更新。
-- `app/Console/Commands/IssueAdminTokenCommand.php`: 管理画面接続検証用 Bearer token を発行する artisan command を追加。
-- `tests/Feature/IssueAdminTokenCommandTest.php`: token 発行、再発行、invalid option、Bearer token API 認証の Feature test を追加。
-- `docs/architecture/backend_design.md`: command 実装済みの auth baseline と次 task を更新。
-- `docs/architecture/api_contract.md`: 同名 token 再発行時の revoke 方針を追記。
-- `docs/decisions/0004-admin-mockup-token-issuance.md`: command 実装状況と次 task を更新。
-- `docs/references/admin-ui-mockup/README.md`: token 発行手順と再発行時の revoke 挙動を追記。
-- `task_board.md` / `run_log.md`: 今回 task の進行、確認結果、次回メモを更新。
-- `legacy_assets/20260504_004800_existing_assets/`: 旧資材一式の退避先。
-- `README.md`: 新規 backend の方針と参照 docs を記載。
-- `.env.example`: 新規 backend 名と日本語 locale に更新。
-- `.gitignore`: legacy 配下の生成物除外を追加。
-- `composer.json` / `composer.lock`: 新規 backend project metadata に更新。
-- `bootstrap/app.php` / `routes/api.php`: `/api/v1/health` を追加。
-- `tests/Feature/ExampleTest.php`: health endpoint の Feature test に変更。
-- `docs/architecture/*.md`: backend 設計、データモデル、API 契約を追加。
-- `docs/decisions/0001-fresh-start.md`: 退避して新規設計から進める決定を記録。
-- `openapi/bunshin-memory-api.yaml`: OpenAPI draft を追加。
-- `task_board.md` / `run_log.md`: automation 運用メモを新規 root に作成。
-- `/Users/fukui/.codex/automations/ai-3/automation.toml`: automation の主 prompt に fresh-start ルールを追加。
-- `/Users/fukui/.codex/automations/ai-3/memory.md`: TOML 更新済みであることを補足。
-- `docs/decisions/0002-api-scope-and-secret-visibility.md`: API scope と secret visibility の決定を追加。
-- `docs/prompts/claude-admin-ui-html.md`: Claude 向け管理画面 HTML UI 作成指示を追加。
-- `docs/references/admin-ui-mockup/`: 管理画面モックアップと原本 zip を配置。
-- `docs/references/admin-ui-mockup/README.md`: Codex automation 向けの参照ルールを追加。
-- `docs/references/admin-ui-mockup/README.md`: real API client の設定方法と token 発行前提を追記。
-- `docs/references/admin-ui-mockup/app.js`: mock data / mock API branch を削除し、Bearer token 対応の real API client、401 / validation error 表示、memories / categories / tags / health 接続を追加。
-- `docs/references/admin-ui-mockup/index.html`: memory visibility に `secret` 選択肢を追加。
-- `docs/references/admin-ui-mockup/styles.css`: API error state、Settings 入力、toast 表示の最小 style を追加。
-- `docs/architecture/backend_design.md`: backend API 実装時のモックアップ参照方針を追加。
-- `docs/architecture/backend_design.md`: モックアップが real API client 接続済みであることと次 task を更新。
-- `docs/decisions/0004-admin-mockup-token-issuance.md`: 管理画面接続検証 token は artisan command で発行する決定を追加。
-- `docs/architecture/backend_design.md`: token 発行 API を置かず artisan command で検証 token を発行する方針と次 task を更新。
-- `docs/architecture/api_contract.md`: token 発行方針を public endpoint なし / artisan command 前提に更新。
-- `docs/references/admin-ui-mockup/README.md`: 管理画面モックアップの token 発行手順を artisan command 前提に更新。
-- `database/migrations/2026_05_04_012300_create_memory_domain_tables.php`: `tenants`, `categories`, `tags`, `memories`, `memory_tag` と `users.tenant_id` を追加。
-- `app/Models/Memory.php`: memory model、relations、casts、tenant/owner/default visibility scopes を追加。
-- `app/Models/Memory.php`: `TenantUserContext` による tenant/owner 境界 scope と context find helper を追加。
-- `app/Models/Category.php`: category model、tenant/owner/memories relation、tenant scope を追加。
-- `app/Models/Category.php`: `TenantUserContext` による tenant/owner 境界 scope と context find helper を追加。
-- `app/Models/Tag.php`: tag model、tenant/memories relation、tenant scope を追加。
-- `app/Models/Tag.php`: `TenantUserContext` による tenant 境界 scope と context find helper を追加。
-- `app/Models/Tenant.php`: tenant model と user data relations を追加。
-- `app/Models/User.php`: `tenant_id` fillable と tenant/memories/categories relation を追加。
-- `app/Support/TenantUserContext.php`: request user から tenant/user 境界 context を作る helper を追加。
-- `tests/Feature/MemoryDomainModelTest.php`: domain schema、relations、secret 除外 scope の Feature test を追加。
-- `tests/Feature/TenantUserBoundaryTest.php`: tenant/owner 境界 query と単体取得を固定する Feature test を追加。
-- `docs/architecture/data_model.md`: tenant 分離で使う context query 方針を追記。
-- `app/Http/Controllers/Api/V1/MemoryController.php`: `POST /api/v1/memories` の作成処理を追加。
-- `app/Http/Requests/StoreMemoryRequest.php`: memory 作成 request validation を追加。
-- `app/Http/Resources/MemoryResource.php`: 管理画面モックアップに沿う memory response shape を追加。
-- `routes/api.php`: authenticated `POST /api/v1/memories` route を追加。
-- `tests/Feature/CreateMemoryApiTest.php`: 作成成功、未認証、validation、category 境界の Feature test を追加。
-- `docs/architecture/api_contract.md`: create memory request / validation / response を追記。
-- `openapi/bunshin-memory-api.yaml`: `POST /memories` の request / response schema を追記。
-- `docs/architecture/backend_design.md`: 次 task を categories CRUD に更新。
-- `app/Http/Controllers/Api/V1/CategoryController.php`: categories list/create/detail/update/delete を追加。
-- `app/Http/Requests/CategoryContextRequest.php`: category read/delete 用の tenant context request を追加。
-- `app/Http/Requests/StoreCategoryRequest.php`: category 作成 validation を追加。
-- `app/Http/Requests/UpdateCategoryRequest.php`: category 更新 validation を追加。
-- `app/Http/Resources/CategoryResource.php`: 管理画面モックアップに沿う category response shape を追加。
-- `routes/api.php`: authenticated categories API resource routes を追加。
-- `tests/Feature/CategoryApiTest.php`: list/create/validation/context boundary/delete/auth の Feature test を追加。
-- `docs/architecture/api_contract.md`: categories CRUD の request / validation / response を追記。
-- `docs/architecture/data_model.md`: category validation 方針を追記。
-- `openapi/bunshin-memory-api.yaml`: categories CRUD schema と paths を追記。
-- `docs/architecture/backend_design.md`: 次 task を tags 正規化に更新。
-- `app/Support/NormalizedTagName.php`: tag 正規化結果 value object を追加。
-- `app/Support/TagNameNormalizer.php`: trim、英数/スペース幅正規化、lowercase key、初期 alias の deterministic normalizer を追加。
-- `app/Http/Controllers/Api/V1/MemoryController.php`: memory 作成時の tag 作成を normalizer 経由に変更し、正規化後の重複を sync 前に除外。
-- `tests/Unit/TagNameNormalizerTest.php`: normalizer の正規化仕様を固定する Unit test を追加。
-- `tests/Feature/CreateMemoryApiTest.php`: tag 表記ゆれ統合と tenant 境界の Feature test を追加。
-- `docs/architecture/data_model.md`: tag `normalized_name` と alias 統合方針を追記。
-- `docs/architecture/api_contract.md`: create memory の tag normalization 仕様を追記。
-- `openapi/bunshin-memory-api.yaml`: create memory tags の正規化説明を追記。
-- `docs/architecture/backend_design.md`: 次 task を tags list API に更新。
-- `app/Http/Controllers/Api/V1/TagController.php`: tenant 内 tag の list endpoint を追加。
-- `app/Http/Requests/TagContextRequest.php`: tag list 用の tenant context request を追加。
-- `app/Http/Resources/TagResource.php`: 管理画面モックアップに沿う tag response shape を追加。
-- `routes/api.php`: authenticated `GET /api/v1/tags` route を追加。
-- `tests/Feature/TagApiTest.php`: tag list、usage_count、別 tenant 除外、auth の Feature test を追加。
-- `docs/architecture/api_contract.md`: tags list の response / 並び順 / tenant 境界を追記。
-- `openapi/bunshin-memory-api.yaml`: `GET /tags` と `Tag` schema を追記。
-- `docs/architecture/backend_design.md`: 次 task を memories list API に更新。
-- `app/Http/Controllers/Api/V1/MemoryController.php`: authenticated `GET /api/v1/memories` の list 処理、visibility / period / category / q filter を追加。
-- `app/Http/Requests/ListMemoriesRequest.php`: memories list query validation と trim / empty-to-null 前処理を追加。
-- `routes/api.php`: authenticated `GET /api/v1/memories` route を追加。
-- `tests/Feature/MemoryListApiTest.php`: default secret 除外、tenant / owner 境界、secret 明示取得、filter、auth、validation の Feature test を追加。
-- `docs/architecture/api_contract.md`: memories list の query parameters / response / 並び順を追記。
-- `openapi/bunshin-memory-api.yaml`: `GET /memories` の parameters / response schema を追記。
-- `docs/architecture/backend_design.md`: 次 task を memories detail API に更新。
-- `app/Http/Controllers/Api/V1/MemoryController.php`: authenticated `GET /api/v1/memories/{memory}` の detail 処理を追加。
-- `app/Http/Requests/MemoryContextRequest.php`: memory detail 用の tenant context request を追加。
-- `routes/api.php`: authenticated `GET /api/v1/memories/{memory}` route を追加。
-- `tests/Feature/MemoryDetailApiTest.php`: secret detail 取得、別 tenant / 別 owner 404、auth の Feature test を追加。
-- `docs/architecture/api_contract.md`: memories detail の response / auth / context 境界を追記。
-- `openapi/bunshin-memory-api.yaml`: `GET /memories/{memoryId}` の 200 / 401 / 404 response schema を追記。
-- `docs/architecture/backend_design.md`: 次 task を memories update API に更新。
-- `app/Http/Controllers/Api/V1/MemoryController.php`: authenticated `PATCH /api/v1/memories/{memory}` の partial update と tag sync を追加。
-- `app/Http/Requests/UpdateMemoryRequest.php`: memory 更新 request validation と category 境界 validation を追加。
-- `routes/api.php`: authenticated `PATCH /api/v1/memories/{memory}` route を追加。
-- `tests/Feature/MemoryUpdateApiTest.php`: secret memory 更新、category / tag clear、validation、別 tenant / 別 owner 404、auth の Feature test を追加。
-- `docs/architecture/api_contract.md`: memories update の request / validation / response / auth / context 境界を追記。
-- `openapi/bunshin-memory-api.yaml`: `PATCH /memories/{memoryId}` の request / response schema を追記。
-- `docs/architecture/backend_design.md`: 次 task を memories delete API に更新。
-- `app/Http/Controllers/Api/V1/MemoryController.php`: authenticated `DELETE /api/v1/memories/{memory}` の soft delete と tag pivot detach を追加。
-- `routes/api.php`: authenticated `DELETE /api/v1/memories/{memory}` route を追加。
-- `tests/Feature/MemoryDeleteApiTest.php`: secret memory 削除、pivot detach、削除後 detail/list 除外、別 tenant / 別 owner 404、auth の Feature test を追加。
-- `docs/architecture/api_contract.md`: memories delete の response / auth / context 境界 / pivot detach を追記。
-- `docs/architecture/data_model.md`: memory soft delete 時の `memory_tag` detach 方針を追記。
-- `openapi/bunshin-memory-api.yaml`: `DELETE /memories/{memoryId}` の 204 / 401 / 404 response schema を追記。
-- `docs/architecture/backend_design.md`: 次 task を Auth 方針整理に更新。
-- `docs/architecture/backend_design.md`: 次 task を Auth 方針の人間判断確認に更新。
-- `review_decision.md`: token-first / session-first の比較、推奨、人間判断項目を追加。
-- `review_decision.md`: Auth 方針が未決であり、実装を保留する状態を追記。
-- `review_decision.md`: 2026-05-04 05:22:43 JST 時点でも Auth 方針が未決であり、実装を保留する状態を再確認。
-- `review_decision.md`: 2026-05-04 05:42:40 JST 時点でも Auth 方針が未決であり、実装を保留する状態を再確認。
-- `review_decision.md`: 2026-05-04 06:03:22 JST 時点でも Auth 方針が未決であり、実装を保留する状態を再確認。
-- `review_decision.md`: 2026-05-04 06:22:36 JST 時点でも Auth 方針が未決であり、実装を保留する状態を再確認。
-- `review_decision.md`: 2026-05-04 06:43:16 JST 時点でも Auth 方針が未決であり、実装を保留する状態を再確認。
-- `review_decision.md`: 2026-05-04 07:01:30 JST 時点でも Auth 方針が未決であり、実装を保留する状態を再確認。
-- `review_decision.md`: 2026-05-04 07:23:39 JST 時点でも Auth 方針が未決であり、実装を保留する状態を再確認。
-- `review_decision.md`: Auth 方針を token-first として確定し、次 task を token auth 導入に更新。
-- `docs/decisions/0003-token-first-auth.md`: `/api/v1` を token-first API とする決定を追加。
-- `docs/architecture/backend_design.md`: Auth 方針と管理画面モックアップ接続範囲を更新。
-- `database/migrations/2026_05_04_074300_create_personal_access_tokens_table.php`: Sanctum 相当 token storage を追加。
-- `app/Models/PersonalAccessToken.php`: hashed Bearer token の lookup、期限判定、tokenable relation を追加。
-- `app/Auth/BearerTokenGuard.php`: request 更新時に user cache を破棄する token guard を追加。
-- `app/Support/NewAccessToken.php`: 発行済み access token と plain text token の return object を追加。
-- `app/Providers/AppServiceProvider.php`: `sanctum_token` auth driver を登録し、Bearer token から user を解決する処理を追加。
-- `app/Models/User.php`: `personalAccessTokens` relation と `createApiToken()` を追加。
-- `config/auth.php`: `sanctum` guard を追加。
-- `routes/api.php`: protected API routes を `auth:sanctum` へ更新。
-- `tests/TestCase.php`: Feature test 用 `withApiToken()` helper を追加。
-- `tests/Feature/*ApiTest.php`: API tests を Bearer token helper 前提へ更新。
-- `tests/Feature/TokenAuthTest.php`: Bearer token 認証、session auth 非採用、invalid / expired token 拒否を追加。
-- `docs/architecture/api_contract.md`: Bearer token contract と初期 token 発行方針を追記。
-- `docs/architecture/backend_design.md`: Auth baseline と次 task を更新。
-- `docs/architecture/data_model.md`: `personal_access_tokens` table を追記。
-- `docs/decisions/0003-token-first-auth.md`: 内部 Sanctum 相当実装の方針を追記。
-- `openapi/bunshin-memory-api.yaml`: Bearer auth security scheme を追加。
-- `/Users/fukui/.codex/automations/ai-3/automation.toml`: token-first 方針と次 task を automation prompt に反映。
-- `task_board.md`: 今回 task、完了条件、次回メモを Auth 方針整理に更新。
-- `task_board.md`: 今回 task、完了条件、次回メモを Auth 方針の人間判断確認に更新。
-- `task_board.md`: Auth 方針再確認の結果と次回メモを更新。
-- `task_board.md`: Auth 方針再確認の結果と次回メモを更新。
-- `task_board.md`: Auth 方針再確認の結果と次回メモを更新。
-- `run_log.md`: Auth 方針整理 task の実施内容と確認結果を追記。
-- `run_log.md`: Auth 方針の人間判断確認 task の実施内容と確認結果を追記。
-- `run_log.md`: Auth 方針再確認 task の実施内容と確認結果を追記。
-- `run_log.md`: Auth 方針再確認 task の実施内容と確認結果を追記。
-- `run_log.md`: Auth 方針再確認 task の実施内容と確認結果を追記。
-- `run_log.md`: Auth 方針再確認 task の実施内容と確認結果を追記。
-- `run_log.md`: Auth 方針再確認 task の実施内容と確認結果を追記。
-- `run_log.md`: Auth 方針再確認 task の実施内容と確認結果を追記。
-- `run_log.md`: token-first 決定の記録内容と次 task を追記。
-- `/Users/fukui/.codex/automations/ai-3/memory.md`: 今回の実行 summary を記録。
+- `database/seeders/DatabaseSeeder.php`: local / testing の固定 dev user、tenant、token を seed。
+- `tests/Feature/LocalDevSeederTest.php`: local dev seed が token と sample memory-space data を作ることを検証。
+- `docs/references/admin-ui-mockup/app.js`: localhost で `local-dev-token` を自動補完。
+- `resources/js/memory-space.js`: localhost で `local-dev-token` を自動補完。
+- `tests/Feature/TokenAuthTest.php`: no-pipe Bearer token の regression test を追加。
+- `docs/references/admin-ui-mockup/README.md`: local seed token の使い方を追記。
+- `docs/references/admin-ui-mockup/manual-smoke-test.md`: local seed token の smoke 手順を追記。
+- `task_board.md`: 今回 task、完了条件、完了結果、次回 task を更新。
+- `run_log.md`: 今回の確認内容、変更ファイル、動作確認結果を追記。
+- `/Users/fukui/.codex/automations/ai-3/memory.md`: 15:14 JST の実行 summary と次 task を更新済み。
 
 ## 動作確認結果
 
-- automation memory と `task_board.md` を確認し、token auth task は完了済み、現在の正式 task が smoke test 作成物の削除確認であることを確認した。
-- 今回の automation 入力に `Smoke memory updated` / `Smoke Test Updated` の削除許可は明示されていないため、destructive な delete 操作は実行しなかった。
-- read-only SQLite query で対象作成物を確認: category ID `5` / name `Smoke Test Updated` / slug `smoke-test-0925` / sort `11` / tenant ID `1` / owner user ID `1`。
-- read-only SQLite query で対象作成物を確認: memory ID `5` / title `Smoke memory updated` / visibility `private` / `deleted_at=null`。
-- read-only SQLite query で関連 tag を確認: tag ID `7` / name `smoke` / usage count `1`、tag ID `4` / name `夏` / usage count `2`。
-- `php artisan route:list --path=api/v1 -vv`: protected routes が `auth:sanctum` middleware、health のみ public であることを確認。
+- `php artisan db:seed`: local dev user / token / sample data 作成成功。
+- `curl -H 'Authorization: Bearer local-dev-token' http://127.0.0.1:8000/api/v1/categories`: `200 OK`。
+- `curl -H 'Authorization: Bearer local-dev-token' http://127.0.0.1:8000/api/v1/memory-space`: `200 OK`。
+- `GET /api/v1/categories?tree=1`: root category 3 件、child category 5 件。
+- `GET /api/v1/memories`: 通常表示 memory 3 件、secret は除外。
+- `GET /api/v1/memory-space`: memories 3 件、`secret.locked_count=1`。
+- `GET /api/v1/tags`: tags 10 件。
+- `curl http://127.0.0.1:8000/admin-assets/app.js`: local dev token 自動補完コード配信確認。
+- `curl http://127.0.0.1:5173/resources/js/memory-space.js`: local dev token 自動補完コード配信確認。
+- `./vendor/bin/pint database/seeders/DatabaseSeeder.php tests/Feature/TokenAuthTest.php`: passed。
+- `php artisan test tests/Feature/TokenAuthTest.php tests/Feature/CategoryApiTest.php`: 12 passed, 126 assertions。
+- `php artisan test tests/Feature/LocalDevSeederTest.php tests/Feature/TokenAuthTest.php tests/Feature/CategoryApiTest.php`: 13 passed, 139 assertions。
+- `npm run build`: passed。Three.js chunk size warning は既知。
 - `git diff --check`: 問題なし。
-- automation memory と `task_board.md` を確認し、前回からの次 task が smoke test 作成物の削除確認であることを確認した。
-- 今回の automation 入力に `Smoke memory updated` / `Smoke Test Updated` の削除許可は明示されていないため、destructive な delete 操作は実行しなかった。
-- read-only SQLite query で対象作成物を確認: category ID `5` / name `Smoke Test Updated` / slug `smoke-test-0925` / sort `11`、memory ID `5` / title `Smoke memory updated` / visibility `private` / `deleted_at=null`、tag ID `7` / name `smoke`。
-- `php artisan route:list --path=api/v1 -vv`: protected routes が `auth:sanctum` middleware、health のみ public であることを確認。
-- `git diff --check`: 問題なし。
-- Chrome で `http://127.0.0.1:8001/` の管理画面モックアップを開き、Settings に API Base URL `http://127.0.0.1:8000/api/v1` と新規発行 Bearer token を保存した。
-- API Health は UI 上で `API OK`、status `正常`、service `bunshin-memory-api`、version `0.1.0` を確認した。
-- Categories は list / create / update を確認した。作成物は `Smoke Test Updated`、slug `smoke-test-0925`、sort `11`。
-- Memories は list / detail / create / update を確認した。作成物は ID `5`、title `Smoke memory updated`、body `Updated API smoke test body`、visibility `private`、tags `smoke` / `夏`。
-- Tags list は UI 上で `smoke` の usage count `1` と既存 tags が表示されることを確認した。
-- 401 表示は stale token 状態の Categories 読み込みで `HTTP 401: Unauthenticated.` と Settings 誘導が表示されることを確認した。
-- 422 表示は Categories create の空送信で `The name field is required.` を含む validation error toast が表示されることを確認した。
-- delete flow は destructive local DB operation のため実行せず、確認 dialog はキャンセルした。
-- `php artisan route:list --path=api/v1 -vv`: protected routes が `auth:sanctum` middleware、health のみ public であることを確認。
-- `php artisan test --filter=IssueAdminTokenCommandTest`: 3 passed, 27 assertions。
-- `curl` with `Accept: application/json`: protected categories の未認証 401 JSON と categories create 空 payload の 422 JSON を確認。
-- `curl` without `Accept: application/json`: 未認証 categories が 500 HTML、validation が 302 HTML になる不一致を確認し、追加 task 候補に記録。
-- `git diff --check`: 問題なし。
-- `sed -n '1,260p' docs/references/admin-ui-mockup/manual-smoke-test.md`: 手順書の内容を読み戻し確認。
-- `php artisan list bunshin --format=json`: `bunshin:issue-admin-token` の options が手順書と一致することを確認。
-- `php artisan route:list --path=api/v1 -vv`: health、memories、categories、tags routes と `auth:sanctum` middleware を確認。
-- `curl -i -H 'Origin: http://127.0.0.1:18081' http://127.0.0.1:18080/api/v1/health`: 別 origin から health に `Access-Control-Allow-Origin: *` が返ることを確認。
-- `curl -i -X OPTIONS ... /api/v1/memories`: `authorization,content-type` の preflight が通ることを確認。
-- `php artisan test --filter=IssueAdminTokenCommandTest`: 3 passed, 27 assertions。
-- `git diff --check`: 問題なし。
-- `perl -ne 'print "$ARGV:$.:$_" if /[ \t]$/' ...`: 今回更新した docs / task_board に行末 whitespace がないことを確認。
-- `php artisan list bunshin --format=json`: `bunshin:issue-admin-token` が artisan command として登録済みであることを確認。
-- `./vendor/bin/pint app/Console/Commands/IssueAdminTokenCommand.php tests/Feature/IssueAdminTokenCommandTest.php`: passed。
-- `php artisan test --filter=IssueAdminTokenCommandTest`: 3 passed, 27 assertions。
-- `php artisan test`: 44 passed, 276 assertions。
-- `php artisan migrate:fresh --env=testing --force`: `personal_access_tokens` migration まで実行完了。
-- `git diff --check`: 問題なし。
-- `php artisan route:list --path=api/v1/health`: `GET|HEAD api/v1/health` を確認。
-- `php artisan test`: 2 passed, 3 assertions。
-- `composer validate --no-check-publish`: valid。
-- `git diff --check`: 問題なし。
-- `sed -n '1,220p' /Users/fukui/.codex/automations/ai-3/automation.toml`: fresh-start ルールの追記を確認。
-- `find docs/references/admin-ui-mockup -maxdepth 1 -type f`: `index.html`, `styles.css`, `app.js`, `source-files.zip`, `README.md` を確認。
-- `./vendor/bin/pint app/Models/User.php app/Models/Memory.php app/Models/Category.php app/Models/Tag.php app/Models/Tenant.php database/migrations/2026_05_04_012300_create_memory_domain_tables.php tests/Feature/MemoryDomainModelTest.php`: passed。
-- `php artisan test`: 4 passed, 10 assertions。
-- `php artisan migrate:fresh --env=testing --force`: domain migration まで実行完了。
-- `git diff --check`: 問題なし。
-- `sed -n '1,220p' review_decision.md`: Auth 方針の比較、推奨、人間判断項目が記載済みであることを確認。
-- `sed -n '55,75p' docs/architecture/backend_design.md`: 次 task が Auth 方針の人間判断確認になっていることを確認。
-- `git diff --check`: 問題なし。
-- `sed -n '1,120p' review_decision.md`: Auth 方針が未決であり、auth 実装を保留する状態が記載済みであることを確認。
-- `sed -n '1,120p' review_decision.md`: 2026-05-04 05:22:43 JST 時点でも Auth 方針が未決であり、auth 実装を保留する状態が記載済みであることを確認。
-- `sed -n '1,120p' review_decision.md`: 2026-05-04 05:42:40 JST 時点でも Auth 方針が未決であり、auth 実装を保留する状態が記載済みであることを確認。
-- `sed -n '1,120p' review_decision.md`: 2026-05-04 06:03:22 JST 時点でも Auth 方針が未決であり、auth 実装を保留する状態が記載済みであることを確認。
-- `sed -n '1,120p' review_decision.md`: 2026-05-04 06:22:36 JST 時点でも Auth 方針が未決であり、auth 実装を保留する状態が記載済みであることを確認。
-- `sed -n '1,180p' review_decision.md`: 2026-05-04 06:43:16 JST 時点でも Auth 方針が未決であり、auth 実装を保留する状態が記載済みであることを確認。
-- `sed -n '1,220p' review_decision.md`: 2026-05-04 07:01:30 JST 時点でも Auth 方針が未決であり、auth 実装を保留する状態が記載済みであることを確認。
-- `sed -n '1,120p' review_decision.md`: 2026-05-04 07:23:39 JST 時点でも Auth 方針が未決であり、auth 実装を保留する状態が記載済みであることを確認。
-- `rg -n "token-first|session-first|Sanctum|Auth 方針|認証方針|認証|auth" ...`: repo 内に token-first / session-first の正式決定がないことを確認。
-- `sed -n '1,130p' review_decision.md`: Auth 方針が token-first として決定済みであることを確認。
-- `sed -n '1,110p' docs/architecture/backend_design.md`: Auth 方針と次 task が token-first / Sanctum 相当に更新済みであることを確認。
-- `grep -n "token-first\\|Sanctum\\|Bearer" /Users/fukui/.codex/automations/ai-3/automation.toml`: automation prompt に token-first 方針が入っていることを確認。
-- `git diff --check`: 問題なし。
-- `php artisan test --filter=TagNameNormalizerTest`: 1 passed, 10 assertions。
-- `php artisan test --filter=CreateMemoryApiTest`: 6 passed, 45 assertions。
-- `./vendor/bin/pint app/Http/Controllers/Api/V1/MemoryController.php app/Support/NormalizedTagName.php app/Support/TagNameNormalizer.php tests/Unit/TagNameNormalizerTest.php tests/Feature/CreateMemoryApiTest.php`: passed。
-- `php artisan test`: 20 passed, 129 assertions。
-- `php artisan migrate:fresh --env=testing --force`: domain migration まで実行完了。
-- `git diff --check`: 問題なし。
-- `./vendor/bin/pint app/Support/TenantUserContext.php app/Models/Memory.php app/Models/Category.php app/Models/Tag.php tests/Feature/TenantUserBoundaryTest.php`: passed。
-- `php artisan test --filter=TenantUserBoundaryTest`: 4 passed, 17 assertions。
-- `php artisan test`: 8 passed, 27 assertions。
-- `php artisan migrate:fresh --env=testing --force`: domain migration まで実行完了。
-- `git diff --check`: 問題なし。
-- `php artisan route:list --path=api/v1/memories`: `POST api/v1/memories` を確認。
-- `php artisan test --filter=CreateMemoryApiTest`: 4 passed, 34 assertions。
-- `./vendor/bin/pint app/Http/Controllers/Api/V1/MemoryController.php app/Http/Requests/StoreMemoryRequest.php app/Http/Resources/MemoryResource.php routes/api.php tests/Feature/CreateMemoryApiTest.php`: passed。
-- `php artisan test`: 12 passed, 61 assertions。
-- `php artisan migrate:fresh --env=testing --force`: domain migration まで実行完了。
-- `git diff --check`: 問題なし。
-- `php artisan test --filter=CategoryApiTest`: 5 passed, 47 assertions。
-- `php artisan route:list --path=api/v1/categories`: categories CRUD の 5 routes を確認。
-- `./vendor/bin/pint app/Http/Controllers/Api/V1/CategoryController.php app/Http/Requests/CategoryContextRequest.php app/Http/Requests/StoreCategoryRequest.php app/Http/Requests/UpdateCategoryRequest.php app/Http/Resources/CategoryResource.php routes/api.php tests/Feature/CategoryApiTest.php`: passed。
-- `php artisan test`: 17 passed, 108 assertions。
-- `php artisan migrate:fresh --env=testing --force`: domain migration まで実行完了。
-- `git diff --check`: 問題なし。
-- `php artisan test --filter=TagApiTest`: 2 passed, 17 assertions。
-- `php artisan route:list --path=api/v1/tags`: `GET|HEAD api/v1/tags` を確認。
-- `./vendor/bin/pint app/Http/Controllers/Api/V1/TagController.php app/Http/Requests/TagContextRequest.php app/Http/Resources/TagResource.php routes/api.php tests/Feature/TagApiTest.php`: passed。
-- `php artisan test`: 22 passed, 146 assertions。
-- `php artisan migrate:fresh --env=testing --force`: domain migration まで実行完了。
-- `git diff --check`: 問題なし。
-- `php artisan route:list --path=api/v1/memories`: `GET|HEAD api/v1/memories` と `POST api/v1/memories` を確認。
-- `php artisan test --filter=MemoryListApiTest`: 5 passed, 31 assertions。
-- `./vendor/bin/pint app/Http/Controllers/Api/V1/MemoryController.php app/Http/Requests/ListMemoriesRequest.php routes/api.php tests/Feature/MemoryListApiTest.php`: passed。
-- `php artisan test`: 27 passed, 177 assertions。
-- `php artisan migrate:fresh --env=testing --force`: domain migration まで実行完了。
-- `git diff --check`: 問題なし。
-- `php artisan route:list --path=api/v1/memories`: `GET|HEAD api/v1/memories/{memory}` を含む 3 routes を確認。
-- `php artisan test --filter=MemoryDetailApiTest`: 3 passed, 15 assertions。
-- `./vendor/bin/pint app/Http/Controllers/Api/V1/MemoryController.php app/Http/Requests/MemoryContextRequest.php routes/api.php tests/Feature/MemoryDetailApiTest.php`: passed。
-- `php artisan test`: 30 passed, 192 assertions。
-- `php artisan migrate:fresh --env=testing --force`: domain migration まで実行完了。
-- `git diff --check`: 問題なし。
-- `php artisan test --filter=MemoryUpdateApiTest`: 5 passed, 38 assertions。
-- `php artisan route:list --path=api/v1/memories`: `PATCH api/v1/memories/{memory}` を含む 4 routes を確認。
-- `./vendor/bin/pint app/Http/Controllers/Api/V1/MemoryController.php app/Http/Requests/UpdateMemoryRequest.php routes/api.php tests/Feature/MemoryUpdateApiTest.php`: passed。
-- `php artisan test`: 35 passed, 230 assertions。
-- `php artisan migrate:fresh --env=testing --force`: domain migration まで実行完了。
-- `git diff --check`: 問題なし。
-- `./vendor/bin/pint app/Http/Controllers/Api/V1/MemoryController.php routes/api.php tests/Feature/MemoryDeleteApiTest.php`: passed。
-- `php artisan test --filter=MemoryDeleteApiTest`: 3 passed, 12 assertions。
-- `php artisan route:list --path=api/v1/memories`: `DELETE api/v1/memories/{memory}` を含む 5 routes を確認。
-- `php artisan test`: 38 passed, 242 assertions。
-- `php artisan migrate:fresh --env=testing --force`: domain migration まで実行完了。
-- `git diff --check`: 問題なし。
-- `./vendor/bin/pint app/Models/PersonalAccessToken.php app/Models/User.php app/Providers/AppServiceProvider.php app/Support/NewAccessToken.php tests/TestCase.php tests/Feature/TokenAuthTest.php routes/api.php config/auth.php`: passed。
-- `php artisan test --filter=TokenAuthTest`: 3 passed, 7 assertions。
-- `php artisan migrate:fresh --env=testing --force`: `personal_access_tokens` migration まで実行完了。
-- `php artisan test --filter=CategoryApiTest`: 5 passed, 47 assertions。
-- `php artisan test`: 41 passed, 249 assertions。
-- `php artisan route:list --path=api/v1 -vv`: protected routes が `auth:sanctum` middleware になっていることを確認。
-- `git diff --check`: 問題なし。
-- `node -e "const fs=require('fs'); new Function(fs.readFileSync('docs/references/admin-ui-mockup/app.js','utf8')); console.log('app.js syntax ok')"`: app.js syntax ok。
-- `node <<'NODE' ...`: `app.js` の `api.listMemories/createMemory/updateMemory/deleteMemory` が Bearer token、query string、`category_id` payload、DELETE endpoint を組み立てることを確認。
-- `rg -n "MOCK|USE_MOCK|mock API layer|API_BASE" docs/references/admin-ui-mockup docs/architecture/backend_design.md task_board.md`: `app.js` 内に mock branch が残っていないことを確認。
-- `php artisan test --filter=TokenAuthTest`: 3 passed, 7 assertions。
-- `php artisan route:list --path=api/v1 -vv`: protected routes が `auth:sanctum` middleware で、health のみ public であることを確認。
-- `php artisan test`: 41 passed, 249 assertions。
-- `git diff --check`: 問題なし。
-- `sed -n '1,220p' docs/decisions/0004-admin-mockup-token-issuance.md`: login endpoint / seed / artisan command の比較と command 採用決定を確認。
-- `sed -n '44,80p' docs/architecture/backend_design.md`: 次 task が `php artisan bunshin:issue-admin-token` 実装になっていることを確認。
-- `sed -n '1,18p' docs/architecture/api_contract.md`: token 発行方針が public endpoint なし / artisan command 前提になっていることを確認。
-- `rg -n "tinker|User::createApiToken\\(\\)|login / token|token 発行 API endpoint|次の実装 task|bunshin:issue-admin-token|0004" ...`: tinker 前提が残っておらず、0004 decision と command 名が参照されていることを確認。
-- `git diff --check`: 問題なし。
-- `php artisan test --filter=TokenAuthTest`: 3 passed, 7 assertions。
 
 ## 調査中に思いついた追加 task
 
-- `/api/v1` の 401 / 422 を `Accept: application/json` なしでも JSON に固定するか、API client 側の `Accept` 必須を明文化する。
-- 管理画面モックアップの Settings は token 存在だけで `API TOKEN SET` と表示するため、invalid / stale token 時の validity feedback を追加するか検討する。
-- memory update smoke で visibility select 変更まで確実に検証できる手順を追加する。
-- 本格管理者 login endpoint をいつ設計するか決める。
-- 管理画面モックアップの配信方式を標準化する。現手順では別 origin + CORS preflight が通ることを確認済み。
-- tag merge / delete の UI 導線を残すなら、backend endpoint を設計するかモックアップ側の操作ボタンを隠す。
+- `metadata.emotion_scores` の score range を 0-100 に固定するか、1-5 に寄せるかを実装前に決める。
+- `metadata.importance_score` を手入力にするか、emotion intensity / recency / tag count から初期値を派生するか検討する。
+- secret unlock password の設定方法を、artisan command、初期 seed、user settings API のどれにするか決める。
+- 専用 unlock password / recovery / rotation を account password から分離するか検討する。
+- memory-space payload の `body` は全文返却か preview にするか、UI パフォーマンスと秘匿性の観点で検討する。
+- category の表示色 / 座標を backend metadata に保存するか、frontend deterministic layout に任せるかを実装時に決める。
+- period labels を固定 enum の表示名として返すか、frontend 側で持つかを決める。
 - public id を ULID / UUID / prefixed id のどれにするか決める。
-- 旧 MVP の「年代」表示を enum key と表示名のどちらで API に出すか決める。
-- domain model factories を追加し、今後の API Feature test fixture を簡潔にする。
-- `visibility` を string constants のまま進めるか、PHP enum cast にするか検討する。
-- API controller 実装時、implicit route model binding ではなく context find helper を通す方針を controller tests で固定する。
-- category の archive / restore 導線を実装するなら、`archived_at` か soft delete を data model に追加する必要がある。
-- `TagNameNormalizer` の alias table は初期最小セットなので、実利用で増やすなら人間レビューしやすい管理方法を検討する。
-- tags list API 実装時、mockup の「表記ゆれ」表示は現在の unique `normalized_name` モデルだと `name !== normalized_name` が原則出にくい。必要なら別 task で tag alias / merge history model を検討する。
-- tags list の `usage_count` に `visibility=secret` memory 由来の件数を含めてよいか、秘匿情報の漏れ観点で確認する。
+- tag merge / delete の UI 導線を残すなら、backend endpoint を設計するかモックアップ側の操作ボタンを隠す。
 - memories list の `q` は現状 `LIKE` 部分一致。件数増加後は full-text search / index 設計を別 task で検討する。
+- Three.js bundle が Vite warning threshold を超えるため、production で必要なら code splitting / lazy load を検討する。
+- 今回作成した memory-space smoke seed data を今後の検証 fixture として保持するか、明示許可後に削除するかを決める。
 
 ## 人間判断が必要な論点
 
+- secret unlock password を今後も account password と共用するか、専用 password に分離するか。
+- memory-space payload で secret memory の locked aggregate をどこまで見せてよいか。
 - smoke test で作成した `Smoke memory updated` と `Smoke Test Updated` を削除してよいか。
+- 今回作成した `memory-space-smoke@example.test` と `Smoke ...` 系 memory-space smoke data を保持してよいか、削除すべきか。
+- 今回作成した `Smoke Parent 20260505030557` (category id `4`) と `Smoke Child Updated 20260505030557` (category id `5`) を削除してよいか。2026-05-05 17:03:50 JST 時点では参照 memory はないが、明示許可がないため未削除。
 - public id を ULID / UUID / prefixed id のどれにするか。
 
 ## 次回 automation が最初に見るべきメモ
 
-今回の task は完了。削除許可は今回入力にも明示されていないため、`Smoke memory updated` と `Smoke Test Updated` は残した。次回はまず削除可否が明示されているかを見る。許可があれば管理画面モックアップから memory / category delete flow を実行して smoke test を完了し、許可がなければ削除せず pause する。
+`categories.parent_id` baseline は migration / model / validation / tests まで確認済み。root category 削除時の child category 扱いは 2026-05-06 14:11:07 JST のユーザー判断で「children あり削除禁止」に決定し、14:13 JST に controller / test / API contract / OpenAPI へ反映済み。children を持つ category の `DELETE` は `422` とし、対象 category / child category / memory category 紐付けは変更しない。
+
+local 開発環境では `php artisan db:seed` で `admin@example.test` / `password` / Bearer token `local-dev-token` と sample category / memory / tag data が作成される。`http://127.0.0.1:8000/admin` と `/memory-space` は localhost で保存 token が未設定または古い `id|...` 形式の場合、`local-dev-token` を自動補完する。seed data は root category 3 件、subcategory 5 件、通常 memory 3 件、secret memory 1 件、tags 10 件。
+
+secret unlock password 方針は 2026-05-06 15:03:18 JST 時点でも未決。今回入力には account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定は含まれていない。現状 baseline は account password hash を使っているため、明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+管理画面モックアップ smoke で作成した category id `4` / `5` は 2026-05-05 17:03:50 JST 時点で残存し、id `5` は id `4` を親に持つ。id `4` / `5` を参照する memory は 0 件。destructive delete flow の明示許可はないため、今回も削除していない。
 
 ## 次にやるべき 1 task
 
-smoke test 作成物の削除確認と削除実施。
+secret unlock password を今後も account password と共用するか、専用 password に分離するかの人間判断を受ける。現状 baseline は account password hash を使っている。
+
+今回の task は未完了。次回も `secret unlock password 方針の人間判断を受ける` から開始する。

@@ -69,6 +69,14 @@ class User extends Authenticatable
     }
 
     /**
+     * @return HasMany<SecretUnlockToken, $this>
+     */
+    public function secretUnlockTokens(): HasMany
+    {
+        return $this->hasMany(SecretUnlockToken::class);
+    }
+
+    /**
      * @param  list<string>  $abilities
      */
     public function createApiToken(

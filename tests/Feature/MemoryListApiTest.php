@@ -141,6 +141,135 @@ class MemoryListApiTest extends TestCase
             ->assertJsonPath('data.0.id', $matched->id);
     }
 
+    public function test_memory_list_can_include_descendant_categories_inside_request_context(): void
+    {
+        $tenant = $this->createTenant('分身AI', 'bunshin-ai');
+        $otherTenant = $this->createTenant('別テナント', 'other-tenant');
+        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+        $sameTenantOtherUser = User::factory()->create(['tenant_id' => $tenant->id]);
+        $otherTenantUser = User::factory()->create(['tenant_id' => $otherTenant->id]);
+
+        $school = $this->createCategory($tenant, $user, '学校', 'school');
+        $club = $this->createCategory($tenant, $user, '部活', 'club', $school);
+        $classroom = $this->createCategory($tenant, $user, '教室', 'classroom', $school);
+        $family = $this->createCategory($tenant, $user, '家族', 'family');
+        $sameTenantOtherOwnerCategory = $this->createCategory($tenant, $sameTenantOtherUser, '仕事', 'work');
+        $otherTenantCategory = $this->createCategory($otherTenant, $otherTenantUser, '旅行', 'travel');
+
+        $schoolMemory = $this->createMemory($tenant, $user, [
+            'category_id' => $school->id,
+            'title' => '学校 root',
+            'visibility' => Memory::VISIBILITY_PRIVATE,
+        ]);
+        $clubMemory = $this->createMemory($tenant, $user, [
+            'category_id' => $club->id,
+            'title' => '部活',
+            'visibility' => Memory::VISIBILITY_PRIVATE,
+        ]);
+        $classroomMemory = $this->createMemory($tenant, $user, [
+            'category_id' => $classroom->id,
+            'title' => '教室',
+            'visibility' => Memory::VISIBILITY_PRIVATE,
+        ]);
+        $secretClubMemory = $this->createMemory($tenant, $user, [
+            'category_id' => $club->id,
+            'title' => '秘匿部活',
+            'visibility' => Memory::VISIBILITY_SECRET,
+        ]);
+        $familyMemory = $this->createMemory($tenant, $user, [
+            'category_id' => $family->id,
+            'title' => '家族',
+            'visibility' => Memory::VISIBILITY_PRIVATE,
+        ]);
+        $sameTenantOtherOwnerMemory = $this->createMemory($tenant, $sameTenantOtherUser, [
+            'category_id' => $sameTenantOtherOwnerCategory->id,
+            'title' => '別 owner',
+            'visibility' => Memory::VISIBILITY_PRIVATE,
+        ]);
+        $otherTenantMemory = $this->createMemory($otherTenant, $otherTenantUser, [
+            'category_id' => $otherTenantCategory->id,
+            'title' => '別 tenant',
+            'visibility' => Memory::VISIBILITY_PRIVATE,
+        ]);
+
+        $this
+            ->withApiToken($user)
+            ->getJson('/api/v1/memories?'.http_build_query([
+                'category_id' => $school->id,
+            ]))
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $schoolMemory->id);
+
+        $response = $this
+            ->withApiToken($user)
+            ->getJson('/api/v1/memories?'.http_build_query([
+                'category_id' => $school->id,
+                'include_descendants' => 'true',
+            ]))
+            ->assertOk()
+            ->assertJsonCount(3, 'data')
+            ->assertJsonMissing(['id' => $secretClubMemory->id])
+            ->assertJsonMissing(['id' => $familyMemory->id])
+            ->assertJsonMissing(['id' => $sameTenantOtherOwnerMemory->id])
+            ->assertJsonMissing(['id' => $otherTenantMemory->id]);
+
+        $ids = collect($response->json('data'))->pluck('id')->all();
+
+        $this->assertEqualsCanonicalizing([
+            $schoolMemory->id,
+            $clubMemory->id,
+            $classroomMemory->id,
+        ], $ids);
+
+        $secretResponse = $this
+            ->withApiToken($user)
+            ->getJson('/api/v1/memories?'.http_build_query([
+                'category_id' => $school->id,
+                'include_descendants' => 1,
+                'visibility' => Memory::VISIBILITY_SECRET,
+            ]))
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
+
+        $this->assertSame($secretClubMemory->id, $secretResponse->json('data.0.id'));
+    }
+
+    public function test_memory_list_descendant_filter_does_not_cross_request_context(): void
+    {
+        $tenant = $this->createTenant('分身AI', 'bunshin-ai');
+        $otherTenant = $this->createTenant('別テナント', 'other-tenant');
+        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+        $sameTenantOtherUser = User::factory()->create(['tenant_id' => $tenant->id]);
+        $otherTenantUser = User::factory()->create(['tenant_id' => $otherTenant->id]);
+
+        $sameTenantOtherOwnerCategory = $this->createCategory($tenant, $sameTenantOtherUser, '仕事', 'work');
+        $otherTenantCategory = $this->createCategory($otherTenant, $otherTenantUser, '旅行', 'travel');
+        $sameTenantOtherOwnerMemory = $this->createMemory($tenant, $sameTenantOtherUser, [
+            'category_id' => $sameTenantOtherOwnerCategory->id,
+            'title' => '別 owner',
+            'visibility' => Memory::VISIBILITY_PRIVATE,
+        ]);
+        $otherTenantMemory = $this->createMemory($otherTenant, $otherTenantUser, [
+            'category_id' => $otherTenantCategory->id,
+            'title' => '別 tenant',
+            'visibility' => Memory::VISIBILITY_PRIVATE,
+        ]);
+
+        foreach ([$sameTenantOtherOwnerCategory, $otherTenantCategory] as $outsideCategory) {
+            $this
+                ->withApiToken($user)
+                ->getJson('/api/v1/memories?'.http_build_query([
+                    'category_id' => $outsideCategory->id,
+                    'include_descendants' => 1,
+                ]))
+                ->assertOk()
+                ->assertJsonCount(0, 'data')
+                ->assertJsonMissing(['id' => $sameTenantOtherOwnerMemory->id])
+                ->assertJsonMissing(['id' => $otherTenantMemory->id]);
+        }
+    }
+
     public function test_memory_list_validates_filter_shape(): void
     {
         $tenant = $this->createTenant('分身AI', 'bunshin-ai');
@@ -148,9 +277,9 @@ class MemoryListApiTest extends TestCase
 
         $this
             ->withApiToken($user)
-            ->getJson('/api/v1/memories?period_key=future&visibility=public&category_id=0')
+            ->getJson('/api/v1/memories?period_key=future&visibility=public&category_id=0&include_descendants=maybe')
             ->assertUnprocessable()
-            ->assertJsonValidationErrors(['period_key', 'visibility', 'category_id']);
+            ->assertJsonValidationErrors(['period_key', 'visibility', 'category_id', 'include_descendants']);
     }
 
     public function test_memory_list_requires_authentication(): void
@@ -166,11 +295,17 @@ class MemoryListApiTest extends TestCase
         ]);
     }
 
-    private function createCategory(Tenant $tenant, User $owner, string $name, string $slug): Category
-    {
+    private function createCategory(
+        Tenant $tenant,
+        User $owner,
+        string $name,
+        string $slug,
+        ?Category $parent = null
+    ): Category {
         return Category::query()->create([
             'tenant_id' => $tenant->id,
             'owner_user_id' => $owner->id,
+            'parent_id' => $parent?->id,
             'name' => $name,
             'slug' => $slug,
         ]);

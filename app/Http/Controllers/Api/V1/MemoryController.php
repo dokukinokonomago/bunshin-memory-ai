@@ -8,6 +8,7 @@ use App\Http\Requests\MemoryContextRequest;
 use App\Http\Requests\StoreMemoryRequest;
 use App\Http\Requests\UpdateMemoryRequest;
 use App\Http\Resources\MemoryResource;
+use App\Models\Category;
 use App\Models\Memory;
 use App\Models\Tag;
 use App\Support\NormalizedTagName;
@@ -39,7 +40,17 @@ class MemoryController extends Controller
         }
 
         if (($filters['category_id'] ?? null) !== null) {
-            $query->where('category_id', $filters['category_id']);
+            if (($filters['include_descendants'] ?? false) === true) {
+                $categoryIds = $this->categoryIdsWithDescendants($context, (int) $filters['category_id']);
+
+                if ($categoryIds === []) {
+                    $query->whereRaw('1 = 0');
+                } else {
+                    $query->whereIn('category_id', $categoryIds);
+                }
+            } else {
+                $query->where('category_id', $filters['category_id']);
+            }
         }
 
         if (($filters['q'] ?? null) !== null) {
@@ -173,6 +184,42 @@ class MemoryController extends Controller
         }
 
         return $model->load(['category', 'tags']);
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    private function categoryIdsWithDescendants(TenantUserContext $context, int $categoryId): array
+    {
+        $category = Category::queryForContext($context)
+            ->whereKey($categoryId)
+            ->first(['id']);
+
+        if (! $category) {
+            return [];
+        }
+
+        $ids = [(int) $category->getKey()];
+        $frontier = $ids;
+
+        while ($frontier !== []) {
+            $children = Category::queryForContext($context)
+                ->whereIn('parent_id', $frontier)
+                ->pluck('id')
+                ->map(static fn (mixed $id): int => (int) $id)
+                ->all();
+
+            $children = array_values(array_diff($children, $ids));
+
+            if ($children === []) {
+                break;
+            }
+
+            $ids = [...$ids, ...$children];
+            $frontier = $children;
+        }
+
+        return $ids;
     }
 
     /**

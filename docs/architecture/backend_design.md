@@ -8,9 +8,12 @@
 
 - API-first の JSON backend。
 - 記憶、カテゴリ、タグを正規化して保存する。
+- カテゴリは大カテゴリー / サブカテゴリーを `categories.parent_id` で階層化する。
+- 年代はカテゴリー階層とは別軸として `period_key` / `occurred_on` に保持する。
 - `tenant_id` と `owner_user_id` を基本境界にする。
 - 「墓場まで」相当の秘匿記憶は magic tag ではなく `visibility` で表現する。
 - 旧 UI は完全に破棄する。管理画面モックアップは実 API 接続対象に含めるが、本格 frontend 再設計や新規 UI デザインは対象外にする。
+- 例外として、記憶の海 / 宇宙画面はユーザー向け探索 frontend としてこの automation の正式実装対象に含める。
 - `visibility=secret` の記憶は通常 list から除外し、明示的に `secret` を要求した場合だけ取得できるようにする。
 
 ## 技術方針
@@ -19,7 +22,7 @@
 - Primary DB: MySQL
 - Test DB: SQLite
 - API namespace: `/api/v1`
-- Response: JSON only
+- Response: `/api/v1` は JSON only。`Accept: application/json` がない request でも、未認証は `401` JSON、validation error は `422` JSON を返す。
 - Auth: token-first。Bearer token / Sanctum personal access token 相当を使い、protected routes は `auth:sanctum` guard で保護する。
 
 ## レイヤ構成
@@ -39,9 +42,33 @@
 - `GET /api/v1/memories/{memory}`
 - `PATCH /api/v1/memories/{memory}`
 - `DELETE /api/v1/memories/{memory}`
+- `GET /api/v1/memory-space`
+- `POST /api/v1/secret-unlocks`
 - `GET /api/v1/categories`
 - `POST /api/v1/categories`
 - `GET /api/v1/tags`
+
+## 記憶の海 / 宇宙画面
+
+参照 mockup は `docs/references/memory-space-screen/memory_space.html` に配置している。
+
+この画面の実装では、テーマ分類、時間軸、横断タグ、感情、secret unlock を分けて扱う。
+
+- テーマ分類: `categories.parent_id` による root category / subcategory。
+- 時間軸: `memories.period_key` / `memories.occurred_on`。カテゴリーとは混ぜない。
+- 横断ラベル: `tags`。
+- 感情: 既存 `emotion_label` / `emotion_intensity` を primary emotion とし、複数 emotion score は初期実装では `metadata.emotion_scores` から返す。
+- 表示重み: 初期実装では `metadata.importance_score`。
+- beliefs / chains: 初期実装では `metadata.beliefs` / `metadata.chains`。
+- secret memory: 通常 payload から除外し、memory-space 画面では password unlock 風 UI と backend 追加認可を通した場合だけ返す。
+
+`GET /api/v1/memory-space` は実装済み。category tree、memory payload、period options、secret locked summary を返す。通常は secret memory 本文・title・tag を返さない。`include_secret=true` と valid `X-Secret-Unlock` が揃った場合だけ secret memory を含め、`secret.unlock_expires_at` を返す。
+
+`POST /api/v1/secret-unlocks` は実装済み。初期 baseline では user の account password hash を unlock password として検証し、15 分有効な user scoped token を発行する。token は `secret_unlock_tokens` に sha256 hash のみ保存し、plain text は response で 1 回だけ返す。
+
+`GET /memory-space` は実装済み。Laravel / Vite asset として Three.js canvas を表示し、API Base URL、Bearer token、period / category filter、descendant toggle、secret unlock modal、memory list / detail panel を持つ。Laravel session には依存せず、token と unlock token は browser runtime state だけで扱う。WebGL renderer 初期化に失敗した場合でも、canvas / scene 操作だけを無効化し、API controls と list/detail は一覧モードとして継続動作する。
+
+詳細は `docs/architecture/memory_space_screen.md` と `docs/decisions/0005-memory-space-screen.md` を正とする。
 
 ## Auth baseline
 
@@ -63,7 +90,7 @@
 
 ## 非対象
 
-- 本格 frontend app 化または UI 再設計。
+- 管理画面モックアップの本格 frontend app 化または UI 再設計。
 - 旧 Blade UI の再実装または復元。
 - AI 生成・要約。
 - 画像・音声アップロード。
@@ -71,4 +98,6 @@
 
 ## 次の実装 task
 
-管理画面モックアップから実 API への手動接続 smoke test を実施し、結果を記録する。`docs/references/admin-ui-mockup/manual-smoke-test.md` に沿って確認し、backend API と mockup の食い違いがあれば `task_board.md` の追加 task 候補に記録する。
+管理画面モックアップの Categories で `parent_id` の最小入力 / 表示を実 API に接続する。
+
+記憶の海 / 宇宙画面の初期 backend / frontend baseline と smoke は完了済み。管理画面は本格 frontend 化せず、category hierarchy の接続確認に必要な最小差分だけ扱う。

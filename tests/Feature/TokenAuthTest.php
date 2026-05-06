@@ -66,4 +66,26 @@ class TokenAuthTest extends TestCase
             ->getJson('/api/v1/categories')
             ->assertUnauthorized();
     }
+
+    public function test_plain_bearer_token_without_id_prefix_authenticates_api_routes(): void
+    {
+        $tenant = Tenant::query()->create([
+            'name' => '分身AI',
+            'slug' => 'bunshin-ai',
+        ]);
+        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+
+        $user->personalAccessTokens()->create([
+            'name' => 'local-dev',
+            'token' => hash('sha256', 'local-dev-token'),
+            'abilities' => ['*'],
+            'expires_at' => now()->addDay(),
+        ]);
+
+        $this
+            ->withHeader('Authorization', 'Bearer local-dev-token')
+            ->getJson('/api/v1/categories')
+            ->assertOk()
+            ->assertJsonPath('data', []);
+    }
 }

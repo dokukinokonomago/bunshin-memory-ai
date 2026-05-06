@@ -33,6 +33,16 @@ class StoreCategoryRequest extends FormRequest
                         ->where('owner_user_id', $user?->getKey());
                 }),
             ],
+            'parent_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('categories', 'id')->where(static function ($query) use ($user): void {
+                    $query
+                        ->where('tenant_id', $user?->tenant_id)
+                        ->where('owner_user_id', $user?->getKey())
+                        ->whereNull('parent_id');
+                }),
+            ],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:999999'],
         ];
     }
@@ -49,6 +59,10 @@ class StoreCategoryRequest extends FormRequest
 
         if (isset($input['slug']) && is_string($input['slug'])) {
             $input['slug'] = strtolower($input['slug']);
+        }
+
+        if (array_key_exists('parent_id', $input) && $input['parent_id'] === '') {
+            $input['parent_id'] = null;
         }
 
         $this->replace($input);

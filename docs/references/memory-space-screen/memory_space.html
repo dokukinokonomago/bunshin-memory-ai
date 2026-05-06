@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>記憶の宇宙</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #020810; overflow: hidden; font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif; }
+#c { display: block; width: 100vw; height: 100vh; }
+
+/* HUD */
+#hud {
+  position: fixed; top: 20px; left: 20px;
+  color: rgba(180,210,255,0.6);
+  font-size: 12px; line-height: 1.8;
+  pointer-events: none;
+  text-shadow: 0 0 8px rgba(100,160,255,0.4);
+}
+#zoom-label {
+  font-size: 13px; font-weight: 500;
+  color: rgba(180,210,255,0.9);
+  margin-bottom: 2px;
+}
+
+/* 詳細パネル */
+#panel {
+  position: fixed; top: 20px; right: 20px;
+  width: 300px;
+  background: rgba(8,16,32,0.92);
+  border: 0.5px solid rgba(100,160,255,0.2);
+  border-radius: 14px;
+  padding: 18px;
+  display: none;
+  color: #c8d8f0;
+  backdrop-filter: blur(12px);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+#panel::-webkit-scrollbar { width: 4px; }
+#panel::-webkit-scrollbar-track { background: transparent; }
+#panel::-webkit-scrollbar-thumb { background: rgba(100,160,255,0.2); border-radius: 2px; }
+
+.p-close {
+  float: right; cursor: pointer;
+  color: rgba(180,210,255,0.4); font-size: 18px; line-height: 1;
+}
+.p-close:hover { color: rgba(180,210,255,0.8); }
+.p-crumb { font-size: 10px; color: rgba(140,180,220,0.5); margin-bottom: 6px; }
+.p-title { font-size: 15px; font-weight: 500; color: #e0ecff; margin-bottom: 10px; line-height: 1.5; }
+.p-desc { font-size: 12px; color: rgba(180,210,255,0.6); line-height: 1.75; margin-bottom: 14px; }
+.p-sec { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(140,180,220,0.4); margin-bottom: 7px; margin-top: 12px; }
+.e-row { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+.e-name { font-size: 11px; color: rgba(180,210,255,0.55); width: 52px; flex-shrink: 0; }
+.e-track { flex: 1; height: 3px; background: rgba(255,255,255,0.07); border-radius: 2px; }
+.e-fill { height: 100%; border-radius: 2px; }
+.e-val { font-size: 10px; color: rgba(140,180,220,0.4); min-width: 22px; text-align: right; }
+.chip { display: inline-block; font-size: 10px; padding: 3px 8px; border-radius: 12px; margin: 2px 2px 0 0; }
+.chip-b { background: rgba(55,138,221,0.18); color: #85b7eb; border: 0.5px solid rgba(55,138,221,0.25); }
+.chip-c { background: rgba(226,75,74,0.16); color: #f09595; border: 0.5px solid rgba(226,75,74,0.2); }
+
+/* レジェンド */
+#legend {
+  position: fixed; bottom: 20px; left: 20px;
+  display: flex; gap: 14px; flex-wrap: wrap;
+  font-size: 10px; color: rgba(140,180,220,0.45);
+  pointer-events: none;
+}
+.l-item { display: flex; align-items: center; gap: 5px; }
+.l-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ローディング */
+#loading {
+  position: fixed; inset: 0;
+  background: #020810;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(140,180,220,0.6); font-size: 14px;
+  letter-spacing: 0.1em;
+  z-index: 100;
+}
+</style>
+</head>
+<body>
+<div id="loading">宇宙を展開中...</div>
+<canvas id="c"></canvas>
+
+<div id="hud">
+  <div id="zoom-label">銀河全体を見ています</div>
+  <div>スクロール: ズーム &nbsp;|&nbsp; ドラッグ: 回転</div>
+  <div>右ドラッグ / 2本指: パン</div>
+</div>
+
+<div id="panel">
+  <span class="p-close" id="cls">×</span>
+  <div class="p-crumb" id="p-crumb"></div>
+  <div class="p-title" id="p-title"></div>
+  <div class="p-desc" id="p-desc"></div>
+  <div id="p-emotions-sec" style="display:none">
+    <div class="p-sec">感情パラメータ</div>
+    <div id="p-emotions"></div>
+  </div>
+  <div id="p-beliefs-sec" style="display:none">
+    <div class="p-sec">信念 / 鎖</div>
+    <div id="p-beliefs"></div>
+  </div>
+  <div id="p-tags-sec" style="display:none">
+    <div class="p-sec">タグ</div>
+    <div id="p-tags"></div>
+  </div>
+</div>
+
+<div id="legend">
+  <div class="l-item"><div class="l-dot" style="background:#fbbf24"></div>喜び</div>
+  <div class="l-item"><div class="l-dot" style="background:#f472b6"></div>愛・感動</div>
+  <div class="l-item"><div class="l-dot" style="background:#60a5fa"></div>驚き・興奮</div>
+  <div class="l-item"><div class="l-dot" style="background:#a78bfa"></div>懐かしさ</div>
+  <div class="l-item"><div class="l-dot" style="background:#34d399"></div>安心・癒し</div>
+  <div class="l-item"><div class="l-dot" style="background:#fb923c"></div>切なさ</div>
+  <div style="width:100%;height:0.5px;background:rgba(140,180,220,0.15);margin:2px 0"></div>
+  <div class="l-item"><span style="font-size:13px;line-height:1;margin-right:2px">◈</span>大カテゴリー（八面体）</div>
+  <div class="l-item"><span style="font-size:13px;line-height:1;margin-right:2px">⬡</span>サブカテゴリー（二十面体）</div>
+  <div class="l-item"><span style="font-size:10px;line-height:1;margin-right:3px">●</span>記憶（球）</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ===== データ =====
+const bigCategories = [
+  { id:"music",       label:"音楽",       color:0xfbbf24, pos:[0,   0,   0  ] },
+  { id:"school",      label:"学校",       color:0xa78bfa, pos:[600, 200, -300] },
+  { id:"life_events", label:"人生の節目", color:0xf472b6, pos:[-500,100, 400 ] },
+  { id:"sports",      label:"スポーツ",   color:0x60a5fa, pos:[300,-300, 500 ] },
+  { id:"food",        label:"食べ物",     color:0xfb923c, pos:[-400,300,-500 ] },
+];
+
+const midCategories = [
+  { id:"mrchildren", parentId:"music",       label:"Mr.Children",     rel:[80,-60, 40] },
+  { id:"mrs",        parentId:"music",       label:"Mrs. GREEN APPLE",rel:[-80,40,-60] },
+  { id:"yoasobi",    parentId:"music",       label:"YOASOBI",         rel:[20, 80, 70] },
+  { id:"elementary", parentId:"school",      label:"小学校",           rel:[-80,-40,30] },
+  { id:"junior_high",parentId:"school",      label:"中学校",           rel:[70, 60,-50] },
+  { id:"high_school",parentId:"school",      label:"高校",             rel:[20,-80,-40] },
+  { id:"wedding",    parentId:"life_events", label:"結婚",             rel:[-70,50,-60] },
+  { id:"birth",      parentId:"life_events", label:"出産・育児",       rel:[80,-30, 40] },
+  { id:"job",        parentId:"life_events", label:"就職・転職",       rel:[-20,80,-50] },
+  { id:"baseball",   parentId:"sports",      label:"野球",             rel:[-70,30, 50] },
+  { id:"soccer",     parentId:"sports",      label:"サッカー",         rel:[60,-60,-30] },
+  { id:"ramen",      parentId:"food",        label:"ラーメン",         rel:[-60,50, 60] },
+  { id:"sweets",     parentId:"food",        label:"お菓子",           rel:[70,-40,-70] },
+];
+
+const memories = [
+  { midCategoryId:"mrchildren", title:"Tomorrow never knowsを初めて聴いた日", desc:"高校の帰り道、友達が貸してくれたMDで聴いた。イントロのギターで世界が変わった。それから20年以上聴き続けている。", weight:0.95, emotions:{"感動":92,"懐かしさ":88,"喜び":75}, beliefs:["音楽は人生を変える"], chains:[], tags:["初めての出会い","青春"] },
+  { midCategoryId:"mrchildren", title:"ライブで「GIFT」を聴いて泣いた", desc:"ドームツアー。大合唱の中で涙が止まらなくなった。みんなと一緒に歌える幸せを感じた夜。", weight:0.88, emotions:{"感動":95,"喜び":82,"愛":78}, beliefs:["一体感は力になる"], chains:[], tags:["ライブ体験","大合唱"] },
+  { midCategoryId:"mrchildren", title:"失恋の夜に「優しい歌」をリピート", desc:"何度聴いても泣いた。でもその涙が少しずつ癒してくれた。桜井さんの声が寄り添ってくれた。", weight:0.75, emotions:{"切なさ":85,"癒し":70,"懐かしさ":65}, beliefs:[], chains:["音楽だけが救い"], tags:["失恋","癒し"] },
+  { midCategoryId:"mrs", title:"「青と夏」で夏が来たと感じる", desc:"毎年夏になると聴く。青春の匂いがする。窓を開けて車で流すとテンションが上がる。", weight:0.80, emotions:{"ワクワク":88,"喜び":85,"懐かしさ":60}, beliefs:["季節に音楽がある"], chains:[], tags:["夏の定番","ドライブ"] },
+  { midCategoryId:"mrs", title:"「僕のこと」でプロポーズした", desc:"彼女が好きな曲だった。この曲を流しながら指輪を渡した。今でも二人の特別な曲。", weight:0.92, emotions:{"愛":95,"ドキドキ":88,"幸せ":90}, beliefs:["音楽は記憶を刻む"], chains:[], tags:["プロポーズ","二人の思い出"] },
+  { midCategoryId:"yoasobi", title:"「夜に駆ける」を初めて聴いた衝撃", desc:"YouTubeのおすすめで流れてきた。こんな曲があるんだと鳥肌が立った。新しい音楽との出会い。", weight:0.85, emotions:{"驚き":90,"興奮":85,"喜び":80}, beliefs:["世界はまだ広い"], chains:[], tags:["衝撃","新しい出会い"] },
+  { midCategoryId:"elementary", title:"修学旅行で初めて親元を離れた", desc:"京都・奈良への2泊3日。友達と夜遅くまで語り合った。あの自由な感覚は忘れられない。", weight:0.92, emotions:{"懐かしさ":95,"楽しさ":88,"ワクワク":82}, beliefs:["自由は外にある"], chains:[], tags:["修学旅行","友情"] },
+  { midCategoryId:"elementary", title:"運動会のリレーで逆転優勝", desc:"最後のアンカーで5人抜き。みんなが応援してくれた。人生で一番輝いた瞬間かもしれない。", weight:0.88, emotions:{"達成感":98,"喜び":95,"興奮":90}, beliefs:["諦めなければ逆転できる"], chains:[], tags:["運動会","勝利"] },
+  { midCategoryId:"elementary", title:"給食のカレーが世界一美味しかった", desc:"毎週金曜日のカレー。おかわりじゃんけんに全力だった。あの味は二度と再現できない。", weight:0.70, emotions:{"懐かしさ":90,"幸せ":75,"喜び":70}, beliefs:[], chains:[], tags:["給食","日常の幸せ"] },
+  { midCategoryId:"junior_high", title:"文化祭でバンド演奏した", desc:"クラスメイトと組んだバンド。下手だったけど、ステージに立てたことが誇りだった。", weight:0.85, emotions:{"興奮":88,"達成感":82,"懐かしさ":78}, beliefs:["やってみることが全て"], chains:[], tags:["文化祭","青春"] },
+  { midCategoryId:"high_school", title:"文化祭の打ち上げで告白された", desc:"まさかの展開。嬉しいけど驚きで頭が真っ白になった。青春映画みたいな夜だった。", weight:0.90, emotions:{"驚き":92,"ドキドキ":95,"幸せ":85}, beliefs:["人生は突然動く"], chains:[], tags:["告白","青春"] },
+  { midCategoryId:"wedding", title:"妹の結婚式で父が泣いていた", desc:"バージンロードを歩く父の背中が震えていた。普段は無口な父が、娘を送り出す姿に胸が熱くなった。", weight:0.95, emotions:{"感動":98,"愛":90,"切なさ":65}, beliefs:["家族の絆は深い"], chains:[], tags:["家族","父娘"] },
+  { midCategoryId:"birth", title:"子供が生まれた朝", desc:"手のひらより小さかった。この命を守るために生きようと、初めて自分より大切なものができた。", weight:1.0, emotions:{"愛":100,"喜び":98,"感動":95}, beliefs:["守るべきものがある"], chains:[], tags:["出産","新しい命"] },
+  { midCategoryId:"birth", title:"子供が初めて「パパ」と言った", desc:"仕事で疲れて帰った日。小さな声で「パパ」と。その瞬間、すべての疲れが吹き飛んだ。", weight:0.88, emotions:{"幸せ":95,"喜び":90,"愛":88}, beliefs:["言葉は魔法"], chains:[], tags:["育児","初めての言葉"] },
+  { midCategoryId:"job", title:"初めての給料で親に食事をご馳走した", desc:"社会人になって最初の給料。両親を連れて少し高いレストランへ。「ありがとう」と言われて泣きそうになった。", weight:0.85, emotions:{"幸せ":88,"達成感":82,"愛":80}, beliefs:["自立は贈り物になる"], chains:[], tags:["初給料","親孝行"] },
+  { midCategoryId:"baseball", title:"甲子園で地元校を応援した夏", desc:"スタンドが一体となって応援。初めて会った人とも肩を組んで校歌を歌った。熱い夏だった。", weight:0.85, emotions:{"興奮":92,"喜び":85,"感動":78}, beliefs:["一体感は奇跡を生む"], chains:[], tags:["甲子園","地元愛"] },
+  { midCategoryId:"soccer", title:"W杯で日本が勝って街中が沸いた", desc:"渋谷のスクランブル交差点で知らない人とハイタッチ。国全体が一つになった夜。", weight:0.90, emotions:{"興奮":95,"喜び":92,"感動":85}, beliefs:["スポーツは国境を越える"], chains:[], tags:["W杯","一体感"] },
+  { midCategoryId:"ramen", title:"深夜のラーメンが染みた受験期", desc:"夜食に母が作ってくれたインスタントラーメン。優しい味が疲れた体に染みた。今でも食べると母を思い出す。", weight:0.70, emotions:{"懐かしさ":90,"愛":75,"癒し":70}, beliefs:["母の愛は味に宿る"], chains:[], tags:["母の味","思い出"] },
+  { midCategoryId:"sweets", title:"祖母が作ってくれたクッキー", desc:"少し焦げてたけど、世界一美味しかった。祖母が亡くなった今、二度と食べられない味。", weight:0.88, emotions:{"懐かしさ":95,"愛":88,"切なさ":75}, beliefs:["愛は形に残る"], chains:["失ったものは戻らない"], tags:["祖母","手作り"] },
+];
+
+const emotionColors = {
+  "喜び":"#fbbf24","感動":"#f472b6","愛":"#f472b6","驚き":"#60a5fa","興奮":"#60a5fa",
+  "懐かしさ":"#a78bfa","安心":"#34d399","癒し":"#34d399","切なさ":"#fb923c",
+  "楽しさ":"#fbbf24","ドキドキ":"#f472b6","達成感":"#34d399","幸せ":"#fbbf24",
+  "緊張":"#fb923c","ワクワク":"#60a5fa","憧れ":"#a78bfa"
+};
+
+// ===== Three.js セットアップ =====
+const canvas = document.getElementById("c");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x020810, 1);
+
+const scene = new THREE.Scene();
+const camera3d = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 20000);
+camera3d.position.set(0, 0, 2200);
+
+// 霧（奥行き感）
+scene.fog = new THREE.FogExp2(0x020810, 0.00035);
+
+// ===== 星フィールド =====
+const starGeo = new THREE.BufferGeometry();
+const starCount = 3000;
+const starPos = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount * 3; i++) starPos[i] = (Math.random() - 0.5) * 12000;
+starGeo.setAttribute("position", new THREE.BufferAttribute(starPos, 3));
+const starMat = new THREE.PointsMaterial({ color: 0xaaccff, size: 1.2, transparent: true, opacity: 0.5 });
+scene.add(new THREE.Points(starGeo, starMat));
+
+// ===== グループ内全マテリアルのopacityを一括変更 =====
+function setGroupAlpha(group, alpha) {
+  group.traverse(obj => {
+    if (!obj.isMesh && !obj.isSprite) return;
+    const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+    mats.forEach(m => {
+      if (m) {
+        m.transparent = true;
+        m.opacity = Math.min(m._baseOpacity ?? m.opacity, alpha * (m._baseOpacity ?? 1));
+      }
+    });
+  });
+}
+
+// マテリアルの元のopacityを _baseOpacity に保存（初期化時に一度だけ呼ぶ）
+function saveBaseOpacity(group) {
+  group.traverse(obj => {
+    if (!obj.isMesh && !obj.isSprite) return;
+    const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+    mats.forEach(m => { if (m && m._baseOpacity === undefined) m._baseOpacity = m.opacity; });
+  });
+}
+
+// ===== ズームレベル管理 =====
+// distance > 1500: 大カテゴリーのみ
+// 600-1500: 中カテゴリー出現
+// < 600: 記憶バブル出現
+const DIST_MID = 1500;
+const DIST_BUBBLE = 600;
+
+// ===== オブジェクト管理 =====
+const bigMeshes = [];   // { mesh, ring, label, cat }
+const midMeshes = [];   // { mesh, ring, label, mid, parentCat }
+const memMeshes = [];   // { mesh, ring, mem, mid, parent }
+const allClickable = [];
+
+// ===== ユーティリティ =====
+function hexToThreeColor(hex) { return new THREE.Color(hex); }
+
+function makeGlowSprite(colorHex, size) {
+  // colorHex は "#rrggbb" 形式で受け取る
+  const c = new THREE.Color(colorHex);
+  const r = Math.round(c.r * 255), g = Math.round(c.g * 255), b = Math.round(c.b * 255);
+  const sz = 128;
+  const cvs = document.createElement("canvas");
+  cvs.width = cvs.height = sz;
+  const cx = cvs.getContext("2d");
+  const grad = cx.createRadialGradient(sz/2,sz/2,0,sz/2,sz/2,sz/2);
+  grad.addColorStop(0,   `rgba(${r},${g},${b},0.6)`);
+  grad.addColorStop(0.4, `rgba(${r},${g},${b},0.15)`);
+  grad.addColorStop(1,   `rgba(${r},${g},${b},0)`);
+  cx.fillStyle = grad;
+  cx.fillRect(0,0,sz,sz);
+  const tex = new THREE.CanvasTexture(cvs);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+  const sp = new THREE.Sprite(mat);
+  sp.scale.set(size, size, 1);
+  return sp;
+}
+
+function makeTextSprite(text, fontSize, color) {
+  const cvs = document.createElement("canvas");
+  cvs.width = 256; cvs.height = 64;
+  const cx = cvs.getContext("2d");
+  cx.font = `500 ${fontSize}px sans-serif`;
+  cx.fillStyle = color;
+  cx.textAlign = "center";
+  cx.textBaseline = "middle";
+  cx.fillText(text, 128, 32);
+  const tex = new THREE.CanvasTexture(cvs);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
+  const sp = new THREE.Sprite(mat);
+  return sp;
+}
+
+// ===== 大カテゴリー: 六角形の星雲コア + 3重リング =====
+bigCategories.forEach(cat => {
+  const group = new THREE.Group();
+  group.position.set(...cat.pos);
+
+  const col = new THREE.Color(cat.color);
+  const hex = "#" + col.getHexString();
+
+  // 大きなグロー霧
+  const glow = makeGlowSprite(hex, 900);
+  group.add(glow);
+
+  // 正八面体（ダイヤモンド型）— 球との差別化
+  const geo = new THREE.OctahedronGeometry(70, 0);
+  const mat = new THREE.MeshBasicMaterial({ color: cat.color, transparent: true, opacity: 0.22, wireframe: false });
+  const mesh = new THREE.Mesh(geo, mat);
+  group.add(mesh);
+
+  // ワイヤーフレーム重ね
+  const wireMat = new THREE.MeshBasicMaterial({ color: cat.color, transparent: true, opacity: 0.55, wireframe: true });
+  const wire = new THREE.Mesh(new THREE.OctahedronGeometry(70, 0), wireMat);
+  group.add(wire);
+
+  // 3重リング（傾き違い）
+  [[130, 2.5, 0.35, Math.PI/3, 0],
+   [105, 1.5, 0.22, Math.PI/6, Math.PI/4],
+   [155, 1.0, 0.15, Math.PI*0.4, Math.PI/2]
+  ].forEach(([rad, tube, op, rx, rz]) => {
+    const rGeo = new THREE.TorusGeometry(rad, tube, 6, 80);
+    const rMat = new THREE.MeshBasicMaterial({ color: cat.color, transparent: true, opacity: op });
+    const ring = new THREE.Mesh(rGeo, rMat);
+    ring.rotation.x = rx; ring.rotation.z = rz;
+    group.add(ring);
+  });
+
+  // ラベル（大きめ・カテゴリー名）
+  const label = makeTextSprite(cat.label, 32, hex);
+  label.scale.set(220, 55, 1);
+  label.position.set(0, -130, 0);
+  group.add(label);
+
+  // 「大カテゴリー」サブラベル
+  const sub = makeTextSprite("● カテゴリー", 16, hex.replace(/ff$/,"88").replace(/#/,"#"));
+  sub.scale.set(160, 30, 1);
+  sub.position.set(0, -160, 0);
+  group.add(sub);
+
+  scene.add(group);
+  saveBaseOpacity(group);
+  bigMeshes.push({ group, mesh, wire, label, cat });
+  allClickable.push({ type:"big", mesh, cat });
+});
+
+// ===== 中カテゴリー: 正六面体（キューブ）+ 軌道リング1本 =====
+midCategories.forEach(mid => {
+  const parent = bigCategories.find(b => b.id === mid.parentId);
+  if (!parent) return;
+
+  const group = new THREE.Group();
+  const wx = parent.pos[0] + mid.rel[0];
+  const wy = parent.pos[1] + mid.rel[1];
+  const wz = parent.pos[2] + mid.rel[2];
+  group.position.set(wx, wy, wz);
+  group.visible = false;
+
+  const col = new THREE.Color(parent.color);
+  const hex = "#" + col.getHexString();
+
+  const glow = makeGlowSprite(hex, 280);
+  group.add(glow);
+
+  // 正二十面体（球と八面体の中間の複雑さ）
+  const geo = new THREE.IcosahedronGeometry(24, 0);
+  const mat = new THREE.MeshBasicMaterial({ color: parent.color, transparent: true, opacity: 0.20 });
+  const mesh = new THREE.Mesh(geo, mat);
+  group.add(mesh);
+
+  const wireMat = new THREE.MeshBasicMaterial({ color: parent.color, transparent: true, opacity: 0.5, wireframe: true });
+  const wire = new THREE.Mesh(new THREE.IcosahedronGeometry(24, 0), wireMat);
+  group.add(wire);
+
+  // 細いリング1本
+  const rGeo = new THREE.TorusGeometry(38, 1.2, 6, 48);
+  const rMat = new THREE.MeshBasicMaterial({ color: parent.color, transparent: true, opacity: 0.4 });
+  const ring = new THREE.Mesh(rGeo, rMat);
+  ring.rotation.x = Math.PI / 2.5;
+  group.add(ring);
+
+  // ラベル
+  const label = makeTextSprite(mid.label, 22, hex);
+  label.scale.set(180, 42, 1);
+  label.position.set(0, -42, 0);
+  group.add(label);
+
+  const sub = makeTextSprite("◆ サブカテゴリー", 14, hex);
+  sub.scale.set(160, 26, 1);
+  sub.position.set(0, -62, 0);
+  group.add(sub);
+
+  scene.add(group);
+  saveBaseOpacity(group);
+  midMeshes.push({ group, mesh, wire, ring, label, mid, parent });
+  allClickable.push({ type:"mid", mesh, mid, parent });
+});
+
+// ===== 記憶バブル: 純粋な球 + 感情カラー =====
+memories.forEach((mem, idx) => {
+  const mid = midCategories.find(m => m.id === mem.midCategoryId);
+  if (!mid) return;
+  const parent = bigCategories.find(b => b.id === mid.parentId);
+  if (!parent) return;
+
+  const group = new THREE.Group();
+
+  const midPos = [
+    parent.pos[0] + mid.rel[0],
+    parent.pos[1] + mid.rel[1],
+    parent.pos[2] + mid.rel[2],
+  ];
+
+  const mems = memories.filter(m => m.midCategoryId === mem.midCategoryId);
+  const memIdx = mems.indexOf(mem);
+  const angle = (memIdx / mems.length) * Math.PI * 2;
+  const spread = 55;
+  const wx = midPos[0] + Math.cos(angle) * spread;
+  const wy = midPos[1] + Math.sin(angle) * spread * 0.6;
+  const wz = midPos[2] + Math.sin(angle * 1.7) * spread * 0.4;
+  group.position.set(wx, wy, wz);
+  group.visible = false;
+
+  const topEmotion = Object.entries(mem.emotions).sort((a,b)=>b[1]-a[1])[0][0];
+  const eColorHex = emotionColors[topEmotion] || "#60a5fa";
+  const eColor = new THREE.Color(eColorHex);
+
+  const r = 8 + mem.weight * 14;
+
+  // 球のみ（形で「記憶」と一目でわかる）
+  const glow = makeGlowSprite(eColorHex, r * 6);
+  group.add(glow);
+
+  const geo = new THREE.SphereGeometry(r, 24, 24);
+  const mat = new THREE.MeshBasicMaterial({ color: eColor, transparent: true, opacity: 0.65 });
+  const mesh = new THREE.Mesh(geo, mat);
+  group.add(mesh);
+
+  // 強感情は輝くアウトラインリング
+  if (Math.max(...Object.values(mem.emotions)) >= 85) {
+    const rGeo = new THREE.TorusGeometry(r + 3, 0.7, 6, 32);
+    const rMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 });
+    const ring = new THREE.Mesh(rGeo, rMat);
+    ring.rotation.x = Math.PI / 2;
+    group.add(ring);
+  }
+
+  // ラベル（近づいたときだけ見える小さいテキスト）
+  const label = makeTextSprite(mem.title.length > 14 ? mem.title.slice(0,13)+"…" : mem.title, 16, eColorHex);
+  label.scale.set(160, 28, 1);
+  label.position.set(0, -(r + 16), 0);
+  label.visible = false; // 超近距離でのみ表示
+  group.add(label);
+
+  scene.add(group);
+  saveBaseOpacity(group);
+  memMeshes.push({ group, mesh, label, mem, mid, parent });
+  allClickable.push({ type:"mem", mesh, mem, mid, parent });
+});
+
+// ===== カメラコントロール =====
+let isDragging = false, isRightDrag = false;
+let prevMouse = { x: 0, y: 0 };
+let spherical = { theta: 0, phi: Math.PI/2, radius: 4000 };
+// target = 回転中心（ワールド座標）。ここを動かすことで「中心の移動」を実現
+const target = new THREE.Vector3(0, 0, 0);
+const targetGoal = new THREE.Vector3(0, 0, 0); // 補間先の回転中心
+let targetSph = { ...spherical };
+let flyAnim = null; // { fromTarget, toTarget, fromRadius, toRadius, progress }
+
+function sphToCart(sph) {
+  return new THREE.Vector3(
+    sph.radius * Math.sin(sph.phi) * Math.sin(sph.theta),
+    sph.radius * Math.cos(sph.phi),
+    sph.radius * Math.sin(sph.phi) * Math.cos(sph.theta)
+  );
+}
+
+// easeInOut
+function easeInOut(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+canvas.addEventListener("mousedown", e => {
+  if (flyAnim) flyAnim = null; // フライ中にドラッグしたらキャンセル
+  isDragging = true;
+  isRightDrag = e.button === 2;
+  prevMouse = { x: e.clientX, y: e.clientY };
+});
+canvas.addEventListener("contextmenu", e => e.preventDefault());
+
+window.addEventListener("mousemove", e => {
+  if (!isDragging) return;
+  const dx = e.clientX - prevMouse.x;
+  const dy = e.clientY - prevMouse.y;
+  prevMouse = { x: e.clientX, y: e.clientY };
+  if (isRightDrag) {
+    const right = new THREE.Vector3();
+    right.crossVectors(camera3d.getWorldDirection(new THREE.Vector3()), camera3d.up).normalize();
+    const up = camera3d.up.clone().normalize();
+    const panSpeed = spherical.radius * 0.001;
+    target.addScaledVector(right, -dx * panSpeed);
+    target.addScaledVector(up,    dy * panSpeed);
+    targetGoal.copy(target);
+  } else {
+    spherical.theta -= dx * 0.004;
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi - dy * 0.004));
+    targetSph.theta = spherical.theta;
+    targetSph.phi   = spherical.phi;
+  }
+});
+window.addEventListener("mouseup", () => isDragging = false);
+
+canvas.addEventListener("wheel", e => {
+  e.preventDefault();
+  const factor = e.deltaY > 0 ? 1.08 : 0.93;
+  targetSph.radius = Math.max(80, Math.min(8000, targetSph.radius * factor));
+}, { passive: false });
+
+// ===== Raycaster（シングル / ダブル共通） =====
+const raycaster = new THREE.Raycaster();
+raycaster.params.Mesh.threshold = 5;
+
+function pickObject(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const mouse = new THREE.Vector2(
+    ((clientX - rect.left) / rect.width)  *  2 - 1,
+    -((clientY - rect.top) / rect.height) *  2 + 1
+  );
+  raycaster.setFromCamera(mouse, camera3d);
+  const meshes = allClickable
+    .filter(o => o.mesh.parent && o.mesh.parent.visible !== false)
+    .map(o => o.mesh);
+  const hits = raycaster.intersectObjects(meshes);
+  if (!hits.length) return null;
+  return allClickable.find(o => o.mesh === hits[0].object) || null;
+}
+
+// シングルクリック → パネル表示
+let mouseDownPos = { x:0, y:0 };
+let lastClickTime = 0;
+let lastClickPos  = { x:0, y:0 };
+
+canvas.addEventListener("mousedown", e => { mouseDownPos = { x: e.clientX, y: e.clientY }; });
+canvas.addEventListener("mouseup", e => {
+  if (Math.abs(e.clientX - mouseDownPos.x) > 5 || Math.abs(e.clientY - mouseDownPos.y) > 5) return;
+
+  const now = Date.now();
+  const sameSpot = Math.abs(e.clientX - lastClickPos.x) < 10 && Math.abs(e.clientY - lastClickPos.y) < 10;
+
+  if (now - lastClickTime < 350 && sameSpot) {
+    // ===== ダブルクリック: フライスルー =====
+    const found = pickObject(e.clientX, e.clientY);
+    if (found) {
+      const objPos = new THREE.Vector3();
+      found.mesh.parent.getWorldPosition(objPos);
+
+      // 到達距離: カテゴリー種別に応じて変える
+      const arrivalRadius = found.type === "big" ? 600
+                          : found.type === "mid" ? 220
+                          : 80;
+
+      flyAnim = {
+        fromTarget: target.clone(),
+        toTarget:   objPos.clone(),
+        fromRadius: spherical.radius,
+        toRadius:   arrivalRadius,
+        progress:   0,
+        duration:   90, // frames
+      };
+    }
+    lastClickTime = 0; // リセット
+  } else {
+    // ===== シングルクリック: パネル =====
+    lastClickTime = now;
+    lastClickPos  = { x: e.clientX, y: e.clientY };
+    const found = pickObject(e.clientX, e.clientY);
+    if (!found) { hidePanel(); return; }
+    if (found.type === "mem") showMemPanel(found.mem, found.mid, found.parent);
+    else if (found.type === "mid") showMidPanel(found.mid, found.parent);
+    else showBigPanel(found.cat);
+  }
+});
+
+// ===== フライスルー関数（animateから呼ぶ） =====
+function stepFlyAnim() {
+  if (!flyAnim) return;
+  flyAnim.progress++;
+  const p = easeInOut(Math.min(flyAnim.progress / flyAnim.duration, 1));
+
+  // 回転中心を補間
+  target.lerpVectors(flyAnim.fromTarget, flyAnim.toTarget, p);
+  targetGoal.copy(target);
+
+  // 半径を補間
+  const r = flyAnim.fromRadius + (flyAnim.toRadius - flyAnim.fromRadius) * p;
+  spherical.radius = r;
+  targetSph.radius  = r;
+
+  if (flyAnim.progress >= flyAnim.duration) flyAnim = null;
+}
+
+// HUDに「ダブルクリック」ヒントを追加
+document.querySelector("#hud").insertAdjacentHTML("beforeend",
+  `<div style="margin-top:4px;color:rgba(140,180,220,0.4)">ダブルクリック: そこへ飛ぶ</div>`);
+
+// ===== パネル表示 =====
+function showMemPanel(mem, mid, parent) {
+  const p = bigCategories.find(b => b.id === mid.parentId);
+  document.getElementById("p-crumb").textContent = (p?.label||"") + " › " + mid.label;
+  document.getElementById("p-title").textContent = mem.title;
+  document.getElementById("p-desc").textContent = mem.desc;
+
+  const es = document.getElementById("p-emotions");
+  es.innerHTML = Object.entries(mem.emotions).map(([k,v])=>`
+    <div class="e-row">
+      <span class="e-name">${k}</span>
+      <div class="e-track"><div class="e-fill" style="width:${v}%;background:${emotionColors[k]||"#60a5fa"}"></div></div>
+      <span class="e-val">${v}</span>
+    </div>`).join("");
+  document.getElementById("p-emotions-sec").style.display = "block";
+
+  const bs = document.getElementById("p-beliefs");
+  bs.innerHTML = (mem.beliefs||[]).map(b=>`<span class="chip chip-b">✦ ${b}</span>`).join("")
+               + (mem.chains||[]).map(c=>`<span class="chip chip-c">⛓ ${c}</span>`).join("");
+  document.getElementById("p-beliefs-sec").style.display = (mem.beliefs.length+mem.chains.length)>0 ? "block":"none";
+
+  const ts = document.getElementById("p-tags");
+  ts.innerHTML = (mem.tags||[]).map(t=>`<span class="chip chip-b">${t}</span>`).join("");
+  document.getElementById("p-tags-sec").style.display = mem.tags?.length ? "block":"none";
+
+  document.getElementById("panel").style.display = "block";
+}
+function showMidPanel(mid, parent) {
+  document.getElementById("p-crumb").textContent = parent.label;
+  document.getElementById("p-title").textContent = mid.label;
+  const count = memories.filter(m=>m.midCategoryId===mid.id).length;
+  document.getElementById("p-desc").textContent = `${count}件の記憶があります。もっとズームインしてみましょう。`;
+  document.getElementById("p-emotions-sec").style.display = "none";
+  document.getElementById("p-beliefs-sec").style.display = "none";
+  document.getElementById("p-tags-sec").style.display = "none";
+  document.getElementById("panel").style.display = "block";
+}
+function showBigPanel(cat) {
+  document.getElementById("p-crumb").textContent = "カテゴリー";
+  document.getElementById("p-title").textContent = cat.label;
+  const midCount = midCategories.filter(m=>m.parentId===cat.id).length;
+  document.getElementById("p-desc").textContent = `${midCount}つのサブカテゴリーがあります。ズームインして探索してみましょう。`;
+  document.getElementById("p-emotions-sec").style.display = "none";
+  document.getElementById("p-beliefs-sec").style.display = "none";
+  document.getElementById("p-tags-sec").style.display = "none";
+  document.getElementById("panel").style.display = "block";
+}
+function hidePanel() { document.getElementById("panel").style.display = "none"; }
+document.getElementById("cls").addEventListener("click", hidePanel);
+
+// ===== ズームUIラベル =====
+function updateHUD(dist) {
+  const el = document.getElementById("zoom-label");
+  if (dist > DIST_MID) el.textContent = "銀河全体を見ています";
+  else if (dist > DIST_BUBBLE) el.textContent = "星系に近づいています";
+  else el.textContent = "記憶の粒に触れています";
+}
+
+// ===== アニメーションループ =====
+let t = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  t += 0.008;
+
+  // フライスルーアニメ（優先）
+  stepFlyAnim();
+
+  // スムーズズーム・回転
+  spherical.radius += (targetSph.radius - spherical.radius) * 0.1;
+  spherical.theta  += (targetSph.theta  - spherical.theta)  * 0.1;
+  spherical.phi    += (targetSph.phi    - spherical.phi)    * 0.1;
+
+  // 回転中心を補間（ドラッグパン時も滑らか）
+  target.lerp(targetGoal, 0.12);
+
+  const pos = sphToCart(spherical);
+  camera3d.position.copy(target).add(pos);
+  camera3d.lookAt(target);
+
+  const dist = spherical.radius;
+  updateHUD(dist);
+
+  // ===== 距離ベースのスムーズフェード =====
+  function fadeRange(val, lo, hi) {
+    return Math.max(0, Math.min(1, (hi - val) / (hi - lo)));
+  }
+  function fadeIn(val, lo, hi) {
+    return Math.max(0, Math.min(1, (val - lo) / (hi - lo)));
+  }
+
+  // 大カテゴリー: 5000まで引いても見える。dist 1200→600 でフェードアウト
+  const bigAlpha = fadeIn(dist, 600, 1200);
+  bigMeshes.forEach(o => {
+    o.group.visible = bigAlpha > 0.01;
+    if (o.group.visible) setGroupAlpha(o.group, bigAlpha);
+  });
+
+  // 中カテゴリー: dist 1800→1000 でフェードイン / dist 300→120 でフェードアウト
+  const midAlpha = Math.min(fadeRange(dist, 800, 1400), fadeIn(dist, 150, 300));
+  midMeshes.forEach(o => {
+    o.group.visible = midAlpha > 0.01;
+    if (o.group.visible) setGroupAlpha(o.group, midAlpha);
+  });
+
+  // 記憶バブル: dist 500→200 に近づいて出現
+  const memAlpha = fadeRange(dist, 200, 500);
+  memMeshes.forEach(o => {
+    o.group.visible = memAlpha > 0.01;
+    if (o.group.visible) setGroupAlpha(o.group, memAlpha);
+  });
+
+  // 大カテゴリー: 八面体ゆっくり自転
+  bigMeshes.forEach((o, i) => {
+    o.mesh.rotation.y = t * 0.25 + i * 1.2;
+    o.mesh.rotation.x = t * 0.15 + i * 0.7;
+    if (o.wire) { o.wire.rotation.y = o.mesh.rotation.y; o.wire.rotation.x = o.mesh.rotation.x; }
+  });
+
+  // 中カテゴリー: 二十面体ゆっくり回転
+  midMeshes.forEach((o, i) => {
+    if (!o.group.visible) return;
+    o.mesh.rotation.y = t * 0.4 + i * 0.9;
+    o.mesh.rotation.z = t * 0.2 + i * 0.5;
+    if (o.wire) { o.wire.rotation.y = o.mesh.rotation.y; o.wire.rotation.z = o.mesh.rotation.z; }
+    if (o.ring) o.ring.rotation.z = t * 0.6 + i;
+  });
+
+  // 記憶バブル: 球をゆっくりパルス、超近距離でラベル表示
+  const DIST_LABEL = 150;
+  memMeshes.forEach((o, i) => {
+    if (!o.group.visible) return;
+    o.mesh.scale.setScalar(1 + Math.sin(t * 1.3 + i * 0.8) * 0.07);
+    if (o.label) o.label.visible = dist < DIST_LABEL;
+  });
+
+  renderer.render(scene, camera3d);
+}
+
+window.addEventListener("resize", () => {
+  camera3d.aspect = window.innerWidth / window.innerHeight;
+  camera3d.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+document.getElementById("loading").style.display = "none";
+animate();
+</script>
+</body>
+</html>

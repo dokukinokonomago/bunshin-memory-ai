@@ -3,8 +3,9 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class CategoryContextRequest extends FormRequest
+class MemorySpaceRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -17,7 +18,17 @@ class CategoryContextRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tree' => ['nullable', 'boolean'],
+            'period_key' => ['nullable', 'string', Rule::in([
+                'childhood',
+                'elementary_school',
+                'junior_high',
+                'high_school',
+                'university',
+                'adult',
+            ])],
+            'category_id' => ['nullable', 'integer', 'min:1'],
+            'include_descendants' => ['nullable', 'boolean'],
+            'include_secret' => ['nullable', 'boolean'],
         ];
     }
 
@@ -25,7 +36,19 @@ class CategoryContextRequest extends FormRequest
     {
         $input = $this->all();
 
-        $this->normalizeBoolean($input, 'tree');
+        if (array_key_exists('period_key', $input) && is_string($input['period_key'])) {
+            $input['period_key'] = trim($input['period_key']);
+        }
+
+        foreach (['include_descendants', 'include_secret'] as $field) {
+            $this->normalizeBoolean($input, $field);
+        }
+
+        foreach (['period_key', 'category_id', 'include_descendants', 'include_secret'] as $nullableField) {
+            if (($input[$nullableField] ?? null) === '') {
+                $input[$nullableField] = null;
+            }
+        }
 
         $this->replace($input);
     }

@@ -11,11 +11,26 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['tenant_id', 'owner_user_id', 'name', 'slug', 'sort_order'])]
+#[Fillable(['tenant_id', 'owner_user_id', 'parent_id', 'name', 'slug', 'sort_order'])]
 class Category extends Model
 {
     /** @use HasFactory<CategoryFactory> */
     use HasFactory;
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'tenant_id' => 'integer',
+            'owner_user_id' => 'integer',
+            'parent_id' => 'integer',
+            'sort_order' => 'integer',
+        ];
+    }
 
     /**
      * @return BelongsTo<Tenant, $this>
@@ -31,6 +46,22 @@ class Category extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_user_id');
+    }
+
+    /**
+     * @return BelongsTo<Category, $this>
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    /**
+     * @return HasMany<Category, $this>
+     */
+    public function children(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id');
     }
 
     /**

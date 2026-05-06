@@ -35,6 +35,22 @@ Sanctum personal access token 相当の token storage。plain text token は保�
 
 client に渡す token は `id|plainTextToken` 形式とする。guard は Bearer token の id 部分で候補を探し、plain text 部分の sha256 hash と保存済み hash を `hash_equals` で比較する。
 
+### secret_unlock_tokens
+
+記憶の海 / 宇宙画面で `visibility=secret` memory を一時的に表示するための user scoped unlock token。plain text token は保存せず、sha256 hash のみ保存する。
+
+- `id`
+- `user_id`
+- `token`
+- `last_used_at`
+- `expires_at`
+- `created_at`
+- `updated_at`
+
+client に渡す token は `id|plainTextToken` 形式とする。`GET /api/v1/memory-space?include_secret=1` は `X-Secret-Unlock` header の token をこの table で検証し、token user が request user と一致し、かつ期限内の場合だけ secret memory を含める。
+
+初期 baseline の TTL は 15 分。専用 unlock password 設定 UI が未実装のため、`POST /api/v1/secret-unlocks` では user の account password hash を検証に使う。専用 password / recovery / rotation は別 task で検討する。
+
 ### memories
 
 - `id`
@@ -56,16 +72,36 @@ client に渡す token は `id|plainTextToken` 形式とする。guard は Beare
 
 `visibility` は `private`, `secret`, `shared` を初期候補にする。旧「墓場まで」は `secret` として扱う。`secret` は通常 list から除外し、明示 filter または ID 指定で認可された場合だけ返す。
 
+`period_key` / `occurred_on` はカテゴリーとは別の時間軸として扱う。年代別表示やタイムラインはこの軸から派生させ、カテゴリー階層には混ぜない。
+
+記憶の海 / 宇宙画面で使う複数 emotion score、表示重み、beliefs、chains は初期実装では `metadata` に置く。
+
+- `metadata.emotion_scores`: emotion label to score map。例: `{ "感動": 92, "懐かしさ": 88 }`
+- `metadata.importance_score`: 0.0-1.0 の表示重み。
+- `metadata.beliefs`: string array。
+- `metadata.chains`: string array。
+
 ### categories
 
 - `id`
 - `tenant_id`
 - `owner_user_id`
+- `parent_id`
 - `name`
 - `slug`
 - `sort_order`
 - `created_at`
 - `updated_at`
+
+大カテゴリー / サブカテゴリーは同一 `categories` table の階層として表現する。
+
+- `parent_id = null`: root category / 大カテゴリー。
+- `parent_id = <category id>`: subcategory / サブカテゴリー。
+- 初期実装では深さ 2 までを正式対応範囲にする。
+- `memories.category_id` は原則として末端カテゴリーを指す。ただしサブカテゴリーなしの root category 直下 memory も許容する。
+- `parent_id` は同一 tenant / owner 内の category だけを参照できるよう validation / query scope で制約する。
+
+slug uniqueness は初期実装では tenant / owner 全体で unique のまま維持する。兄弟内 unique への変更は、URL 設計が必要になった段階で別 task にする。
 
 ### tags
 
@@ -105,4 +141,5 @@ Memory の API delete は soft delete とし、削除前に `memory_tag` pivot �
 - `tags.*`: trim 後に validation し、保存時は `TagNameNormalizer` を通して `name` / `normalized_name` を決める
 - `category.name`: required, trim 後 1-80 chars
 - `category.slug`: required, lowercase kebab-case, tenant / owner 内で unique
+- `category.parent_id`: nullable integer, 同一 tenant / owner 内の root category のみ指定可
 - `category.sort_order`: nullable integer, 0-999999

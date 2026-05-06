@@ -33,10 +33,19 @@ class MemoryDomainModelTest extends TestCase
             'sort_order' => 10,
         ]);
 
+        $childCategory = Category::query()->create([
+            'tenant_id' => $tenant->id,
+            'owner_user_id' => $owner->id,
+            'parent_id' => $category->id,
+            'name' => '部活',
+            'slug' => 'club',
+            'sort_order' => 20,
+        ]);
+
         $memory = Memory::query()->create([
             'tenant_id' => $tenant->id,
             'owner_user_id' => $owner->id,
-            'category_id' => $category->id,
+            'category_id' => $childCategory->id,
             'period_key' => 'high_school',
             'occurred_on' => '2026-05-04',
             'title' => '放課後の教室',
@@ -59,10 +68,14 @@ class MemoryDomainModelTest extends TestCase
 
         $this->assertTrue($memory->tenant->is($tenant));
         $this->assertTrue($memory->owner->is($owner));
-        $this->assertTrue($memory->category->is($category));
+        $this->assertTrue($memory->category->is($childCategory));
         $this->assertTrue($memory->tags->first()->is($tag));
         $this->assertSame(['imported' => false], $memory->metadata);
         $this->assertSame(3, $memory->emotion_intensity);
+        $this->assertSame($category->id, $childCategory->parent_id);
+        $this->assertSame(20, $childCategory->sort_order);
+        $this->assertTrue($childCategory->parent->is($category));
+        $this->assertTrue($category->children->first()->is($childCategory));
     }
 
     public function test_memory_scopes_filter_by_tenant_owner_and_default_visibility(): void

@@ -1,5 +1,1475 @@
 # Run Log
 
+## 2026-05-06 15:19:03 JST
+
+### 今回の task
+
+local 開発環境の seed に sample category / memory / tag data も追加し、管理画面モックアップと memory-space を開いた直後に確認できる状態にする。
+
+### 実施内容
+
+- `DatabaseSeeder` に sample category hierarchy、通常 memory、secret memory、tags を追加した。
+- seed data は idempotent に `updateOrCreate` / `sync` されるため、`php artisan db:seed` を再実行しても重複しない。
+- sample memory は memory-space payload の `emotion_scores`、`importance_score`、`beliefs`、`chains`、tags を確認できる metadata 付きにした。
+- `LocalDevSeederTest` を追加し、fixed token、category tree、secret を除外した memory list、memory-space の locked secret count を検証した。
+- 管理画面モックアップ README と manual smoke test に sample seed data の内容を追記した。
+- `php artisan db:seed` を再実行し、現在の local DB に sample data を投入した。
+
+### 変更ファイル一覧
+
+- `database/seeders/DatabaseSeeder.php`
+- `tests/Feature/LocalDevSeederTest.php`
+- `docs/references/admin-ui-mockup/README.md`
+- `docs/references/admin-ui-mockup/manual-smoke-test.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan db:seed`: local sample data 作成成功。
+- `GET /api/v1/categories?tree=1`: root category 3 件、child category 5 件。
+- `GET /api/v1/memories`: 通常表示 memory 3 件、secret は除外。
+- `GET /api/v1/memory-space`: memories 3 件、`secret.locked_count=1`。
+- `GET /api/v1/tags`: tags 10 件。
+- `./vendor/bin/pint database/seeders/DatabaseSeeder.php tests/Feature/LocalDevSeederTest.php`: passed。
+- `php artisan test tests/Feature/LocalDevSeederTest.php tests/Feature/TokenAuthTest.php tests/Feature/CategoryApiTest.php`: 13 passed, 139 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。local 確認では `local-dev-token` と sample data が利用できる。次回は `secret unlock password 方針の人間判断を受ける` に戻る。
+
+## 2026-05-06 15:14:13 JST
+
+### 今回の task
+
+local 開発環境で Bearer token を毎回貼り直さず確認できるようにする。
+
+### 実施内容
+
+- `DatabaseSeeder` を更新し、`local` / `testing` 環境だけ tenant `default`、user `admin@example.test`、password `password`、固定 Bearer token `local-dev-token` を idempotent に作るようにした。
+- `docs/references/admin-ui-mockup/app.js` と `resources/js/memory-space.js` を更新し、localhost では保存 token が未設定または古い `id|...` 形式の場合に `local-dev-token` を自動補完するようにした。
+- `TokenAuthTest` に no-pipe Bearer token の regression test を追加した。
+- 管理画面モックアップ README と manual smoke test に `php artisan db:seed` / `local-dev-token` の手順を追記した。
+- `php artisan db:seed` を実行し、現在の local DB に固定 token を作成した。
+
+### 変更ファイル一覧
+
+- `database/seeders/DatabaseSeeder.php`
+- `docs/references/admin-ui-mockup/app.js`
+- `resources/js/memory-space.js`
+- `tests/Feature/TokenAuthTest.php`
+- `docs/references/admin-ui-mockup/README.md`
+- `docs/references/admin-ui-mockup/manual-smoke-test.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan db:seed`: local dev user / token 作成成功。
+- `curl -H 'Authorization: Bearer local-dev-token' http://127.0.0.1:8000/api/v1/categories`: `200 OK`。
+- `curl -H 'Authorization: Bearer local-dev-token' http://127.0.0.1:8000/api/v1/memory-space`: `200 OK`。
+- `curl http://127.0.0.1:8000/admin-assets/app.js`: local dev token 自動補完コード配信確認。
+- `curl http://127.0.0.1:5173/resources/js/memory-space.js`: local dev token 自動補完コード配信確認。
+- `./vendor/bin/pint database/seeders/DatabaseSeeder.php tests/Feature/TokenAuthTest.php`: passed。
+- `php artisan test tests/Feature/TokenAuthTest.php tests/Feature/CategoryApiTest.php`: 12 passed, 126 assertions。
+- `npm run build`: passed。Three.js chunk size warning は既知。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。local 確認では `local-dev-token` が Bearer token として使える。次回は `secret unlock password 方針の人間判断を受ける` に戻る。
+
+## 2026-05-06 15:03:18 JST
+
+### 今回の task
+
+secret unlock password を account password と共用するか、専用 password に分離するかの人間判断が今回入力に含まれているか確認する。明示決定がなければ実装変更せず、未決として記録する。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、`run_log.md`、`review_decision.md` を確認した。
+- 今回入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
+- `SecretUnlockController`、`StoreSecretUnlockRequest`、`SecretUnlockApiTest`、`docs/decisions/0005-memory-space-screen.md`、`docs/architecture/api_contract.md`、`docs/architecture/data_model.md` を確認した。
+- 現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の account password hash を検証し、15 分有効な unlock token を発行する。
+- `review_decision.md` に secret unlock password 方針の未決 section を追加し、account password 共用案、専用 unlock password 分離案、推奨、未決 status を記録した。
+- 方針未決のため、`SecretUnlockController` / tests / API contract / OpenAPI の実装変更は行っていない。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認と管理ファイル更新のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は未完了。次回も `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っている。明示決定があるまでは secret unlock 実装変更に進まない。
+
+## 2026-05-06 14:13:17 JST
+
+### 今回の task
+
+children を持つ category の削除を `422 Unprocessable Entity` で拒否するように `CategoryController@destroy`、`CategoryApiTest`、`docs/architecture/api_contract.md`、OpenAPI を更新する。
+
+### 実施内容
+
+- ユーザー判断として root category 削除方針を「children あり削除禁止」に確定した。
+- `review_decision.md` を決定済みに更新し、`DELETE /api/v1/categories/{category}` で children がある場合は `422` / `children` error field を返す方針を固定した。
+- `CategoryController@destroy` に children 存在チェックを追加し、children がある場合は category / child category / memory category 紐付けを変更せず `422` validation-style JSON を返すようにした。
+- `CategoryApiTest` を更新し、children あり category の削除拒否、child の parent 維持、memory category 維持、children なし category の通常削除と memory category null 化を検証した。
+- `docs/architecture/api_contract.md` と `openapi/bunshin-memory-api.yaml` に category delete の 422 response と message / errors.children を反映した。
+
+### 変更ファイル一覧
+
+- `app/Http/Controllers/Api/V1/CategoryController.php`
+- `tests/Feature/CategoryApiTest.php`
+- `docs/architecture/api_contract.md`
+- `openapi/bunshin-memory-api.yaml`
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `./vendor/bin/pint app/Http/Controllers/Api/V1/CategoryController.php tests/Feature/CategoryApiTest.php`: passed。
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `ruby -e 'require "yaml"; YAML.load_file("openapi/bunshin-memory-api.yaml")'`: openapi yaml ok。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っているため、account password 共用を続けるか、専用 password に分離するかを確認する。
+
+## 2026-05-06 14:01:37 JST
+
+### 今回の task
+
+root category 削除方針の人間判断を受ける。
+
+### 実施内容
+
+- shell の `CODEX_HOME` が空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接確認した。
+- `task_board.md`、`review_decision.md`、`CategoryController@destroy`、`CategoryApiTest`、`docs/architecture/api_contract.md`、OpenAPI の現状を確認した。
+- 2026-05-06 14:01:37 JST の今回入力にも、root 昇格、children あり削除禁止、cascade delete のどれを正式採用するかの明示決定は含まれていなかった。
+- 現在の実装 / Feature test は root 昇格、API contract draft は children あり削除を `422 Unprocessable Entity` で拒否する方針、OpenAPI は category delete を `204` / `401` / `404` のみで定義しており、差分が残っている。
+- 方針未決のため、`CategoryController` / tests / API contract / OpenAPI の実装変更は行わず保留した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は未完了。次回も `root category 削除方針の人間判断を受ける` から開始する。推奨は `review_decision.md` の選択肢 B「children を持つ category は削除禁止」。採用された場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。
+
+## 2026-05-06 13:01:47 JST
+
+### 今回の task
+
+root category 削除方針の人間判断を受ける。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md`、`review_decision.md` を確認し、`categories.parent_id` の migration / model / validation / tests baseline は既に完了済みであることを確認した。
+- 2026-05-06 13:01:47 JST の今回入力には、root 昇格、children あり削除禁止、cascade delete のどれを正式採用するかの明示決定は含まれていなかった。
+- `CategoryController@destroy`、`CategoryApiTest`、`docs/architecture/api_contract.md`、`openapi/bunshin-memory-api.yaml` を確認した。
+- 現在の実装 / Feature test は root category 削除時に child category を root 昇格する一方、API contract draft は children あり削除を `422 Unprocessable Entity` で拒否する方針を記載している。OpenAPI は category delete を `204` / `401` / `404` のみで定義している。
+- 方針未決のため、`CategoryController` / tests / API contract / OpenAPI の実装変更は行わず、判断待ちを継続した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `CategoryController@destroy`: category 配下 memory の `category_id` を `null` にして category を削除する。child category は DB FK の `nullOnDelete()` により root 昇格する。
+- `CategoryApiTest`: root category 削除時の child root 昇格を固定している。
+- `docs/architecture/api_contract.md`: children を持つ category の削除は初期実装で `422 Unprocessable Entity` とする記述がある。
+- `openapi/bunshin-memory-api.yaml`: category delete は `204` / `401` / `404` のみで、children あり削除時の `422` response は未反映。
+- 今回は判断確認のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は未完了。次回も `root category 削除方針の人間判断を受ける` から開始する。推奨は `review_decision.md` の選択肢 B「children を持つ category は削除禁止」。削除禁止が採用された場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。
+
+## 2026-05-06 12:02:45 JST
+
+### 今回の task
+
+root category 削除方針の人間判断を受ける。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md`、`review_decision.md` を確認し、`categories.parent_id` の migration / model / validation / tests baseline は既に完了済みであることを確認した。
+- 2026-05-06 12:02:45 JST の今回入力には、root 昇格、children あり削除禁止、cascade delete のどれを正式採用するかの明示決定は含まれていなかった。
+- `CategoryController@destroy`、`CategoryApiTest`、`docs/architecture/api_contract.md`、`openapi/bunshin-memory-api.yaml` を確認した。
+- 現在の実装 / Feature test は root category 削除時に child category を root 昇格する一方、API contract draft は children あり削除を `422 Unprocessable Entity` で拒否する方針を記載している。OpenAPI は category delete を `204` / `401` / `404` のみで定義している。
+- 方針未決のため、`CategoryController` / tests / API contract / OpenAPI の実装変更は行わず、判断待ちを継続した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `CategoryController@destroy`: category 配下 memory の `category_id` を `null` にして category を削除する。child category は DB FK の `nullOnDelete()` により root 昇格する。
+- `CategoryApiTest`: root category 削除時の child root 昇格を固定している。
+- `docs/architecture/api_contract.md`: children を持つ category の削除は初期実装で `422 Unprocessable Entity` とする記述がある。
+- `openapi/bunshin-memory-api.yaml`: category delete は `204` / `401` / `404` のみで、children あり削除時の `422` response は未反映。
+- 今回は判断確認のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は未完了。次回も `root category 削除方針の人間判断を受ける` から開始する。推奨は `review_decision.md` の選択肢 B「children を持つ category は削除禁止」。削除禁止が採用された場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。
+
+## 2026-05-06 11:01:39 JST
+
+### 今回の task
+
+root category 削除方針の人間判断が今回入力または管理メモに明示されたかを確認する。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、`run_log.md`、`review_decision.md` を確認し、`categories.parent_id` の migration / model / validation / tests baseline は既に完了済みであることを確認した。
+- 今回入力には、root 昇格、children あり削除禁止、cascade delete のどれを正式採用するかの明示決定は含まれていなかった。
+- `CategoryController@destroy` は現在、category 配下 memory の `category_id` を `null` にして category を削除する。child category は DB FK の `nullOnDelete()` により root 昇格する。
+- `CategoryApiTest` は root category 削除時の child root 昇格を固定している一方、`docs/architecture/api_contract.md` は children を持つ category の削除を初期実装で `422 Unprocessable Entity` とする記述を持つ。
+- OpenAPI の category delete は現状 `204` / `401` / `404` までで、children あり削除時の `422` response は未反映。
+- `review_decision.md` の最終確認日時を 2026-05-06 11:01:39 JST に更新し、今回も方針未決であることを追記した。
+- 方針未決のため、`CategoryController` / tests / API contract / OpenAPI の実装変更は行っていない。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は未完了。次回も `root category 削除方針の人間判断を受ける` から開始する。推奨は `review_decision.md` の選択肢 B「children を持つ category は削除禁止」。採用された場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。
+
+## 2026-05-06 10:02:50 JST
+
+### 今回の task
+
+root category 削除方針の人間判断が今回入力または管理メモに明示されたかを確認する。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、`run_log.md`、`review_decision.md` を確認し、`categories.parent_id` の migration / model / validation / tests baseline は既に完了済みであることを確認した。
+- 今回入力には、root 昇格、children あり削除禁止、cascade delete のどれを正式採用するかの明示決定は含まれていなかった。
+- `CategoryController@destroy` は現在、category 配下 memory の `category_id` を `null` にして category を削除する。child category は DB FK の `nullOnDelete()` により root 昇格する。
+- `CategoryApiTest` は root category 削除時の child root 昇格を固定している一方、`docs/architecture/api_contract.md` は children を持つ category の削除を初期実装で `422 Unprocessable Entity` とする記述を持つ。
+- OpenAPI の category delete は現状 `204` / `401` / `404` までで、children あり削除時の `422` response は未反映。
+- `review_decision.md` の最終確認日時を 2026-05-06 10:02:50 JST に更新し、今回も方針未決であることを追記した。
+- 方針未決のため、`CategoryController` / tests / API contract / OpenAPI の実装変更は行っていない。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は未完了。次回も `root category 削除方針の人間判断を受ける` から開始する。推奨は `review_decision.md` の選択肢 B「children を持つ category は削除禁止」。採用された場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。
+
+## 2026-05-06 09:03:00 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば今回 task の範囲内だけで補う。
+
+### 実施内容
+
+- `CODEX_HOME` は shell で未設定だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を automation memory として確認した。
+- `task_board.md` を今回 task 用に開始時点で更新し、今回入力の正式 task 指示どおり `categories.parent_id` baseline の再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、`categories_context_parent_index` が定義済みであることを確認した。
+- `Category` model で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent として許可し、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation があることを確認した。
+- `CategoryController` / `CategoryContextRequest` / `CategoryResource` で flat list の `parent_id` と `tree=true` の nested children response が実装済みであることを確認した。
+- `CategoryApiTest` と `MemoryDomainModelTest` で root / child 作成、tree response、tenant / owner 境界、空文字 `parent_id` normalization、PATCH 時の境界外 category / subcategory parent 拒否、model relation / cast を検証していることを確認した。
+- 追加 code change は不要だった。root category 削除方針は今回 task の対象外かつ明示決定がないため変更していない。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 123 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `root category 削除方針の人間判断を受ける` から開始する。推奨は `review_decision.md` の選択肢 B「children を持つ category は削除禁止」。削除禁止を採用する場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。
+
+## 2026-05-06 07:03:39 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests baseline を再検証し、追加実装が不要であることを確認する。
+
+### 実施内容
+
+- `CODEX_HOME` は shell で未設定だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を automation memory として確認した。
+- `task_board.md` を今回 task 用に更新し、今回入力の正式 task 指示どおり `categories.parent_id` baseline の再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、`categories_context_parent_index` が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内の root category のみを parent として許可し、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryContextRequest` / `CategoryResource` で flat list の `parent_id` と `tree=true` の nested children response が実装済みであることを確認した。
+- `CategoryApiTest` と `MemoryDomainModelTest` で root / child 作成、tree response、tenant / owner 境界、空文字 `parent_id` normalization、PATCH 時の境界外 category / subcategory parent 拒否、model relation / cast が検証済みであることを確認した。
+- 今回の追加 code change はなし。root category 削除方針は今回 task の対象外かつ明示決定がないため変更していない。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 123 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `root category 削除方針の人間判断を受ける` から開始する。推奨は `review_decision.md` の選択肢 B「children を持つ category は削除禁止」。削除禁止を採用する場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。
+
+## 2026-05-06 08:03:43 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば今回 task の範囲内だけで補う。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md`、category 関連 migration / model / request / controller / resource / Feature test を確認した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、`categories_context_parent_index` が定義済みであることを確認した。
+- `Category` model で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent として許可し、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation があることを確認した。
+- `CategoryApiTest` と `MemoryDomainModelTest` で root / child 作成、tree response、tenant / owner 境界、空文字 `parent_id` normalization、PATCH 時の境界外 category / subcategory parent 拒否、model relation / cast を検証していることを確認した。
+- 追加 code change は不要だった。root category 削除方針は今回 task の対象外のため変更していない。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 123 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `root category 削除方針の人間判断を受ける` から開始する。推奨は `review_decision.md` の選択肢 B「children を持つ category は削除禁止」。削除禁止を採用する場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。
+
+## 2026-05-06 06:03:25 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests baseline を再検証し、追加実装が不要であることを確認する。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、category 関連 migration / model / request / controller / resource / Feature test を確認した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` は nullable self FK、`nullOnDelete()`、`categories_context_parent_index` を定義済み。
+- `app/Models/Category.php` は `parent_id` fillable / integer cast / `parent()` / `children()` relation を定義済み。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` は同一 tenant / owner 内の root category のみ parent として許可し、自己参照、3 階層以上、境界外 category を拒否する。
+- `tests/Feature/CategoryApiTest.php` は root / child 作成、tree response、tenant / owner 境界、空文字 normalization、PATCH 時の境界外 category / subcategory parent 拒否を検証済み。
+- 今回の追加 code change はなし。root category 削除方針は今回入力にも明示決定がないため変更していない。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 123 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `root category 削除方針の人間判断を受ける` から開始する。推奨は `review_decision.md` の選択肢 B「children を持つ category は削除禁止」。削除禁止を採用する場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。
+
+## 2026-05-06 05:04:28 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests baseline を再確認し、不足していた PATCH parent validation test を追加する。
+
+### 実施内容
+
+- `task_board.md` と現在の code / docs / tests を確認し、`categories.parent_id` の migration / model / validation / tests baseline が概ね実装済みであることを確認した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` は nullable self FK、`nullOnDelete()`、`categories_context_parent_index` を定義済み。
+- `app/Models/Category.php` は `parent_id` fillable / integer cast / `parent()` / `children()` relation を定義済み。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` は parent を同一 tenant / owner 内の root category に限定し、自己参照、3 階層以上、子カテゴリを持つ root のサブカテゴリ化を拒否する。
+- `CategoryApiTest` に PATCH `parent_id` validation の追加 coverage を入れ、境界外 category と subcategory を parent として指定できないことを明示した。
+- root category 削除方針は今回の正式 task では変更していない。2026-05-06 05:04:28 JST 時点でも root 昇格 / children あり削除禁止 / cascade delete の明示決定はない。
+
+### 変更ファイル一覧
+
+- `tests/Feature/CategoryApiTest.php`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed / 123 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「root category 削除方針の人間判断を受ける」から開始する。推奨の「children を持つ category は削除禁止」を採用する場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。
+
+## 2026-05-06 04:01:13 JST
+
+### 今回の task
+
+root category 削除方針の人間判断を受ける。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、`run_log.md`、`review_decision.md` を確認し、直近の正式 task が root category 削除方針の判断待ちであることを確認した。
+- `categories.parent_id` の migration / model / validation / tests baseline は既に実装 / 検証済みであることを確認した。
+- 2026-05-06 04:01:13 JST の今回入力には、root 昇格、children あり削除禁止、cascade delete のどれを採用するかの明示決定は含まれていなかった。
+- `CategoryController@destroy` は category 配下 memory の `category_id` を `null` にして category を削除する現在実装であり、child category は DB FK の `nullOnDelete()` により root 昇格する。
+- `CategoryApiTest` は root category 削除時の child root 昇格を固定している一方、`docs/architecture/api_contract.md` は children を持つ category の削除を初期実装で `422 Unprocessable Entity` とする記述を持つことを再確認した。
+- 方針未決のため、`CategoryController` / tests / API contract / OpenAPI の実装変更は行っていない。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は未完了。次回も「root category 削除方針の人間判断を受ける」から開始する。推奨は `review_decision.md` の選択肢 B「children を持つ category は削除禁止」。採用された場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。
+
+## 2026-05-06 03:02:43 JST
+
+### 今回の task
+
+root category 削除方針の人間判断を受ける。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md`、`review_decision.md`、`CategoryController@destroy`、`CategoryApiTest`、`docs/architecture/api_contract.md`、OpenAPI の category delete 記述を確認した。
+- `categories.parent_id` の migration / model / validation / tests baseline は既に実装 / 検証済みであることを確認した。
+- 2026-05-06 03:02:43 JST の今回入力には、root 昇格、children あり削除禁止、cascade delete のどれを採用するかの明示決定は含まれていなかった。
+- 現在の実装 / Feature test は root category 削除時に child category を root 昇格する一方、API contract draft は children を持つ category の削除を `422 Unprocessable Entity` とする記述を持つことを再確認した。
+- 方針未決のため、`CategoryController` / tests / API contract / OpenAPI の実装変更は行っていない。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「root category 削除方針の人間判断を受ける」から開始する。推奨は `review_decision.md` の選択肢 B「children を持つ category は削除禁止」。採用された場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。
+
+## 2026-05-06 02:02:59 JST
+
+### 今回の task
+
+root category 削除方針の人間判断を受ける。今回入力に明示決定がない場合は、実装変更を行わず未決 blocker として記録する。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md`、`review_decision.md` を確認し、`categories.parent_id` の migration / model / validation / tests baseline は既に完了済みであることを確認した。
+- 今回の automation 入力にも、root 昇格、children あり削除禁止、cascade delete のどれを採用するかの明示決定がないことを確認した。
+- `CategoryController@destroy` は、category 配下 memory の `category_id` を `null` にして category を削除する現在実装であることを確認した。child category は DB FK の `nullOnDelete()` により root 昇格する。
+- `CategoryApiTest` は、root category 削除時に child category の `parent_id` が `null` になる root 昇格挙動を固定していることを確認した。
+- `docs/architecture/api_contract.md` は、children を持つ category の削除を初期実装では `422 Unprocessable Entity` とする方針を記載していることを確認した。
+- `review_decision.md` の確認日時を更新し、2026-05-06 02:02:59 JST 時点でも方針未決であることを追記した。
+- 方針未決のため、`CategoryController` / tests / API contract / OpenAPI の実装変更は行わず保留した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- docs / code 確認: root category 削除方針は未決のまま。
+- 今回は判断確認のみで code change がないため PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は未完了。次回も「root category 削除方針の人間判断を受ける」から開始する。推奨の「children を持つ category は削除禁止」を採用する場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。root 昇格を採用する場合は API contract と OpenAPI を root 昇格方針へ更新する。
+
+## 2026-05-06 01:04:00 JST
+
+### 今回の task
+
+root category 削除方針の人間判断を受ける。今回入力に明示決定がない場合は、実装変更を行わず未決 blocker として記録する。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md`、`review_decision.md` を確認し、直近で `categories.parent_id` の migration / model / validation / tests baseline は完了済みであることを確認した。
+- 今回の automation 入力には、root 昇格、children あり削除禁止、cascade delete のどれを採用するかの明示決定がないことを確認した。
+- `CategoryController@destroy` は、category 配下 memory の `category_id` を `null` にして category を削除する現在実装であることを確認した。child category は DB FK の `nullOnDelete()` により root 昇格する。
+- `CategoryApiTest` は、root category 削除時に child category の `parent_id` が `null` になる root 昇格挙動を固定していることを確認した。
+- `docs/architecture/api_contract.md` は、children を持つ category の削除を初期実装では `422 Unprocessable Entity` とする方針を記載していることを確認した。
+- `review_decision.md` の確認日時を更新し、2026-05-06 01:04:00 JST 時点でも方針未決であることを追記した。
+- 方針未決のため、`CategoryController` / tests / API contract / OpenAPI の実装変更は行わず保留した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- docs / code 確認: root category 削除方針は未決のまま。
+- 今回は判断確認のみで code change がないため PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は未完了。次回も「root category 削除方針の人間判断を受ける」から開始する。推奨の「children を持つ category は削除禁止」を採用する場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。root 昇格を採用する場合は API contract と OpenAPI を root 昇格方針へ更新する。
+
+## 2026-05-05 23:03:14 JST
+
+### 今回の task
+
+root category 削除方針の人間判断を受ける。今回入力に明示決定がない場合は、実装変更を行わず未決 blocker として記録する。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md`、`review_decision.md` を確認し、直近の次 task が root category 削除方針の人間判断確認であることを確認した。
+- automation 入力に残っている `categories.parent_id` の migration / model / validation / tests task は、2026-05-05 21:03:34 JST までに実装 / 検証済みであるため、今回の重複実装は行わなかった。
+- 2026-05-05 23:03:14 JST の今回入力には、root 昇格、children あり削除禁止、cascade delete のどれを採用するかの明示決定がないことを確認した。
+- `CategoryController@destroy` は、category 配下 memory の `category_id` を `null` にして category を削除する現在実装であることを確認した。child category は DB FK の `nullOnDelete()` により root 昇格する。
+- `CategoryApiTest` は、root category 削除時に child category の `parent_id` が `null` になる root 昇格挙動を固定していることを確認した。
+- `docs/architecture/api_contract.md` は、children を持つ category の削除を初期実装では `422 Unprocessable Entity` とする方針を記載していることを確認した。
+- `review_decision.md` の確認日時を更新し、2026-05-05 23:03:14 JST 時点でも方針未決であることを追記した。
+- 方針未決のため、`CategoryController` / tests / API contract / OpenAPI の実装変更は行わず保留した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- docs / code 確認: root category 削除方針は未決のまま。
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed / 111 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は未完了。次回も「root category 削除方針の人間判断を受ける」から開始する。推奨の「children を持つ category は削除禁止」を採用する場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。root 昇格を採用する場合は API contract と OpenAPI を root 昇格方針へ更新する。
+
+## 2026-05-05 22:03:05 JST
+
+### 今回の task
+
+root category 削除方針の人間判断を受ける。今回入力に明示決定がない場合は、実装変更を行わず未決 blocker として記録する。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md`、`review_decision.md` を確認し、直近の次 task が root category 削除方針の人間判断確認であることを確認した。
+- 2026-05-05 22:03:05 JST の今回入力には、root 昇格、children あり削除禁止、cascade delete のどれを採用するかの明示決定がないことを確認した。
+- `CategoryController@destroy` は、category 配下 memory の `category_id` を `null` にして category を削除する現在実装であることを確認した。child category は DB FK の `nullOnDelete()` により root 昇格する。
+- `CategoryApiTest` は、root category 削除時に child category の `parent_id` が `null` になる root 昇格挙動を固定していることを確認した。
+- `docs/architecture/api_contract.md` は、children を持つ category の削除を初期実装では `422 Unprocessable Entity` とする方針を記載していることを確認した。
+- `review_decision.md` の確認日時を更新し、2026-05-05 22:03:05 JST 時点でも方針未決であることを追記した。
+- 方針未決のため、`CategoryController` / tests / API contract / OpenAPI の実装変更は行わず保留した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- docs / code 確認: root category 削除方針は未決のまま。
+- 今回は判断確認のみで code change がないため PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は未完了。次回も「root category 削除方針の人間判断を受ける」から開始する。推奨の「children を持つ category は削除禁止」を採用する場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。root 昇格を採用する場合は API contract と OpenAPI を root 昇格方針へ更新する。
+
+## 2026-05-05 20:03:06 JST
+
+### 今回の task
+
+root category 削除方針の人間判断が今回入力または既存 docs にあるか確認し、未決 blocker を記録する。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md`、`review_decision.md` を確認し、直近の次 task が root category 削除方針の人間判断確認であることを確認した。
+- 今回の automation 入力には、root 昇格、children あり削除禁止、cascade delete のどれを採用するかの明示決定がないことを確認した。
+- `CategoryController@destroy` と `CategoryApiTest` は、root category 削除時に child category の `parent_id` を `null` にする root 昇格挙動を現在固定していることを確認した。
+- `docs/architecture/api_contract.md` は、children を持つ category の削除を初期実装では `422 Unprocessable Entity` とする方針を記載していることを確認した。
+- `review_decision.md` の確認日時を更新し、2026-05-05 20:03:06 JST 時点でも方針未決であることを追記した。
+- 方針未決のため、`CategoryController` / tests / API contract / OpenAPI の実装変更は行わず保留した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- docs / code 確認: root category 削除方針は未決のまま。
+- 今回は判断確認のみで code change がないため PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「root category 削除方針の人間判断を受ける」から開始する。推奨の「children を持つ category は削除禁止」を採用する場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。root 昇格を採用する場合は API contract と OpenAPI を root 昇格方針へ更新する。
+
+## 2026-05-05 17:03:50 JST
+
+### 今回の task
+
+smoke test 作成 category id `4` / `5` の削除実施可否を、今回入力に明示許可があるかで確認する。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md` を確認し、`categories.parent_id` backend task は完了済みであることを確認した。
+- `task_board.md` が次に指している smoke test 作成 category id `4` / `5` の削除実施可否確認を今回の 1 task とした。
+- 今回の automation 入力には destructive delete flow の明示許可がないため、管理画面モックアップ、API、DB のいずれからも category delete は実行しなかった。
+- read-only SQLite query で category id `4` / `5` の残存、tenant / owner、親子関係、参照 memory の有無を再確認した。
+- `CategoryController@destroy` と migration schema を確認し、削除を実行した場合は category hard delete、child category は `parent_id=null`、配下 memory は `category_id=null` になる実装であることを再確認した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- read-only SQLite query: category id `4` / `5` は tenant ID `2` / owner user ID `2` に存在する。
+- read-only SQLite query: category id `4` は `Smoke Parent 20260505030557`、category id `5` は `Smoke Child Updated 20260505030557` で `parent_id=4`。
+- read-only SQLite query: category id `4` / `5` を参照する memory は 0 件。
+- read-only SQLite schema: `categories` table に `deleted_at` はなく、`parent_id` FK は `on delete set null`。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「smoke test 作成 category id `4` / `5` の削除実施可否をユーザーに確認する」から開始する。今回入力にも明示許可はないため、category id `4` / `5` は残したまま pause する。
+
+## 2026-05-05 16:01:23 JST
+
+### 今回の task
+
+smoke test 作成 category id `4` / `5` の削除実施可否を、今回入力に明示許可があるかで確認する。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md` を確認し、`categories.parent_id` backend task は完了済みであることを確認した。
+- `task_board.md` が次に指している smoke test 作成 category id `4` / `5` の削除実施可否確認を今回の 1 task とした。
+- 今回の automation 入力には destructive delete flow の明示許可がないため、管理画面モックアップ、API、DB のいずれからも category delete は実行しなかった。
+- read-only SQLite query で category id `4` / `5` の残存、tenant / owner、親子関係、参照 memory の有無を再確認した。
+- `CategoryController@destroy` と migration schema を確認し、削除を実行した場合は category hard delete、child category は `parent_id=null`、配下 memory は `category_id=null` になる実装であることを再確認した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- read-only SQLite query: category id `4` / `5` は tenant ID `2` / owner user ID `2` に存在する。
+- read-only SQLite query: category id `4` は `Smoke Parent 20260505030557`、category id `5` は `Smoke Child Updated 20260505030557` で `parent_id=4`。
+- read-only SQLite query: category id `4` / `5` を参照する memory は 0 件。
+- read-only SQLite schema: `categories` table に `deleted_at` はなく、`parent_id` FK は `on delete set null`。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「smoke test 作成 category id `4` / `5` の削除実施可否をユーザーに確認する」から開始する。今回入力にも明示許可はないため、category id `4` / `5` は残したまま pause する。
+
+## 2026-05-05 15:01:54 JST
+
+### 今回の task
+
+smoke test 作成 category の削除可否を確認し、明示許可がある場合だけ delete flow を実施する。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md` を確認し、前回 browser smoke で作成した category id `4` / `5` の削除可否確認を今回の 1 task とした。
+- 今回の automation 入力には destructive delete flow の明示許可がないため、管理画面モックアップや API から category delete は実行しなかった。
+- read-only SQLite query で category id `4` / `5` の残存、tenant / owner、親子関係、参照 memory の有無を確認した。
+- `CategoryController@destroy` と migration を確認し、category delete は hard delete、child category は FK の `nullOnDelete` により root 昇格、category 配下 memory は `category_id=null` になる実装であることを確認した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- read-only SQLite query: category id `4` / `5` は tenant ID `2` / owner user ID `2` に存在する。
+- read-only SQLite query: category id `4` は `Smoke Parent 20260505030557`、category id `5` は `Smoke Child Updated 20260505030557` で `parent_id=4`。
+- read-only SQLite query: category id `4` / `5` を参照する memory は存在しない。
+- read-only SQLite query: `categories` table に `deleted_at` はない。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「smoke test 作成 category id `4` / `5` の削除実施可否をユーザーに確認する」から開始する。明示許可が出た場合だけ category delete flow を実行し、未確認なら削除せず pause する。
+
+## 2026-05-05 14:04:34 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests を追加する。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md` を確認し、今回入力が指す `categories.parent_id` backend task は既に実装済みであることを確認した。
+- 重複実装は避けつつ、完了条件のうち root category 削除時に child category の `parent_id` が `null` になる挙動を Feature test で直接固定できていなかったため、`CategoryApiTest` に regression assertion を追加した。
+- 既存の migration / model / request validation / controller / resource は、同一 tenant / owner 内の root parent、自己参照拒否、3 階層以上の拒否、tree response、`parent_id` response を満たしていることを再確認した。
+
+### 変更ファイル一覧
+
+- `tests/Feature/CategoryApiTest.php`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php -l tests/Feature/CategoryApiTest.php`: 構文エラーなし。
+- `php artisan test --filter=CategoryApiTest`: 8 passed / 100 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「smoke test 作成 category の削除可否を確認する」から開始する。明示許可がない限り、前回 browser smoke で作成した category id `4` / `5` は削除しない。
+
+## 2026-05-05 11:05:13 JST
+
+### 今回の task
+
+管理画面モックアップの Categories で `parent_id` の最小入力 / 表示を実 API に接続する。
+
+### 実施内容
+
+- automation memory は未作成だったため、`task_board.md` と `run_log.md` を確認して重複作業を避けた。
+- automation 入力に残っていた `categories.parent_id` backend task は、既に 2026-05-05 01:06:01 JST に実装済み、08:03:32 JST に再検証済みだったため、`task_board.md` が次に指していた管理画面モックアップ接続 task を今回の 1 task とした。
+- Categories 一覧に `親カテゴリ` column を追加し、root category は `—`、subcategory は親カテゴリ名を表示するようにした。
+- Category 作成 / 編集 modal に `親カテゴリ` select を追加し、root category を親候補として読み込み、編集中 category 自身は候補から除外するようにした。
+- Category create / update payload に `parent_id` を含めるようにした。
+- Memory 作成 / 編集 modal の category option 表示も `親 / 子` 形式にし、subcategory 選択時に階層が分かるようにした。
+- 管理画面モックアップの smoke test 手順と README を `parent_id` 確認込みに更新した。
+
+### 変更ファイル一覧
+
+- `docs/references/admin-ui-mockup/index.html`
+- `docs/references/admin-ui-mockup/app.js`
+- `docs/references/admin-ui-mockup/manual-smoke-test.md`
+- `docs/references/admin-ui-mockup/README.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `node --check docs/references/admin-ui-mockup/app.js`: 構文エラーなし。
+- `php artisan test --filter=CategoryApiTest`: 8 passed / 99 assertions。
+- `git diff --check`: 問題なし。
+- 今回は destructive delete flow と browser 手動 smoke は実行していない。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「管理画面モックアップで `parent_id` create / update を browser smoke する」から開始する。明示許可がない限り、既存 smoke test 作成物や今回の確認で作成する test memory / category の delete flow は実行しない。
+
+## 2026-05-05 10:05:25 JST
+
+### 今回の task
+
+管理画面モックアップで `Accept: application/json` なしの 401 / 422 表示を再 smoke する。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md` を確認し、`categories.parent_id` は実装 / 再検証済みだったため、`task_board.md` が次に指す管理画面モックアップ 401 / 422 再 smoke を今回の 1 task とした。
+- local backend `http://127.0.0.1:8000/api/v1/health` が起動済みであることを確認し、管理画面モックアップ用 static server を `http://127.0.0.1:8001/` で一時起動した。
+- `php artisan bunshin:issue-admin-token` で管理画面 smoke 用 Bearer token を再発行した。plain token は記録しない。
+- raw request で `Accept: application/json` を明示しない 401 / 422 response が JSON になることを確認した。
+- Chrome CDP で管理画面モックアップを操作し、Settings への valid token 保存、Categories list 表示、token クリア後の 401 error state、空 category 保存時の 422 toast を確認した。
+- 明示許可がないため destructive delete flow は実行しなかった。
+- stale になっていた backend / memory-space docs の次 task 記載を、category hierarchy の管理画面接続 task に更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `docs/architecture/backend_design.md`
+- `docs/architecture/memory_space_screen.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `curl -H 'Accept:' GET /api/v1/categories`: 401 JSON / `Content-Type: application/json` を確認。
+- `curl -H 'Accept:' POST /api/v1/categories -d '{}'`: 422 JSON / validation errors を確認。
+- Chrome CDP smoke: valid token では Categories list が `API OK` / error なし。
+- Chrome CDP smoke: token クリア後は `HTTP 401: Unauthenticated.` の error state を表示。
+- Chrome CDP smoke: 空 category 保存で `422 The name field is required. (and 1 more error)` toast を表示。
+- Screenshot: `storage/app/admin-ui-error-smoke.png` に保存。この path は ignored。
+- `php artisan test --filter=ApiJsonExceptionResponseTest`: 2 passed / 11 assertions。
+- `php artisan test`: 61 passed / 478 assertions。
+- `git diff --check`: 問題なし。
+- `127.0.0.1:8001` static server と Chrome CDP `9223` は停止済み。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「管理画面モックアップの Categories で `parent_id` の最小入力 / 表示を実 API に接続する」から開始する。管理画面は本格 frontend 化せず、category hierarchy の接続確認に必要な最小差分だけに留める。既存 smoke test 作成物の削除は、明示許可がない限り実行しない。
+
+## 2026-05-05 09:06:06 JST
+
+### 今回の task
+
+`/api/v1` の 401 / 422 を、クライアントが `Accept: application/json` を付けない場合でも JSON で返す。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、`run_log.md` を確認し、`categories.parent_id` は完了済みのため、`task_board.md` が次に指す JSON 401 / 422 固定化を今回の 1 task として進めた。
+- `bootstrap/app.php` で `redirectGuestsTo` を設定し、`api/*` の未認証 request では login route redirect を持たない `AuthenticationException` にした。
+- `bootstrap/app.php` で `shouldRenderJsonWhen` を設定し、`api/*` は `Accept` header に依存せず JSON exception response を返すようにした。既存の `expectsJson()` 判定も維持した。
+- `ApiJsonExceptionResponseTest` を追加し、`Accept` なしの `GET /api/v1/categories` が 401 JSON、`Accept` なしの `POST /api/v1/memories` validation error が 422 JSON になることを固定した。
+- API 契約 docs、backend design、OpenAPI description、管理画面モックアップ smoke 手順に `Accept` なし JSON error response 方針を反映した。
+
+### 変更ファイル一覧
+
+- `bootstrap/app.php`
+- `tests/Feature/ApiJsonExceptionResponseTest.php`
+- `docs/architecture/api_contract.md`
+- `docs/architecture/backend_design.md`
+- `docs/references/admin-ui-mockup/manual-smoke-test.md`
+- `openapi/bunshin-memory-api.yaml`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php -l bootstrap/app.php tests/Feature/ApiJsonExceptionResponseTest.php`: 構文エラーなし。
+- `./vendor/bin/pint bootstrap/app.php tests/Feature/ApiJsonExceptionResponseTest.php`: passed。
+- `php artisan test --filter=ApiJsonExceptionResponseTest`: 2 passed / 11 assertions。
+- `php artisan test --filter=TokenAuthTest`: 3 passed / 7 assertions。
+- `ruby -e 'require "yaml"; YAML.load_file("openapi/bunshin-memory-api.yaml")'`: OpenAPI YAML parse OK。
+- `php artisan test`: 61 passed / 478 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「管理画面モックアップで `Accept` なしの 401 / 422 表示を再 smoke する」から開始する。API 側は `Accept: application/json` がなくても 401 / 422 を JSON で返す regression test が入った。
+
+## 2026-05-05 08:03:32 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests が新規設計 baseline として揃っていることを確認する。
+
+### 実施内容
+
+- automation memory は未作成だったため、`task_board.md` と `run_log.md` を正として前回までの進捗を確認した。
+- automation 入力に残っていた `categories.parent_id` task は、`task_board.md` / `run_log.md` 上で 2026-05-05 01:06:01 JST に完了済みだったため、重複実装せず今回の 1 task は targeted verification とした。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` が nullable self reference FK、`categories_context_parent_index`、down migration を持つことを確認した。
+- `Category` model が `parent_id` fillable、`parent()`、`children()` relation を持つことを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` が同一 tenant / owner 内の root category だけを parent にでき、自己参照、境界外 parent、subcategory を parent にする 3 階層化、子持ち root category の subcategory 化を防いでいることを確認した。
+- `CategoryResource` と `CategoryApiTest` が `parent_id`、parent / children relation、tree response、tenant / owner boundary、depth 制約を検証していることを確認した。
+
+### 変更ファイル一覧
+
+- 実装ファイルの追加変更なし。
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php -l database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php app/Models/Category.php app/Http/Requests/StoreCategoryRequest.php app/Http/Requests/UpdateCategoryRequest.php app/Http/Controllers/Api/V1/CategoryController.php app/Http/Resources/CategoryResource.php tests/Feature/CategoryApiTest.php`: 構文エラーなし。
+- `php artisan test --filter=CategoryApiTest`: 8 passed / 99 assertions。
+- `php artisan test --filter=MemoryListApiTest`: 7 passed / 53 assertions。
+- temp SQLite DB で `php artisan migrate:fresh --force` と `php artisan migrate:rollback --step=2 --force`: `categories.parent_id` migration の up / down を確認。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「`/api/v1` の 401 / 422 を `Accept: application/json` なしでも JSON で返す middleware / exception handling を追加する」から開始する。`categories.parent_id` baseline は実装済みで、今回の verification でも退行は見つからなかった。
+
+## 2026-05-05 07:10:04 JST
+
+### 今回の task
+
+memory-space で WebGL context 作成に失敗しても API controls / list が動く fallback を追加する。
+
+### 実施内容
+
+- automation memory は未作成 / 空だったため、`task_board.md` と `run_log.md` を正として前回までの進捗を確認した。
+- automation 入力に残っていた `categories.parent_id` task は、`task_board.md` 上で 2026-05-05 01:06:01 JST に完了済みだったため重複実装せず、次 task の WebGL fallback を今回の 1 task として進めた。
+- `new THREE.WebGLRenderer(...)` の初期化失敗を `try/catch` で捕捉し、失敗時は root に `is-webgl-unavailable` を付与して status に fallback message を表示するようにした。
+- WebGL unavailable 時は canvas event binding、scene rebuild、renderer resize / render を skip しつつ、API controls、filters、list/detail、secret unlock dialog の DOM runtime は継続するようにした。
+- `categoryMap` は fallback 時も API payload から構築し、list item click で detail 表示できるようにした。
+- memory-space design docs と backend overview に fallback 動作と確認済み smoke 範囲を反映した。
+- local smoke 用に `memory-space-fallback-smoke` token を発行し、Chrome CDP で WebGL context を強制 null にして fallback を確認した。
+
+### 変更ファイル一覧
+
+- `resources/js/memory-space.js`
+- `resources/css/memory-space.css`
+- `docs/architecture/memory_space_screen.md`
+- `docs/architecture/backend_design.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+- local DB: `memory-space-fallback-smoke` token を発行。
+- ignored artifact: `storage/app/memory-space-webgl-fallback-smoke.png`
+
+### 動作確認結果
+
+- `php artisan migrate --force`: Nothing to migrate。
+- `php artisan test --filter=MemorySpaceFrontendTest`: 1 passed / 5 assertions。
+- `php artisan test --filter=MemorySpaceApiTest`: 5 passed / 66 assertions。
+- `php artisan test --filter=CategoryApiTest`: 8 passed / 99 assertions。
+- `npm run build`: passed。Three.js bundle 由来の 500KB chunk warning は継続。
+- `git diff --check`: 問題なし。
+- Chrome CDP fallback smoke: `HTMLCanvasElement.getContext('webgl*')` を null にして WebGL renderer 初期化失敗を再現。
+- Chrome CDP fallback smoke: root fallback class、canvas `display: none`、fallback status 表示を確認。
+- Chrome CDP fallback smoke: Bearer token 入力後、list 3 件、category options 4、period options 7、category metric 3、memory metric 3、locked secret 1 を確認。
+- Chrome CDP fallback smoke: list item click で detail panel が開き、`Smoke 大学のサークル` の detail title / body が表示されることを確認。
+- Chrome screenshot: `storage/app/memory-space-webgl-fallback-smoke.png`。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「`/api/v1` の 401 / 422 を `Accept: application/json` なしでも JSON で返す middleware / exception handling を追加する」から開始する。WebGL fallback は canvas / scene 操作だけを止め、API controls / list / detail を動かす方針で実装済み。`categories.parent_id` baseline は完了済みで、今回も `CategoryApiTest` が通っている。
+
+## 2026-05-05 04:10:26 JST
+
+### 今回の task
+
+`POST /api/v1/secret-unlocks` の backend baseline を追加する。
+
+### 実施内容
+
+- `secret_unlock_tokens` table と `SecretUnlockToken` model を追加し、plain token は保存せず sha256 hash だけ保存するようにした。
+- `POST /api/v1/secret-unlocks` を `auth:sanctum` 配下に追加し、初期 baseline として user の account password hash を unlock password として検証するようにした。
+- unlock token は user scoped / 15 分 TTL とし、response では `id|plainTextToken` を 1 回だけ返すようにした。
+- `GET /api/v1/memory-space?include_secret=1` で valid `X-Secret-Unlock` がある場合だけ `visibility=secret` memory 本文・title・tag を返すようにした。
+- unlock token がない、不正、期限切れ、別 user のものの場合は、secret memory 本文・title・tag を返さず locked summary に留める挙動を維持した。
+- `SecretUnlockApiTest` を追加し、token 発行、wrong password、auth / tenant requirement、valid / invalid / expired / other user token の coverage を追加した。
+- API 契約 docs、data model docs、memory-space design doc、decision memo、OpenAPI、task board を更新した。
+
+### 変更ファイル一覧
+
+- `database/migrations/2026_05_05_040500_create_secret_unlock_tokens_table.php`
+- `app/Models/SecretUnlockToken.php`
+- `app/Http/Requests/StoreSecretUnlockRequest.php`
+- `app/Http/Controllers/Api/V1/SecretUnlockController.php`
+- `app/Models/User.php`
+- `app/Http/Controllers/Api/V1/MemorySpaceController.php`
+- `routes/api.php`
+- `tests/Feature/SecretUnlockApiTest.php`
+- `docs/architecture/api_contract.md`
+- `docs/architecture/data_model.md`
+- `docs/architecture/memory_space_screen.md`
+- `docs/decisions/0005-memory-space-screen.md`
+- `docs/architecture/backend_design.md`
+- `openapi/bunshin-memory-api.yaml`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php -l app/Models/SecretUnlockToken.php app/Http/Requests/StoreSecretUnlockRequest.php app/Http/Controllers/Api/V1/SecretUnlockController.php app/Http/Controllers/Api/V1/MemorySpaceController.php routes/api.php tests/Feature/SecretUnlockApiTest.php`: 構文エラーなし。
+- `php artisan route:list --path=api/v1 -vv`: `POST api/v1/secret-unlocks` が `auth:sanctum` 配下に登録されていることを確認。
+- `./vendor/bin/pint app/Models/User.php app/Models/SecretUnlockToken.php app/Http/Requests/StoreSecretUnlockRequest.php app/Http/Controllers/Api/V1/SecretUnlockController.php app/Http/Controllers/Api/V1/MemorySpaceController.php routes/api.php tests/Feature/SecretUnlockApiTest.php`: passed。
+- `ruby -e 'require "yaml"; YAML.load_file("openapi/bunshin-memory-api.yaml")'`: OpenAPI YAML parse OK。
+- `php artisan test --filter=SecretUnlockApiTest`: 4 passed / 46 assertions。
+- `php artisan test --filter=MemorySpaceApiTest`: 5 passed / 66 assertions。
+- `php artisan migrate:fresh --env=testing --force`: 全 migration 実行完了。
+- `php artisan test`: 58 passed / 462 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「記憶の海 / 宇宙 frontend を Vite asset として実装し、実 API に接続する」から開始する。backend 側は `POST /api/v1/secret-unlocks` で 15 分 unlock token を発行し、`GET /api/v1/memory-space?include_secret=1` に valid `X-Secret-Unlock` がある場合だけ secret memory を返す。初期 baseline の unlock password は user account password と共用しているため、専用 password / recovery / rotation は追加 task 候補として扱う。
+
+## 2026-05-05 03:09:18 JST
+
+### 今回の task
+
+`GET /api/v1/memory-space` の read endpoint を追加する。
+
+### 実施内容
+
+- `GET /api/v1/memory-space` を `auth:sanctum` 配下に追加した。
+- `MemorySpaceRequest` を追加し、`period_key`、`category_id`、`include_descendants`、`include_secret` の validation / boolean normalization を実装した。
+- `MemorySpaceController` を追加し、request context 内の category tree、visible memory payload、fixed period options、secret locked summary を返すようにした。
+- category tree の `memory_count` / `locked_secret_count` は、現在の `period_key` filter に一致する category subtree aggregate count として返す。
+- memories payload は `metadata.emotion_scores`、`metadata.importance_score`、`metadata.beliefs`、`metadata.chains`、tags を visualization field として展開する。
+- default では `visibility=secret` memory を返さず、`include_secret=1` 指定時も secret unlock backend 未実装の現時点では locked summary だけを返すようにした。
+- `category_id` / `include_descendants` filter は tenant / owner 境界内でだけ descendant 展開するようにした。
+- `MemorySpaceApiTest` を追加し、read model shape、metadata 展開、secret 非露出、period/category filter、境界外 category id、validation、auth requirement を確認した。
+- `docs/architecture/api_contract.md`、`docs/architecture/memory_space_screen.md`、`docs/architecture/backend_design.md`、`openapi/bunshin-memory-api.yaml` を実装済み contract に更新した。
+
+### 変更ファイル一覧
+
+- `app/Http/Controllers/Api/V1/MemorySpaceController.php`
+- `app/Http/Requests/MemorySpaceRequest.php`
+- `routes/api.php`
+- `tests/Feature/MemorySpaceApiTest.php`
+- `docs/architecture/api_contract.md`
+- `docs/architecture/memory_space_screen.md`
+- `docs/architecture/backend_design.md`
+- `openapi/bunshin-memory-api.yaml`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php -l app/Http/Requests/MemorySpaceRequest.php app/Http/Controllers/Api/V1/MemorySpaceController.php routes/api.php tests/Feature/MemorySpaceApiTest.php`: 構文エラーなし。
+- `php artisan route:list --path=api/v1 -vv`: `GET api/v1/memory-space` が `auth:sanctum` 配下に登録されていることを確認。
+- `./vendor/bin/pint app/Http/Requests/MemorySpaceRequest.php app/Http/Controllers/Api/V1/MemorySpaceController.php routes/api.php tests/Feature/MemorySpaceApiTest.php`: `MemorySpaceController.php` のみ整形。
+- `php artisan test --filter=MemorySpaceApiTest`: 5 passed / 66 assertions。
+- `php artisan test`: 54 passed / 416 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「`POST /api/v1/secret-unlocks` の backend baseline を追加する」から開始する。`GET /api/v1/memory-space` は `include_secret=1` を受け付けるが、unlock backend 未実装のため secret memory 本文・title・tag は返さず、`secret.locked_count` と category の `locked_secret_count` だけを返す。
+
+## 2026-05-05 02:07:35 JST
+
+### 今回の task
+
+category tree response と `include_descendants` filter を categories / memories API に追加する。
+
+### 実施内容
+
+- `GET /api/v1/categories?tree=1` で request user の tenant / owner 内の root category だけを top-level に返し、eager loaded `children` を含める tree response を追加した。
+- `GET /api/v1/categories` は従来の flat list response のまま維持した。
+- `GET /api/v1/memories` に `include_descendants` boolean query を追加し、`category_id` 指定時に request context 内の descendants を含めて絞り込めるようにした。
+- `include_descendants=1` でも境界外 category id から tenant / owner 外の memory が返らないよう、descendant 展開を `TenantUserContext` 内に限定した。
+- default list の `visibility=secret` 除外は維持し、`visibility=secret` を明示した場合だけ secret memory を返す既存挙動も descendant filter と併用できるようにした。
+- `tree` / `include_descendants` は `1/0`, `true/false`, `yes/no`, `on/off` を受けるよう query normalization を追加した。
+- `CategoryApiTest` と `MemoryListApiTest` に tree response、flat response 維持、descendant filter、secret 明示指定、tenant / owner boundary、validation coverage を追加した。
+- `docs/architecture/api_contract.md` と `openapi/bunshin-memory-api.yaml` に query parameter と category tree response shape を反映した。
+
+### 変更ファイル一覧
+
+- `app/Http/Requests/CategoryContextRequest.php`
+- `app/Http/Requests/ListMemoriesRequest.php`
+- `app/Http/Controllers/Api/V1/CategoryController.php`
+- `app/Http/Controllers/Api/V1/MemoryController.php`
+- `app/Http/Resources/CategoryResource.php`
+- `tests/Feature/CategoryApiTest.php`
+- `tests/Feature/MemoryListApiTest.php`
+- `docs/architecture/api_contract.md`
+- `openapi/bunshin-memory-api.yaml`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php -l app/Http/Requests/CategoryContextRequest.php app/Http/Requests/ListMemoriesRequest.php app/Http/Controllers/Api/V1/CategoryController.php app/Http/Controllers/Api/V1/MemoryController.php app/Http/Resources/CategoryResource.php tests/Feature/CategoryApiTest.php tests/Feature/MemoryListApiTest.php`: 構文エラーなし。
+- `./vendor/bin/pint app/Http/Requests/CategoryContextRequest.php app/Http/Requests/ListMemoriesRequest.php app/Http/Controllers/Api/V1/CategoryController.php app/Http/Controllers/Api/V1/MemoryController.php app/Http/Resources/CategoryResource.php tests/Feature/CategoryApiTest.php tests/Feature/MemoryListApiTest.php`: `tests/Feature/MemoryListApiTest.php` の brace 位置のみ修正。
+- `php artisan test --filter=CategoryApiTest`: 8 passed / 99 assertions。
+- `php artisan test --filter=MemoryListApiTest`: 7 passed / 53 assertions。
+- `php artisan test`: 49 passed / 350 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「`GET /api/v1/memory-space` の read endpoint を追加する」から開始する。category tree は `GET /api/v1/categories?tree=1` で取得でき、memories list は `include_descendants=1` で指定 category 配下まで絞り込める。secret memory は通常 list では引き続き除外される。
+
+## 2026-05-05 01:06:01 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests を追加する。
+
+### 実施内容
+
+- `categories.parent_id` を追加する migration を作成し、self reference FK と context parent index を追加した。
+- `Category` model に `parent_id` fillable、`parent()`、`children()` relation を追加した。
+- category create API で `parent_id` を保存できるようにし、同一 tenant / owner 内の root category だけを parent にできる validation を追加した。
+- category update API で `parent_id` の partial update を受け付け、自己参照、境界外 parent、subcategory を parent にする 3 階層化、子持ち root category の subcategory 化を validation で防ぐようにした。
+- `CategoryResource` と OpenAPI category schema / payload に `parent_id` を追加した。
+- `CategoryApiTest` に subcategory create、parent / children relation、parent boundary、深さ 2 制約、update validation の coverage を追加した。
+- `docs/architecture/data_model.md` の validation 初期案に `category.parent_id` を追記した。
+
+### 変更ファイル一覧
+
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php`
+- `app/Models/Category.php`
+- `app/Http/Requests/StoreCategoryRequest.php`
+- `app/Http/Requests/UpdateCategoryRequest.php`
+- `app/Http/Controllers/Api/V1/CategoryController.php`
+- `app/Http/Resources/CategoryResource.php`
+- `tests/Feature/CategoryApiTest.php`
+- `openapi/bunshin-memory-api.yaml`
+- `docs/architecture/data_model.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php -l` 対象 PHP ファイル: 構文エラーなし。
+- `./vendor/bin/pint app/Models/Category.php app/Http/Requests/StoreCategoryRequest.php app/Http/Requests/UpdateCategoryRequest.php app/Http/Controllers/Api/V1/CategoryController.php app/Http/Resources/CategoryResource.php tests/Feature/CategoryApiTest.php database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php`: `tests/Feature/CategoryApiTest.php` の brace 位置のみ修正。
+- `php artisan test --filter=CategoryApiTest`: 7 passed / 79 assertions。
+- `php artisan test`: 46 passed / 308 assertions。
+- temp SQLite DB で `php artisan migrate:fresh --force` と `php artisan migrate:rollback --step=1 --force`: 成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「category tree response と `include_descendants` filter を categories / memories API に追加する」から開始する。`parent_id` は同一 tenant / owner 内の root category だけ指定でき、初期実装は深さ 2 まで。root category 削除時の child category 扱いは現状 DB の `nullOnDelete` で root 昇格になるため、tree UI 実装時に仕様確認する。
+
+## 2026-05-05 00:31:59 JST
+
+### 今回の task
+
+記憶の海 / 宇宙画面の実装方針を設計 docs、automation prompt、task board、run log に反映する。
+
+### 実施内容
+
+- ユーザー提供 HTML `/Users/fukui/Dropbox/download/memory_space (1).html` を `docs/references/memory-space-screen/memory_space.html` に配置した。
+- `docs/references/memory-space-screen/README.md` を追加し、mock data が前提にしている大カテゴリー / サブカテゴリー / 記憶 / emotion / weight / beliefs / chains / tags の扱いを整理した。
+- `docs/decisions/0005-memory-space-screen.md` を追加し、記憶の海 / 宇宙画面の backend 改修と frontend 実装を automation scope に含める決定を記録した。
+- `docs/architecture/memory_space_screen.md` を追加し、カテゴリー階層、年代別軸、複数 emotion score、importance score、beliefs / chains、secret unlock、API draft、frontend 実装順を整理した。
+- `docs/architecture/data_model.md` に `categories.parent_id`、年代の別軸、memory visualization metadata 方針を追記した。
+- `docs/architecture/backend_design.md` の frontend 非対象範囲を整理し、記憶の海 / 宇宙画面を正式 frontend scope の例外として追加した。
+- `docs/architecture/api_contract.md` に category `parent_id`、`include_descendants`、`GET /api/v1/memory-space`、`POST /api/v1/secret-unlocks` の draft を追記した。
+- `/Users/fukui/.codex/automations/ai-3/automation.toml` の古い token auth next-task 記述を完了済みに直し、記憶の海 / 宇宙画面実装ルールと次 task を追加した。
+- `task_board.md` を新しい優先順位に更新し、smoke test 作成物削除は未着手 task に残した。
+
+### 変更ファイル一覧
+
+- `docs/references/memory-space-screen/memory_space.html`
+- `docs/references/memory-space-screen/README.md`
+- `docs/decisions/0005-memory-space-screen.md`
+- `docs/architecture/memory_space_screen.md`
+- `docs/architecture/data_model.md`
+- `docs/architecture/backend_design.md`
+- `docs/architecture/api_contract.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/automation.toml`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `grep -n "記憶の海\\|次の正式 task\\|Sanctum 相当" /Users/fukui/.codex/automations/ai-3/automation.toml`: 記憶の海 / 宇宙画面実装ルール、token auth 完了済み、次 task が入っていることを確認。
+- `docs/architecture/memory_space_screen.md`、`docs/decisions/0005-memory-space-screen.md`、`docs/architecture/data_model.md`、`docs/architecture/backend_design.md`、`docs/architecture/api_contract.md` を読み戻し、カテゴリー階層、年代別軸、secret unlock 方針を確認。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「`categories.parent_id` の migration / model / validation / tests を追加する」から開始する。年代はカテゴリーに混ぜず `period_key` / `occurred_on` の別軸として維持する。secret memory は memory-space 画面で password unlock 風 UI と backend 追加認可を通す。
+
+## 2026-05-05 00:01:29 JST
+
+### 今回の task
+
+smoke test 作成物の削除可否を確認し、許可が明示されていない場合は delete flow を実行せず pause 状態を記録する。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、今回の automation 入力を確認した。
+- automation 入力には古い次 task として Sanctum 相当 token auth 導入の記載があるが、memory と `task_board.md` では token auth / 管理画面接続 / token 発行 command / manual smoke test は完了済みであることを確認した。
+- 現在の正式 task は smoke test 作成物の削除可否確認であり、今回の automation 入力には `Smoke memory updated` と `Smoke Test Updated` の削除許可が明示されていないため、管理画面モックアップや API からの delete 操作は実行しなかった。
+- read-only SQLite query で対象作成物が local DB に残っていることだけ確認した。
+- `task_board.md` を今回の確認結果で更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- read-only SQLite query: category ID `5` / name `Smoke Test Updated` / slug `smoke-test-0925` / sort `11` / tenant ID `1` / owner user ID `1` を確認。
+- read-only SQLite query: memory ID `5` / title `Smoke memory updated` / visibility `private` / tenant ID `1` / owner user ID `1` / `deleted_at=null` を確認。
+- read-only SQLite query: tag ID `7` / name `smoke` / normalized_name `smoke` / usage count `1`、tag ID `4` / name `夏` / normalized_name `夏` / usage count `2` を確認。
+- read-only SQLite query で `categories` には `deleted_at` がないことを確認したため、category は存在確認だけを行った。
+- `php artisan route:list --path=api/v1 -vv`: protected routes が `auth:sanctum` middleware、health のみ public であることを確認。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「smoke test 作成物の削除確認と削除実施」から開始する。`Smoke memory updated` と `Smoke Test Updated` の削除許可が明示されていれば管理画面モックアップから memory / category delete flow を実行して smoke test を完了する。未確認なら削除せず pause する。
+
+## 2026-05-04 23:03:11 JST
+
+### 今回の task
+
+smoke test 作成物の削除可否を確認し、許可が明示されていない場合は delete flow を実行せず pause 状態を記録する。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、今回の automation 入力を確認した。
+- automation 入力には古い次 task として Sanctum 相当 token auth 導入の記載があるが、memory と `task_board.md` では token auth / 管理画面接続 / token 発行 command / manual smoke test は完了済みであることを確認した。
+- 現在の正式 task は smoke test 作成物の削除可否確認であり、今回の automation 入力には `Smoke memory updated` と `Smoke Test Updated` の削除許可が明示されていないため、管理画面モックアップや API からの delete 操作は実行しなかった。
+- read-only SQLite query で対象作成物が local DB に残っていることだけ確認した。
+- `task_board.md` を今回の確認結果で更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- read-only SQLite query: category ID `5` / name `Smoke Test Updated` / slug `smoke-test-0925` / sort `11` / tenant ID `1` / owner user ID `1` を確認。
+- read-only SQLite query: memory ID `5` / title `Smoke memory updated` / visibility `private` / tenant ID `1` / owner user ID `1` / `deleted_at=null` を確認。
+- read-only SQLite query: tag ID `7` / name `smoke` / normalized_name `smoke` / usage count `1`、tag ID `4` / name `夏` / normalized_name `夏` / usage count `2` を確認。
+- `php artisan route:list --path=api/v1 -vv`: protected routes が `auth:sanctum` middleware、health のみ public であることを確認。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「smoke test 作成物の削除確認と削除実施」から開始する。`Smoke memory updated` と `Smoke Test Updated` の削除許可が明示されていれば管理画面モックアップから memory / category delete flow を実行して smoke test を完了する。未確認なら削除せず pause する。
+
+## 2026-05-04 22:04:08 JST
+
+### 今回の task
+
+smoke test 作成物の削除可否を確認し、許可が明示されていない場合は delete flow を実行せず pause 状態を記録する。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、今回の automation 入力を確認した。
+- automation 入力には古い次 task として Sanctum 相当 token auth 導入の記載があるが、memory と `task_board.md` では token auth / 管理画面接続 / token 発行 command / manual smoke test は完了済みであることを確認した。
+- 現在の正式 task は smoke test 作成物の削除可否確認であり、今回の automation 入力には `Smoke memory updated` と `Smoke Test Updated` の削除許可が明示されていないため、管理画面モックアップや API からの delete 操作は実行しなかった。
+- read-only SQLite query で対象作成物が local DB に残っていることだけ確認した。
+- `task_board.md` を今回の確認結果で更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- read-only SQLite query: category ID `5` / name `Smoke Test Updated` / slug `smoke-test-0925` / sort `11` / tenant ID `1` / owner user ID `1` を確認。
+- read-only SQLite query: memory ID `5` / title `Smoke memory updated` / visibility `private` / tenant ID `1` / owner user ID `1` / `deleted_at=null` を確認。
+- read-only SQLite query: tag ID `7` / name `smoke` / normalized_name `smoke` / usage count `1`、tag ID `4` / name `夏` / normalized_name `夏` / usage count `2` を確認。
+- `php artisan route:list --path=api/v1 -vv`: protected routes が `auth:sanctum` middleware、health のみ public であることを確認。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「smoke test 作成物の削除確認と削除実施」から開始する。`Smoke memory updated` と `Smoke Test Updated` の削除許可が明示されていれば管理画面モックアップから memory / category delete flow を実行して smoke test を完了する。未確認なら削除せず pause する。
+
+## 2026-05-04 11:21:44 JST
+
+### 今回の task
+
+smoke test 作成物の削除可否を確認し、許可が明示されていない場合は delete flow を実行せず pause 状態を記録する。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、今回の automation 入力を確認した。
+- automation 入力には古い次 task として Sanctum 相当 token auth 導入の記載があるが、memory と `task_board.md` では token auth は完了済みで、現在の正式 task は smoke test 作成物の削除可否確認になっていることを確認した。
+- 今回の automation 入力には `Smoke memory updated` と `Smoke Test Updated` の削除許可が明示されていないため、管理画面モックアップや API からの delete 操作は実行しなかった。
+- read-only SQLite query で対象作成物が local DB に残っていることだけ確認した。
+- `categories` には `deleted_at` がないため、category は存在確認カラムだけで確認した。
+- `task_board.md` を、削除許可待ちで pause を継続する現在状態に更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- read-only SQLite query: category ID `5` / name `Smoke Test Updated` / slug `smoke-test-0925` / sort `11` / tenant ID `1` / owner user ID `1` を確認。
+- read-only SQLite query: memory ID `5` / title `Smoke memory updated` / visibility `private` / tenant ID `1` / owner user ID `1` / `deleted_at=null` を確認。
+- read-only SQLite query: tag ID `7` / name `smoke` / normalized_name `smoke` / usage count `1`、tag ID `4` / name `夏` / normalized_name `夏` / usage count `2` を確認。
+- `php artisan route:list --path=api/v1 -vv`: protected routes が `auth:sanctum` middleware、health のみ public であることを確認。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「smoke test 作成物の削除確認と削除実施」から開始する。`Smoke memory updated` と `Smoke Test Updated` の削除許可が明示されていれば管理画面モックアップから memory / category delete flow を実行して smoke test を完了する。未確認なら削除せず pause する。
+
+## 2026-05-04 11:02:50 JST
+
+### 今回の task
+
+smoke test 作成物の削除可否を確認し、許可が明示されていない場合は delete flow を実行せず pause 状態を記録する。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、今回の automation 入力を確認した。
+- automation 入力には古い次 task として Sanctum 相当 token auth 導入の記載があるが、memory と `task_board.md` では token auth は完了済みで、現在の正式 task は smoke test 作成物の削除可否確認になっていることを確認した。
+- 今回の automation 入力には `Smoke memory updated` と `Smoke Test Updated` の削除許可が明示されていないため、管理画面モックアップや API からの delete 操作は実行しなかった。
+- read-only SQLite query で対象作成物が local DB に残っていることだけ確認した。
+- `task_board.md` を、削除許可待ちで pause を継続する現在状態に整理した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- read-only SQLite query: category ID `5` / name `Smoke Test Updated` / slug `smoke-test-0925` / sort `11` / tenant ID `1` / owner user ID `1` を確認。
+- read-only SQLite query: memory ID `5` / title `Smoke memory updated` / visibility `private` / `deleted_at=null` を確認。
+- read-only SQLite query: tag ID `7` / name `smoke` / normalized_name `smoke` / usage count `1`、tag ID `4` / name `夏` / normalized_name `夏` / usage count `2` を確認。
+- `php artisan route:list --path=api/v1 -vv`: protected routes が `auth:sanctum` middleware、health のみ public であることを確認。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「smoke test 作成物の削除確認と削除実施」から開始する。`Smoke memory updated` と `Smoke Test Updated` の削除許可が明示されていれば管理画面モックアップから memory / category delete flow を実行して smoke test を完了する。未確認なら削除せず pause する。
+
+## 2026-05-04 10:42:50 JST
+
+### 今回の task
+
+smoke test 作成物の削除可否を確認し、許可が明示されていない場合は delete flow を実行せず pause 状態を記録する。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、今回の automation 入力を確認した。
+- automation 入力には古い次 task として Sanctum 相当 token auth 導入の記載があるが、memory と `task_board.md` では token auth は完了済みで、現在の正式 task は smoke test 作成物の削除可否確認になっていることを確認した。
+- 今回の automation 入力には `Smoke memory updated` と `Smoke Test Updated` の削除許可が明示されていないため、管理画面モックアップや API からの delete 操作は実行しなかった。
+- read-only SQLite query で対象作成物が local DB に残っていることだけ確認した。
+- `task_board.md` を、削除許可待ちで pause を継続する状態に更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- read-only SQLite query: category ID `5` / name `Smoke Test Updated` / slug `smoke-test-0925` / sort `11` / tenant ID `1` / owner user ID `1` を確認。
+- read-only SQLite query: memory ID `5` / title `Smoke memory updated` / visibility `private` / `deleted_at=null` を確認。
+- read-only SQLite query: tag ID `7` / name `smoke` / normalized_name `smoke` / usage count `1`、tag ID `4` / name `夏` / normalized_name `夏` / usage count `2` を確認。
+- `php artisan route:list --path=api/v1 -vv`: protected routes が `auth:sanctum` middleware、health のみ public であることを確認。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「smoke test 作成物の削除確認と削除実施」から開始する。`Smoke memory updated` と `Smoke Test Updated` の削除許可が明示されていれば管理画面モックアップから memory / category delete flow を実行して smoke test を完了する。未確認なら削除せず pause する。
+
+## 2026-05-04 10:21:46 JST
+
+### 今回の task
+
+smoke test 作成物の削除可否を確認し、許可が明示されていない場合は delete flow を実行せず pause 状態を記録する。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、今回の automation 入力を確認した。
+- `task_board.md` と memory では token auth / 管理画面接続 / smoke test の削除以外は完了済みで、現在の正式 task は smoke test 作成物の削除可否確認になっていることを確認した。
+- 今回の automation 入力には `Smoke memory updated` と `Smoke Test Updated` の削除許可が明示されていないため、管理画面モックアップや API からの delete 操作は実行しなかった。
+- read-only SQLite query で対象作成物が local DB に残っていることだけ確認した。
+- `task_board.md` を、削除許可待ちで pause を継続する状態に更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- read-only SQLite query: category ID `5` / name `Smoke Test Updated` / slug `smoke-test-0925` / sort `11` / tenant ID `1` / owner user ID `1` を確認。
+- read-only SQLite query: memory ID `5` / title `Smoke memory updated` / visibility `private` / `deleted_at=null` を確認。
+- read-only SQLite query: tag ID `7` / name `smoke` / normalized_name `smoke` / usage count `1`、tag ID `4` / name `夏` / normalized_name `夏` / usage count `2` を確認。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「smoke test 作成物の削除確認と削除実施」から開始する。`Smoke memory updated` と `Smoke Test Updated` の削除許可が明示されていれば管理画面モックアップから memory / category delete flow を実行して smoke test を完了する。未確認なら削除せず pause する。
+
 ## 2026-05-04 10:03:02 JST
 
 ### 今回の task
@@ -286,6 +1756,99 @@ Auth 方針の人間判断を確認する。
 
 今回の task は完了。次回は「Auth 方針の人間判断を確認する」から開始する。`review_decision.md` を読み、token-first / session-first の選択が未決なら実装に進まず判断待ちを継続する。token-first が選ばれていれば、Sanctum 相当の token auth 導入 task に進む。
 
+## 2026-05-05 05:17:10 JST
+
+### 今回の task
+
+記憶の海 / 宇宙 frontend を Laravel / Vite asset として実装し、`GET /api/v1/memory-space` と `POST /api/v1/secret-unlocks` の実 API に接続する。
+
+### 実施内容
+
+- `GET /memory-space` route と Blade shell を追加した。
+- Three.js を Vite bundle に追加し、参照 mockup の星雲 / category / memory bubble 表現を root frontend asset に移植した。
+- `resources/js/memory-space.js` で Bearer token、API Base URL、period filter、category filter、descendant toggle を `GET /api/v1/memory-space` query に接続した。
+- secret unlock dialog から `POST /api/v1/secret-unlocks` を呼び、password は保存せず、返却された unlock token だけを runtime state に保持して `X-Secret-Unlock` で再取得するようにした。
+- memory list、summary metrics、memory / category detail panel、401 / validation / network error 表示を追加した。
+- frontend route の Feature test と memory-space / secret-unlock backend tests を実行した。
+- built asset を Laravel serve 経由で browser smoke し、nonblank WebGL canvas と invalid token error 表示を確認した。
+
+### 変更ファイル一覧
+
+- `routes/web.php`
+- `resources/views/memory-space.blade.php`
+- `resources/js/memory-space.js`
+- `resources/css/memory-space.css`
+- `vite.config.js`
+- `package.json`
+- `package-lock.json`
+- `tests/Feature/MemorySpaceFrontendTest.php`
+- `docs/architecture/memory_space_screen.md`
+- `docs/architecture/backend_design.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `npm run build`: passed。Three.js bundle 由来の 500KB chunk warning はあり。
+- `php -l routes/web.php tests/Feature/MemorySpaceFrontendTest.php`: 構文エラーなし。
+- `./vendor/bin/pint routes/web.php tests/Feature/MemorySpaceFrontendTest.php`: passed。
+- `php artisan test --filter=MemorySpaceFrontendTest`: 1 passed / 5 assertions。
+- `php artisan test --filter=MemorySpaceApiTest`: 5 passed / 66 assertions。
+- `php artisan test --filter=SecretUnlockApiTest`: 4 passed / 46 assertions。
+- `php artisan test`: 59 passed / 467 assertions。
+- `curl -fsS http://127.0.0.1:8000/memory-space`: built asset を含む HTML shell を確認。
+- `curl -fsS http://127.0.0.1:8000/api/v1/health`: service status OK。
+- Playwright smoke: `http://127.0.0.1:8000/memory-space` で canvas `1280x800`、non-black pixels `196`、list 初期表示 `API token 未設定` を確認。screenshot は ignored path `storage/app/memory-space-smoke.png` に保存。
+- Playwright mobile smoke: invalid token で同期し、status `Unauthenticated.` と error class 表示を確認。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「記憶の海 / 宇宙画面を seed data 付きで browser smoke し、API token、list/detail、period / category filter、secret unlock flow を確認する」から開始する。今回の browser smoke は built asset の nonblank canvas と invalid token error 表示までで、seeded data を使った list/detail/secret unlock の実ブラウザ end-to-end 確認は次 task に残す。
+
+## 2026-05-05 06:15:58 JST
+
+### 今回の task
+
+記憶の海 / 宇宙画面を seed data 付きで browser smoke し、API token、list/detail、period / category filter、secret unlock flow を確認する。
+
+### 実施内容
+
+- local DB を `php artisan migrate --force` で確認し、追加 migration がないことを確認した。
+- smoke 専用 tenant / user / category / memory / tag / Bearer token を idempotent に作成した。
+- `GET /api/v1/memory-space` を API precheck し、visible memories 3 件、locked secret 1 件の payload を確認した。
+- `php artisan test --filter=MemorySpaceFrontendTest`、`MemorySpaceApiTest`、`SecretUnlockApiTest` と `npm run build` を実行した。
+- in-app browser backend `iab` は検出できなかったため、既存 Google Chrome headless + CDP に fallback した。
+- Chrome CDP smoke で API Base URL / Bearer token 入力、list/detail、period filter、category filter、descendant toggle、wrong password validation、correct password secret unlock、secret detail、invalid token 401 表示を確認した。
+- `storage/app/memory-space-seed-smoke.png` に secret unlock 後の screenshot を保存した。この path は ignored。
+- `--disable-gpu` で headless Chrome を起動した場合、WebGL context が作れず Three.js 初期化で UI JS が止まることを確認した。Metal / WebGL 有効の headless Chrome では smoke flow は完走したため、fallback 実装を次 task 候補にした。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+- local DB: smoke 専用 seed data / token を作成または更新。
+- ignored artifact: `storage/app/memory-space-seed-smoke.png`
+
+### 動作確認結果
+
+- `php artisan migrate --force`: Nothing to migrate。
+- API precheck: `GET /api/v1/memory-space` で root categories 2 件、visible memories 3 件、`secret.locked=true` / `locked_count=1` を確認。
+- `php artisan test --filter=MemorySpaceFrontendTest`: 1 passed / 5 assertions。
+- `php artisan test --filter=MemorySpaceApiTest`: 5 passed / 66 assertions。
+- `php artisan test --filter=SecretUnlockApiTest`: 4 passed / 46 assertions。
+- `npm run build`: passed。Three.js bundle 由来の 500KB chunk warning は継続。
+- Chrome CDP smoke: initial categories 3、visible memories 3、locked secret 1。
+- Chrome CDP smoke: `high_school` filter で visible memories 2、`Smoke 学校` + descendants で visible memory 1、descendants off で 0。
+- Chrome CDP smoke: wrong password validation `パスワードが正しくありません。`、correct password unlock、secret detail body、invalid token `Unauthenticated.` を確認。
+- Chrome screenshot: `storage/app/memory-space-seed-smoke.png`。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「memory-space で WebGL context 作成に失敗しても API controls / list が動く fallback を追加する」から開始する。今回の smoke では WebGL 無効環境で Three.js 初期化が throw し、list 初期化まで進まないケースを確認した。seed data は local DB に残してあり、今後の smoke fixture として使える。削除する場合は明示許可が必要。
+
 ## 2026-05-04 08:13:08 JST
 
 ### 今回の task
@@ -410,6 +1973,47 @@ Auth 方針の人間判断を確認する。
 ### 次回 automation への引き継ぎ
 
 今回の task は完了。次回は「Auth 方針の人間判断を確認する」から開始する。`review_decision.md` を読み、token-first / session-first の選択が未決なら実装に進まず判断待ちを継続する。token-first が選ばれていれば、Sanctum 相当の token auth 導入 task に進む。
+
+## 2026-05-05 12:06:37 JST
+
+### 今回の task
+
+管理画面モックアップで `parent_id` create / update を browser smoke する。
+
+### 実施内容
+
+- automation memory と `task_board.md` を確認し、`categories.parent_id` backend 実装は既に完了済みだったため、今回の 1 task を管理画面モックアップの browser smoke に限定した。
+- `task_board.md` を開始時点の task / 完了条件に更新した。
+- 既存 backend server `127.0.0.1:8000` と一時 static mockup server `127.0.0.1:8001` で検証した。
+- `php artisan bunshin:issue-admin-token` で `admin@example.test` / `admin-mockup` の検証用 Bearer token を再発行した。
+- Browser Use の in-app backend が検出できなかったため、fallback として local Google Chrome headless + CDP で `docs/references/admin-ui-mockup/` を操作した。
+- Settings から API Base URL と Bearer token を保存し、API Health と Categories を UI 経由で確認した。
+- UI から root category `Smoke Parent 20260505030557` を作成し、request body が `parent_id: null` であることと一覧の `親カテゴリ` が `—` になることを確認した。
+- UI から subcategory `Smoke Child 20260505030557` を作成し、request body が `parent_id: 4` であることと一覧の `親カテゴリ` が root category 名になることを確認した。
+- UI から subcategory を `Smoke Child Updated 20260505030557` に更新し、PATCH request body に `parent_id: 4` が含まれ、一覧の name / sort が更新されることを確認した。
+- destructive delete flow は明示許可がないため実行していない。作成物は category id `4` / `5` として残っている。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `curl http://127.0.0.1:8000/api/v1/health`: `status=ok`, `version=0.1.0`。
+- token 付き `GET /api/v1/categories`: smoke category 作成前は空、作成後は root / child の 2 件を確認。
+- headless Chrome CDP smoke: Settings 保存、Health 表示、Categories list、root create、subcategory create、subcategory update が成功。
+- captured category write requests:
+  - `POST /api/v1/categories` with `parent_id: null`, `slug: smoke-parent-20260505030557`
+  - `POST /api/v1/categories` with `parent_id: "4"`, `slug: smoke-child-20260505030557`
+  - `PATCH /api/v1/categories/5` with `parent_id: "4"`, `sort_order: 12`
+- `php artisan test --filter=CategoryApiTest`: 8 passed / 99 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「smoke test 作成 category の削除可否を確認する」から開始する。明示許可がない限り、今回作成した `Smoke Parent 20260505030557` / `Smoke Child Updated 20260505030557` は削除しない。
 
 ## 2026-05-04 06:43:16 JST
 
@@ -1226,3 +2830,164 @@ Auth 方針の人間判断を確認する。
 ### 次回 automation への引き継ぎ
 
 今回の task は完了。次回は「Auth 方針の人間判断を確認する」から開始する。`review_decision.md` を読み、token-first / session-first の選択が未決なら実装に進まず判断待ちを継続する。token-first が選ばれていれば、Sanctum 相当の token auth 導入 task に進む。
+
+## 2026-05-05 13:03:16 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests を追加する。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md`、category 関連実装、設計 docs / OpenAPI の `parent_id` 記述を確認した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で `categories.parent_id` と context parent index が追加済みであることを確認した。
+- `Category` model に `parent_id` fillable、`parent` / `children` relation が追加済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内の root category だけを parent として許可し、自己参照と 3 階層以上を拒否する validation が実装済みであることを確認した。
+- `CategoryResource` / `CategoryController` / `CategoryContextRequest` で `parent_id` response と `tree=true` response が実装済みであることを確認した。
+- 今回は実装ファイルの追加改修は不要だったため、台帳と run log のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test --filter=CategoryApiTest`: 8 passed, 99 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「smoke test 作成 category の削除可否を確認する」から開始する。前回 browser smoke で作成した category id `4` / `5` は destructive delete flow の明示許可がないため残している。
+
+## 2026-05-05 18:05:15 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests を追加・確認する。
+
+### 実施内容
+
+- shell の `CODEX_HOME` が空で初回参照は `/automations` になったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を読み直して更新した。
+- `task_board.md` を今回 task 用に更新し、完了条件を `categories.parent_id` の migration / model / validation / tests 確認に切り替えた。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete`、`categories_context_parent_index` が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable、`parent()` / `children()` relation、context scope が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内の root category のみ parent として許可し、自己参照と 3 階層以上を拒否する validation が実装済みであることを確認した。
+- `CategoryResource` / `CategoryController` / `CategoryContextRequest` で `parent_id` response と `tree=true` response が実装済みであることを確認した。
+- `CategoryApiTest` で root / child 作成、tree response、境界外 parent 拒否、深さ 3 拒否、root 削除時の child root 昇格が検証されていることを確認した。
+- 追加の code change は不要だったため、台帳と run log と automation memory の更新だけを行った。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test --filter=CategoryApiTest`: 8 passed, 100 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「root category 削除時の child category 扱いを `review_decision.md` に整理する」から開始する。現在の実装は FK `nullOnDelete` により child category を root 昇格し、Feature test でもこの挙動を固定しているが、root 昇格 / cascade delete / 削除禁止のどれを正式 UX とするかは人間判断として残っている。
+
+## 2026-05-05 19:10:14 JST
+
+### 今回の task
+
+root category 削除時の child category 扱いを `review_decision.md` に整理する。
+
+### 実施内容
+
+- automation memory は未作成だったため、`task_board.md` と `run_log.md` を主な前回文脈として確認した。
+- `task_board.md` を今回 task 用に更新し、`categories.parent_id` 確認 task の重複実施は避けた。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php`、`CategoryController@destroy`、`CategoryApiTest`、`docs/architecture/api_contract.md` を確認した。
+- 現在の実装 / Feature test は root category 削除時に child category を root 昇格する一方、API contract draft は children あり削除を `422 Unprocessable Entity` で拒否する方針を記載していることを確認した。
+- `review_decision.md` に root 昇格、children あり削除禁止、cascade delete の選択肢、影響、リスク、推奨、決定待ち項目を追記した。
+- 初期実装の正式方針としては、memory-space の tree 表示で暗黙の root 昇格を避けるため、children を持つ category の削除禁止を推奨として整理した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `review_decision.md`: root category 削除方針の判断メモが追記済みであることを確認。
+- 今回は判断整理のみのため PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は「root category 削除方針の人間判断を確認する」から開始する。削除禁止が採用された場合は、`CategoryController@destroy`、`CategoryApiTest`、`docs/architecture/api_contract.md`、OpenAPI を 422 方針へ揃える。root 昇格を採用する場合は、API contract の 422 記述を root 昇格方針へ更新する。
+
+## 2026-05-05 21:03:34 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests を確認し、不足があれば追加する。
+
+### 実施内容
+
+- automation memory、`task_board.md`、category 関連 migration / model / request / controller / resource / Feature test を確認した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、context parent index が定義済みであることを確認した。
+- `Category` model は `parent_id` fillable と `parent()` / `children()` relation を持っていたが、integer casts が未定義だったため追加した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内の root category のみ parent として許可し、自己参照と 3 階層以上を拒否する validation が実装済みであることを確認した。
+- `CategoryApiTest` で root / child category create、tree list、parent validation、context boundary が検証されていることを確認した。
+- `MemoryDomainModelTest` に category parent / children relation と cast 済み値の assertion を追加した。
+
+### 変更ファイル一覧
+
+- `app/Models/Category.php`
+- `tests/Feature/MemoryDomainModelTest.php`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `./vendor/bin/pint app/Models/Category.php tests/Feature/MemoryDomainModelTest.php`: passed。
+- `php artisan test tests/Feature/MemoryDomainModelTest.php tests/Feature/CategoryApiTest.php`: 10 passed, 111 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `root category 削除方針の人間判断を受ける` から開始する。推奨は `review_decision.md` の選択肢 B「children を持つ category は削除禁止」。削除禁止を採用する場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。
+
+## 2026-05-06 00:06:48 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests baseline を確認し、不足分だけ追加する。
+
+### 実施内容
+
+- shell の `CODEX_HOME` が空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接確認し、`task_board.md` と `run_log.md` も前回文脈として確認した。
+- `task_board.md` を今回 task 用に更新し、今回入力の正式 task 指示に合わせて `categories.parent_id` baseline の確認と不足補完に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、context parent index が定義済みであることを確認した。
+- `Category` model で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内の root category のみ parent として許可し、自己参照と 3 階層以上を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryContextRequest` / `CategoryResource` で flat list の `parent_id` と `tree=true` の nested children response が実装済みであることを確認した。
+- `CategoryApiTest` に `parent_id` 空文字を root category として保存する create test と、subcategory の `parent_id` 空文字 update で root に戻せる assertion を追加した。
+- root category 削除時の child category 扱いは今回入力にも明示判断がないため、`CategoryController@destroy` / API contract / OpenAPI の方針変更は行わなかった。
+
+### 変更ファイル一覧
+
+- `tests/Feature/CategoryApiTest.php`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php tests/Feature/MemoryListApiTest.php`: 17 passed, 167 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `root category 削除方針の人間判断を受ける` から開始する。推奨は `review_decision.md` の選択肢 B「children を持つ category は削除禁止」。削除禁止を採用する場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。

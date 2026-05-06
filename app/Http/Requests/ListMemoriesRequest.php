@@ -34,6 +34,7 @@ class ListMemoriesRequest extends FormRequest
                 Memory::VISIBILITY_SECRET,
                 Memory::VISIBILITY_SHARED,
             ])],
+            'include_descendants' => ['nullable', 'boolean'],
         ];
     }
 
@@ -47,12 +48,50 @@ class ListMemoriesRequest extends FormRequest
             }
         }
 
-        foreach (['q', 'period_key', 'visibility', 'category_id'] as $nullableField) {
+        $this->normalizeBoolean($input, 'include_descendants');
+
+        foreach (['q', 'period_key', 'visibility', 'category_id', 'include_descendants'] as $nullableField) {
             if (($input[$nullableField] ?? null) === '') {
                 $input[$nullableField] = null;
             }
         }
 
         $this->replace($input);
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     */
+    private function normalizeBoolean(array &$input, string $field): void
+    {
+        if (! array_key_exists($field, $input)) {
+            return;
+        }
+
+        if ($input[$field] === '') {
+            $input[$field] = null;
+
+            return;
+        }
+
+        if (! is_string($input[$field])) {
+            return;
+        }
+
+        $value = strtolower(trim($input[$field]));
+
+        if (in_array($value, ['1', 'true', 'yes', 'on'], true)) {
+            $input[$field] = true;
+
+            return;
+        }
+
+        if (in_array($value, ['0', 'false', 'no', 'off'], true)) {
+            $input[$field] = false;
+
+            return;
+        }
+
+        $input[$field] = trim($input[$field]);
     }
 }

@@ -8,6 +8,7 @@
 // ================================================================
 const API_CONFIG_STORAGE_KEY = 'bunshin-admin-api-config';
 const DEFAULT_API_BASE = '/api/v1';
+const LOCAL_DEV_TOKEN = 'local-dev-token';
 
 class ApiClientError extends Error {
   constructor(message, { status = null, errors = null, payload = null } = {}) {
@@ -29,11 +30,23 @@ function loadApiConfig() {
     const saved = JSON.parse(localStorage.getItem(API_CONFIG_STORAGE_KEY) || '{}');
     return {
       baseUrl: normalizeApiBase(saved.baseUrl),
-      token: typeof saved.token === 'string' ? saved.token.trim() : '',
+      token: defaultLocalDevToken(typeof saved.token === 'string' ? saved.token.trim() : ''),
     };
   } catch {
-    return { baseUrl: DEFAULT_API_BASE, token: '' };
+    return { baseUrl: DEFAULT_API_BASE, token: defaultLocalDevToken('') };
   }
+}
+
+function defaultLocalDevToken(savedToken) {
+  if (!isLocalDevHost()) return savedToken;
+
+  if (!savedToken || savedToken.includes('|')) return LOCAL_DEV_TOKEN;
+
+  return savedToken;
+}
+
+function isLocalDevHost() {
+  return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
 }
 
 const apiState = loadApiConfig();
@@ -176,6 +189,26 @@ const periodLabels = {
 };
 
 function periodLabel(k) { return periodLabels[k] || k; }
+
+function isRootCategory(category) {
+  return category.parent_id === null || category.parent_id === undefined || category.parent_id === '';
+}
+
+function categoryParentMap(categories) {
+  return new Map(categories.map(category => [String(category.id), category]));
+}
+
+function categoryParentLabel(category, categories) {
+  if (isRootCategory(category)) return '—';
+
+  const parent = categoryParentMap(categories).get(String(category.parent_id));
+  return parent ? parent.name : `#${category.parent_id}`;
+}
+
+function categoryDisplayName(category, categories) {
+  const parentLabel = categoryParentLabel(category, categories);
+  return parentLabel === '—' ? category.name : `${parentLabel} / ${category.name}`;
+}
 
 function relativeTime(iso) {
   const d = new Date(iso), now = new Date();
@@ -621,12 +654,13 @@ async function renderCategories(el) {
     <div class="table-wrap">
       <table>
         <colgroup>
-          <col style="width:28%"><col style="width:20%"><col style="width:10%"><col style="width:14%"><col style="width:14%"><col style="width:100px">
+          <col style="width:24%"><col style="width:17%"><col style="width:18%"><col style="width:8%"><col style="width:10%"><col style="width:12%"><col style="width:100px">
         </colgroup>
         <thead>
           <tr>
             <th>カテゴリ名</th>
             <th>スラッグ</th>
+            <th>親カテゴリ</th>
             <th>順序</th>
             <th>記憶数</th>
             <th>状態</th>
@@ -636,11 +670,17 @@ async function renderCategories(el) {
         <tbody>
           ${categories.map(c => `
             <tr>
-              <td class="td-title">${esc(c.name)}</td>
+              <td class="td-title">
+                ${isRootCategory(c) ? '' : '<span style="color:var(--text-muted);font-weight:400">└ </span>'}${esc(c.name)}
+              </td>
               <td style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted)">${esc(c.slug)}</td>
+              <td style="color:var(--text-secondary)">${esc(categoryParentLabel(c, categories))}</td>
               <td style="color:var(--text-muted)">${c.sort_order}</td>
               <td style="color:var(--text-secondary)">${c.memory_count}</td>
-              <td><span class="badge ${c.archived ? 'badge--neutral' : 'badge--ok'}">${c.archived ? 'archived' : 'active'}</span></td>
+              <td>
+                <span class="badge ${isRootCategory(c) ? 'badge--neutral' : 'badge--warn'}">${isRootCategory(c) ? 'root' : 'child'}</span>
+                <span class="badge ${c.archived ? 'badge--neutral' : 'badge--ok'}">${c.archived ? 'archived' : 'active'}</span>
+              </td>
               <td>
                 <div class="td-actions">
                   <button class="btn-icon cat-edit-btn" data-id="${c.id}" aria-label="編集" title="編集">
@@ -1056,7 +1096,19 @@ function populateMemoryCategoryOptions(categories, selectedId = '') {
   const select = document.getElementById('f-category');
   select.innerHTML = `
     <option value="">未分類</option>
-    ${categories.filter(c => !c.archived).map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}
+    ${categories.filter(c => !c.archived).map(c => `<option value="${c.id}">${esc(categoryDisplayName(c, categories))}</option>`).join('')}
+  `;
+  select.value = selectedId ? String(selectedId) : '';
+}
+
+function populateCategoryParentOptions(categories, selectedId = '', excludeId = null) {
+  const select = document.getElementById('cat-parent');
+  const exclude = excludeId === null ? null : String(excludeId);
+  const roots = categories.filter(c => !c.archived && isRootCategory(c) && String(c.id) !== exclude);
+
+  select.innerHTML = `
+    <option value="">なし（大カテゴリ）</option>
+    ${roots.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}
   `;
   select.value = selectedId ? String(selectedId) : '';
 }
@@ -1091,19 +1143,29 @@ async function executeDelete() {
 // ================================================================
 async function openCategoryModal(id) {
   document.getElementById('category-modal-title').textContent = id ? 'カテゴリを編集' : 'カテゴリを作成';
+  let category = null;
+  let categories = [];
+
+  try {
+    [category, categories] = await Promise.all([
+      id ? api.getCategory(id) : Promise.resolve(null),
+      api.listCategories(),
+    ]);
+  } catch (error) {
+    showApiError(error);
+    return;
+  }
+
+  populateCategoryParentOptions(categories, category?.parent_id || '', id);
+
   if (id) {
-    try {
-      const c = await api.getCategory(id);
-      document.getElementById('cat-name').value = c.name;
-      document.getElementById('cat-slug').value = c.slug;
-      document.getElementById('cat-sort').value = c.sort_order;
-    } catch (error) {
-      showApiError(error);
-      return;
-    }
+    document.getElementById('cat-name').value = category.name;
+    document.getElementById('cat-slug').value = category.slug;
+    document.getElementById('cat-sort').value = category.sort_order;
   } else {
     document.getElementById('cat-name').value = '';
     document.getElementById('cat-slug').value = '';
+    document.getElementById('cat-parent').value = '';
     document.getElementById('cat-sort').value = '0';
   }
   document.getElementById('category-modal-backdrop').classList.remove('hidden');
@@ -1116,6 +1178,7 @@ async function openCategoryModal(id) {
     const payload = {
       name: document.getElementById('cat-name').value.trim(),
       slug: document.getElementById('cat-slug').value.trim(),
+      parent_id: document.getElementById('cat-parent').value || null,
       sort_order: parseInt(document.getElementById('cat-sort').value || '0'),
     };
 
