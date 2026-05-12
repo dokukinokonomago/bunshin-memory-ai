@@ -1,5 +1,1592 @@
 # Run Log
 
+## 2026-05-09 15:56:06 JST
+
+### 今回の task
+
+ユーザーログインや SaaS に必要な機能の漏れを洗い出し、設計メモと実装 task に追加する。
+
+### 実施内容
+
+- 現行の `routes/api.php`、`User`、`Tenant`、`PersonalAccessToken`、auth config、token auth tests、backend design を確認した。
+- 現状は token-first guard、personal access token 保存、検証用 token 発行 command、local seed token、tenant / owner 境界までは実装済みであることを確認した。
+- SaaS として不足している user login、logout、me、token lifecycle、password reset、tenant onboarding、member role、subscription / billing gate、audit / rate limit を洗い出した。
+- `docs/architecture/saas_auth_gap_analysis.md` を追加し、現在実装済みの範囲、不足機能、実装順、次に実装する 1 task、人間判断が必要な論点を整理した。
+- `docs/architecture/backend_design.md` に SaaS / Auth readiness セクションを追加し、次の backend task を `POST /api/v1/auth/login` に更新した。
+- `task_board.md` の未着手 task と次にやるべき 1 task を SaaS / auth backlog に更新した。
+- 今回は task / docs 追加のみで、backend code は変更していない。
+
+### 変更ファイル一覧
+
+- `docs/architecture/saas_auth_gap_analysis.md`
+- `docs/architecture/backend_design.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は docs / task 追加のみで backend code change なし。PHP tests は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `POST /api/v1/auth/login の backend baseline を追加する` から開始する。login task では route / request / controller / response shaping、valid email / password での token 発行、invalid credentials、tenant 未所属 user の扱い、API contract / OpenAPI、Feature test までを完了条件にする。
+
+## 2026-05-09 07:03:37 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests baseline を再確認し、不足があれば今回 task の範囲内で追加する。
+
+### 実施内容
+
+- shell の `CODEX_HOME` は空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md`、`run_log.md`、automation memory を確認し、`categories.parent_id` baseline は既に実装 / 検証済みで、直近の次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回の automation prompt でも `categories.parent_id` task が明示されているため、重複実装を避けつつ今回の 1 task を baseline 再検証に固定した。
+- migration は nullable self FK / `nullOnDelete()` / context parent index / rollback を持つことを確認した。
+- `Category` model は `parent_id` fillable / integer cast / `parent()` / `children()` relation を持つことを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` は同一 tenant / owner 内の root category のみ parent として許可し、自己参照、3 階層以上、境界外 parent、子を持つ category のサブカテゴリ化を拒否することを確認した。
+- `CategoryController` / `CategoryResource` は `tree=true` の nested children response と、children を持つ category の削除禁止 422 方針を反映済みであることを確認した。
+- `CategoryApiTest` と `MemoryDomainModelTest` は parent 作成、tree response、request-context 境界、invalid parent、空文字 parent normalization、children あり更新 / 削除拒否、model relation / cast を検証している。
+- 追加 backend code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っている。明示決定があるまでは secret unlock 実装変更に進まない。
+
+## 2026-05-09 06:03:23 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests baseline を再確認し、不足があれば今回 task の範囲内で追加する。
+
+### 実施内容
+
+- `$CODEX_HOME` は shell 上で空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md`、`run_log.md`、automation memory を確認し、`categories.parent_id` baseline は既に実装 / 検証済みで、直近の次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回の automation prompt でも `categories.parent_id` task が明示されているため、重複実装を避けつつ今回の 1 task を baseline 再検証に固定した。
+- migration は nullable self FK / `nullOnDelete()` / context parent index / rollback を持つことを確認した。
+- `Category` model は `parent_id` fillable / integer cast / `parent()` / `children()` relation を持つことを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` は同一 tenant / owner 内の root category のみ parent として許可し、自己参照、3 階層以上、境界外 parent、子を持つ category のサブカテゴリ化を拒否することを確認した。
+- `CategoryController` / `CategoryResource` / API contract / OpenAPI は `tree=true` の nested children response と、children を持つ category の削除禁止 422 方針を反映済みであることを確認した。
+- `CategoryApiTest` と `MemoryDomainModelTest` は parent 作成、tree response、request-context 境界、invalid parent、空文字 parent normalization、children あり更新 / 削除拒否、model relation / cast を検証している。
+- 追加 backend code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っている。明示決定があるまでは secret unlock 実装変更に進まない。
+
+## 2026-05-09 05:01:55 JST
+
+### 今回の task
+
+secret unlock password を account password と共用するか、専用 password に分離するかの人間判断が今回入力に含まれているか確認する。明示決定がなければ実装変更せず、未決として記録する。
+
+### 実施内容
+
+- `$CODEX_HOME` は shell 上で空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md`、`run_log.md`、`review_decision.md`、automation memory を確認し、`categories.parent_id` baseline は 2026-05-08 21:04:29 JST に再検証済みで、現在の blocker は secret unlock password 方針であることを確認した。
+- `SecretUnlockController` を spot check し、現状 baseline が認証済み user の account password hash を検証して 15 分有効な unlock token を発行する実装のままであることを確認した。
+- `review_decision.md` と今回入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
+- 方針未決のため、`SecretUnlockController` / tests / API contract / OpenAPI の実装変更は行っていない。
+- `review_decision.md` の secret unlock password 方針の最終確認を 2026-05-09 05:01:55 JST に更新した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認と管理ファイル更新のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っている。明示決定があるまでは secret unlock 実装変更に進まない。
+
+## 2026-05-09 04:02:01 JST
+
+### 今回の task
+
+secret unlock password を account password と共用するか、専用 password に分離するかの人間判断が今回入力に含まれているか確認する。明示決定がなければ実装変更せず、未決として記録する。
+
+### 実施内容
+
+- `$CODEX_HOME` は shell 上で空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md`、`run_log.md`、`review_decision.md`、automation memory を確認し、`categories.parent_id` baseline は 2026-05-08 21:04:29 JST に再検証済みで、現在の blocker は secret unlock password 方針であることを確認した。
+- `review_decision.md` と今回入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
+- 現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の account password hash を検証し、15 分有効な unlock token を発行する。
+- 方針未決のため、`SecretUnlockController` / tests / API contract / OpenAPI の実装変更は行っていない。
+- `review_decision.md` の secret unlock password 方針の最終確認を 2026-05-09 04:02:01 JST に更新した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認と管理ファイル更新のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っている。明示決定があるまでは secret unlock 実装変更に進まない。
+
+## 2026-05-09 03:03:32 JST
+
+### 今回の task
+
+secret unlock password を account password と共用するか、専用 password に分離するかの人間判断が今回入力に含まれているか確認する。明示決定がなければ実装変更せず、未決として記録する。
+
+### 実施内容
+
+- `$CODEX_HOME` は shell 上で空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md`、`run_log.md`、`review_decision.md`、automation memory を確認し、`categories.parent_id` baseline は 2026-05-08 21:04:29 JST に再検証済みで、現在の blocker は secret unlock password 方針であることを確認した。
+- `review_decision.md` と今回入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
+- 現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の account password hash を検証し、15 分有効な unlock token を発行する。
+- 方針未決のため、`SecretUnlockController` / tests / API contract / OpenAPI の実装変更は行っていない。
+- `review_decision.md` の secret unlock password 方針の最終確認を 2026-05-09 03:03:32 JST に更新した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認と管理ファイル更新のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っている。明示決定があるまでは secret unlock 実装変更に進まない。
+
+## 2026-05-09 02:01:59 JST
+
+### 今回の task
+
+secret unlock password を account password と共用するか、専用 password に分離するかの人間判断が今回入力に含まれているか確認する。明示決定がなければ実装変更せず、未決として記録する。
+
+### 実施内容
+
+- `$CODEX_HOME` は shell 上で空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md`、`run_log.md`、`review_decision.md`、automation memory を確認し、`categories.parent_id` baseline は 2026-05-08 21:04:29 JST に再検証済みで、現在の blocker は secret unlock password 方針であることを確認した。
+- `review_decision.md` と今回入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
+- 現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の account password hash を検証し、15 分有効な unlock token を発行する。
+- 方針未決のため、`SecretUnlockController` / tests / API contract / OpenAPI の実装変更は行っていない。
+- `review_decision.md` の secret unlock password 方針の最終確認を 2026-05-09 02:01:59 JST に更新した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認と管理ファイル更新のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っている。明示決定があるまでは secret unlock 実装変更に進まない。
+
+## 2026-05-09 01:02:22 JST
+
+### 今回の task
+
+secret unlock password を account password と共用するか、専用 password に分離するかの人間判断が今回入力に含まれているか確認する。明示決定がなければ実装変更せず、未決として記録する。
+
+### 実施内容
+
+- `$CODEX_HOME` は shell 上で空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md`、`run_log.md`、`review_decision.md` を確認し、`categories.parent_id` baseline は 2026-05-08 21:04:29 JST に再検証済みで、現在の blocker は secret unlock password 方針であることを確認した。
+- `review_decision.md` と今回入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
+- 現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の account password hash を検証し、15 分有効な unlock token を発行する。
+- 方針未決のため、`SecretUnlockController` / tests / API contract / OpenAPI の実装変更は行っていない。
+- `review_decision.md` の secret unlock password 方針の最終確認を 2026-05-09 01:02:22 JST に更新した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認と管理ファイル更新のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っている。明示決定があるまでは secret unlock 実装変更に進まない。
+
+## 2026-05-09 00:03:27 JST
+
+### 今回の task
+
+secret unlock password を account password と共用するか、専用 password に分離するかの人間判断が今回入力に含まれているか確認する。明示決定がなければ実装変更せず、未決として記録する。
+
+### 実施内容
+
+- `$CODEX_HOME` は shell 上で空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md`、`run_log.md`、`review_decision.md` を確認し、`categories.parent_id` baseline は 2026-05-08 21:04:29 JST に再検証済みで、現在の blocker は secret unlock password 方針であることを確認した。
+- `review_decision.md` と今回入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
+- 現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の account password hash を検証し、15 分有効な unlock token を発行する。
+- 方針未決のため、`SecretUnlockController` / tests / API contract / OpenAPI の実装変更は行っていない。
+- `review_decision.md` の secret unlock password 方針の最終確認を 2026-05-09 00:03:27 JST に更新した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認と管理ファイル更新のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っている。明示決定があるまでは secret unlock 実装変更に進まない。
+
+## 2026-05-08 23:03:45 JST
+
+### 今回の task
+
+secret unlock password を account password と共用するか、専用 password に分離するかの人間判断が今回入力に含まれているか確認する。明示決定がなければ実装変更せず、未決として記録する。
+
+### 実施内容
+
+- `$CODEX_HOME` は shell 上で空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md`、`run_log.md`、`review_decision.md` を確認し、`categories.parent_id` baseline は 2026-05-08 21:04:29 JST に再検証済みで、現在の blocker は secret unlock password 方針であることを確認した。
+- 念のため category migration / model / request validation を確認し、`parent_id` baseline が引き続き実装済みであることを確認した。
+- 今回入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
+- 現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の account password hash を検証し、15 分有効な unlock token を発行する。
+- 方針未決のため、`SecretUnlockController` / tests / API contract / OpenAPI の実装変更は行っていない。
+- `review_decision.md` の secret unlock password 方針の最終確認を 2026-05-08 23:03:45 JST に更新した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認と管理ファイル更新のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っている。明示決定があるまでは secret unlock 実装変更に進まない。
+
+## 2026-05-08 22:01:38 JST
+
+### 今回の task
+
+secret unlock password を account password と共用するか、専用 password に分離するかの人間判断が今回入力に含まれているか確認する。明示決定がなければ実装変更せず、未決として記録する。
+
+### 実施内容
+
+- `$CODEX_HOME/automations/ai-3/memory.md` は存在しなかったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md`、`run_log.md`、`review_decision.md` を確認し、`categories.parent_id` baseline は 2026-05-08 21:04:29 JST に再検証済みで、現在の blocker は secret unlock password 方針であることを確認した。
+- 今回入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
+- 現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の account password hash を検証し、15 分有効な unlock token を発行する。
+- 方針未決のため、`SecretUnlockController` / tests / API contract / OpenAPI の実装変更は行っていない。
+- `review_decision.md` の secret unlock password 方針の最終確認を 2026-05-08 22:01:38 JST に更新した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認と管理ファイル更新のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っている。明示決定があるまでは secret unlock 実装変更に進まない。
+
+## 2026-05-08 21:04:29 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば最小修正する。
+
+### 実施内容
+
+- `$CODEX_HOME` が shell 上で空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` を作業開始時に今回 task の進行中状態へ更新し、scope を `categories.parent_id` baseline の再検証に固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、`categories_context_parent_index`、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation / context scope が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent として許可し、空文字正規化、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryApiTest` と `MemoryDomainModelTest` で parent create / update / tree response / invalid parent validation / relation baseline が検証済みであることを確認した。
+- 追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 20:02:51 JST
+
+### 今回の task
+
+secret unlock password を account password と共用するか、専用 password に分離するかの人間判断が今回入力に含まれているか確認する。明示決定がなければ実装変更せず、未決として記録する。
+
+### 実施内容
+
+- `$CODEX_HOME` が shell 上で空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` と automation memory を確認し、`categories.parent_id` baseline は再検証済みで、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
+- 現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の account password hash を検証し、15 分有効な unlock token を発行する。
+- 方針未決のため、`SecretUnlockController` / tests / API contract / OpenAPI の実装変更は行っていない。
+- `review_decision.md` の secret unlock password 方針の最終確認を 2026-05-08 20:02:51 JST に更新した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認と管理ファイル更新のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っている。明示決定があるまでは secret unlock 実装変更に進まない。
+
+## 2026-05-08 19:04:25 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests baseline を追加または再検証する。
+
+### 実施内容
+
+- `$CODEX_HOME` が shell 上で空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` を作業開始時に今回 task の進行中状態へ更新し、scope を `categories.parent_id` baseline の再検証に固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、`categories_context_parent_index`、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation / context scope が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内の root category のみ parent として許可し、空文字正規化、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryApiTest` と `MemoryDomainModelTest` で parent create / update / tree response / invalid parent validation / relation baseline が検証済みであることを確認した。
+- 追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 18:03:38 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests baseline を追加または再検証する。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、category 関連 migration / model / request / controller / resource / tests を確認した。
+- `task_board.md` と automation memory では `categories.parent_id` baseline が完了済みだったため、重複実装は避けて再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、`categories_context_parent_index`、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation / context scope が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent として許可し、空文字正規化、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryApiTest` と `MemoryDomainModelTest` で parent create / update / tree response / invalid parent validation / relation baseline が検証済みであることを確認した。
+- 追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 17:02:38 JST
+
+### 今回の task
+
+`categories.parent_id` の migration / model / validation / tests baseline を追加または再検証する。
+
+### 実施内容
+
+- `$CODEX_HOME` が shell 上で空だったため、初回の `$CODEX_HOME/automations/ai-3/memory.md` 参照では memory が見つからなかった。その後、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` を今回 task 用に更新し、今回入力の正式 task 指示に合わせて `categories.parent_id` baseline の再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、`categories_context_parent_index`、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation / context scope が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent として許可し、空文字正規化、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryApiTest` と `MemoryDomainModelTest` で parent create / update / tree response / invalid parent validation / relation baseline が検証済みであることを確認した。
+- 追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan migrate:fresh --env=testing`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 16:02:30 JST
+
+### 今回の task
+
+secret unlock password を account password と共用するか、専用 password に分離するかの人間判断が今回入力に含まれているか確認する。明示決定がなければ実装変更せず、未決として記録する。
+
+### 実施内容
+
+- shell 上の `CODEX_HOME` は空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` と `run_log.md` を確認し、`categories.parent_id` baseline は直近まで再検証済みで、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
+- 現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の account password hash を検証し、15 分有効な unlock token を発行する。
+- 方針未決のため、`SecretUnlockController` / tests / API contract / OpenAPI の実装変更は行っていない。
+- `review_decision.md` の secret unlock password 方針の最終確認を 2026-05-08 16:02:30 JST に更新した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認と管理ファイル更新のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は未完了。次回も `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っている。明示決定があるまでは secret unlock 実装変更に進まない。
+
+## 2026-05-08 15:04:17 JST
+
+### 今回の task
+
+今回入力で指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- `$CODEX_HOME/automations/ai-3/memory.md` は shell 上の `CODEX_HOME` が空だったため初回参照では見つからず、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` と `run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、`categories_context_parent_index`、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation / context scope が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent として許可し、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` / docs / OpenAPI で parent create / update / tree response / children あり削除禁止 / relation が検証済みであることを確認した。
+- 追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 14:04:26 JST
+
+### 今回の task
+
+今回入力で指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- `$CODEX_HOME/automations/ai-3/memory.md` は shell 上の `CODEX_HOME` が空だったため初回参照では見つからず、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` と `run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、`categories_context_parent_index`、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation / context scope が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent として許可し、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` / docs / OpenAPI で parent create / update / tree response / children あり削除禁止 / relation が検証済みであることを確認した。
+- 追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 13:03:53 JST
+
+### 今回の task
+
+今回入力で指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- `$CODEX_HOME/automations/ai-3/memory.md` は shell 上の `CODEX_HOME` が空で初回参照では見つからなかったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` と `run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、`categories_context_parent_index`、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation / context scope が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent として許可し、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` / docs / OpenAPI で parent create / update / tree response / children あり削除禁止 / relation が検証済みであることを確認した。
+- 追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 12:02:55 JST
+
+### 今回の task
+
+今回入力で指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、`run_log.md` を確認した。shell 環境の `CODEX_HOME` は空だったため、既存運用パスを直接参照した。
+- `task_board.md` を今回実行の進行状態へ更新してから、`categories.parent_id` baseline の再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、`categories_context_parent_index`、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation / context scope が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent として許可し、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` / docs / OpenAPI で parent create / update / tree response / children あり削除禁止 / relation が検証済みであることを確認した。
+- 追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 11:02:58 JST
+
+### 今回の task
+
+今回入力で指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- `$CODEX_HOME/automations/ai-3/memory.md` は shell 環境の `CODEX_HOME` が空で初回参照に内容が出なかったため、repo の `task_board.md` / `run_log.md` を前回文脈として確認した。
+- `task_board.md` を今回実行の進行状態へ更新してから、`categories.parent_id` baseline の再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、`categories_context_parent_index`、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation / context scope が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent として許可し、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` で parent create / update / tree response / children あり削除禁止 / relation が検証済みであることを確認した。
+- 追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 10:04:42 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- shell 上の `CODEX_HOME` は未設定だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` と `run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable self FK / `nullOnDelete()` / `categories_context_parent_index` / rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` / docs / OpenAPI で parent create / update / tree / validation / model relation の baseline が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 09:05:04 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- shell 上の `CODEX_HOME` は未設定だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` と `run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable self FK / `nullOnDelete()` / `categories_context_parent_index` / rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` で parent create / update / tree / validation / model relation の baseline が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 08:03:45 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- shell 上の `CODEX_HOME` は未設定だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` と `run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable self FK / `nullOnDelete()` / `categories_context_parent_index` / rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` で parent create / update / tree / validation / model relation の baseline が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 07:03:50 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、`run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable self FK / `nullOnDelete()` / `categories_context_parent_index` / rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` / docs / OpenAPI で parent create / update / tree / validation / model relation の baseline が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 06:03:30 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- `$CODEX_HOME/automations/ai-3/memory.md` は shell 上の `CODEX_HOME` 展開では見つからなかったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` と `run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable self FK / `nullOnDelete()` / `categories_context_parent_index` / rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` / docs / OpenAPI で parent create / update / tree / validation / model relation の baseline が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 05:02:53 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- `$CODEX_HOME/automations/ai-3/memory.md` は shell 上の `CODEX_HOME` 展開では見つからなかったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` と `run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable self FK / `nullOnDelete()` / `categories_context_parent_index` / rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` / docs / OpenAPI で parent create / update / tree / validation / model relation の baseline が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 04:03:03 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- 初回の `$CODEX_HOME/automations/ai-3/memory.md` 参照では shell 上の `CODEX_HOME` が空で未作成扱いになったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接確認した。
+- `task_board.md` と `run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable self FK / `nullOnDelete()` / `categories_context_parent_index` / rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` / docs / OpenAPI で parent create / update / tree / validation / model relation の baseline が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 03:03:55 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- 初回の `$CODEX_HOME/automations/ai-3/memory.md` 参照では shell 上の `CODEX_HOME` が空で未作成扱いになったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接確認した。
+- `task_board.md` と `run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable self FK / `nullOnDelete()` / `categories_context_parent_index` / rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` / docs / OpenAPI で parent create / update / tree / validation / model relation の baseline が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 02:02:48 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- 初回の `$CODEX_HOME/automations/ai-3/memory.md` 参照では shell 上の `CODEX_HOME` が空で未作成扱いになったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接確認した。
+- `task_board.md` と `run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable self FK / `nullOnDelete()` / `categories_context_parent_index` / rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` / docs / OpenAPI で parent create / update / tree / validation / model relation の baseline が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 01:02:21 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- 初回の `$CODEX_HOME/automations/ai-3/memory.md` 参照では shell 上の `CODEX_HOME` が空で未作成扱いになったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接確認した。
+- `task_board.md` と `run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable self FK / `nullOnDelete()` / `categories_context_parent_index` / rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` / docs / OpenAPI で parent create / update / tree / validation / model relation の baseline が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-08 00:02:30 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- 初回の `$CODEX_HOME/automations/ai-3/memory.md` 参照では shell 上の `CODEX_HOME` が空で未作成扱いになったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接確認した。
+- `task_board.md` と `run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable self FK / `nullOnDelete()` / `categories_context_parent_index` / rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` で parent create / update / tree / validation / model relation の baseline が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 23:02:30 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- `$CODEX_HOME` は shell 上では空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` と `run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable self FK / `nullOnDelete()` / `categories_context_parent_index` / rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` で parent create / update / tree / validation / model relation の baseline が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 22:04:09 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable self FK / `nullOnDelete()` / `categories_context_parent_index` / rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` で parent create / update / tree / validation / model relation の baseline が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 21:03:44 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、`run_log.md` を確認し、直近でも `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable self FK / `nullOnDelete()` / `categories_context_parent_index` / rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` で parent create / update / tree / validation / model relation の baseline が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 20:17:25 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、`run_log.md` を確認し、直近では `categories.parent_id` baseline は完了済み、次 task は secret unlock password 方針の人間判断であることを確認した。
+- 今回入力で `categories.parent_id` task が再指定されているため、重複実装は避けつつ baseline 再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable self FK / `nullOnDelete()` / `categories_context_parent_index` / rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` で parent create / update / tree / validation / model relation の baseline が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 19:41:08 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- `$CODEX_HOME` が shell 上では空だったため、初回は指定 memory path を解決できなかった。その後、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` を作業開始時に更新し、今回 task を `categories.parent_id` baseline 再検証に固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable self FK / `nullOnDelete()` / `categories_context_parent_index` / rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryResource` / `CategoryApiTest` / `MemoryDomainModelTest` で parent create / update / tree / validation / model relation の baseline が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 18:05:29 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md` を確認した。shell の `CODEX_HOME` は空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接参照した。
+- `task_board.md` は作業開始時に確認し、今回 task scope が `categories.parent_id` baseline 再検証に固定されていることを確認した。完了時に今回結果へ更新した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、`categories_context_parent_index`、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `app/Http/Requests/StoreCategoryRequest.php` / `app/Http/Requests/UpdateCategoryRequest.php` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryContextRequest` / `CategoryResource` で flat list の `parent_id`、`tree=true` の nested children response、children あり削除禁止方針が実装済みであることを確認した。
+- `CategoryApiTest` / `MemoryDomainModelTest` が parent create / update / tree / validation / model relation を検証していることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 17:03:59 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md` を確認した。shell の `CODEX_HOME` は空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接参照した。
+- `task_board.md` は作業開始時に今回 task 用へ更新し、1 回で 1 task だけ進める scope に固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、`categories_context_parent_index`、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `app/Http/Requests/StoreCategoryRequest.php` / `app/Http/Requests/UpdateCategoryRequest.php` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryContextRequest` / `CategoryResource` で flat list の `parent_id`、`tree=true` の nested children response、children あり削除禁止方針が実装済みであることを確認した。
+- `CategoryApiTest` / `MemoryDomainModelTest` が parent create / update / tree / validation / model relation を検証していることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 16:02:21 JST
+
+### 今回の task
+
+今回入力で再指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば補う。
+
+### 実施内容
+
+- automation memory、`task_board.md`、`run_log.md` を確認した。shell の `CODEX_HOME` は空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接参照した。
+- `task_board.md` は作業開始時に今回 task 用へ更新し、1 回で 1 task だけ進める scope に固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、`categories_context_parent_index`、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内 root category のみ parent にでき、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / `CategoryContextRequest` / `CategoryResource` で flat list の `parent_id`、`tree=true` の nested children response、children あり削除禁止方針が実装済みであることを確認した。
+- `CategoryApiTest` / `MemoryDomainModelTest` が parent create / update / tree / validation / model relation を検証していることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration 適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 15:02:53 JST
+
+### 今回の task
+
+今回入力で指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば今回 task の範囲内だけで補う。
+
+### 実施内容
+
+- `$CODEX_HOME` が空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` と automation memory では `categories.parent_id` baseline が完了済みで、直近の次 task は secret unlock password 方針の人間判断になっていることを確認した。
+- 今回入力に `categories.parent_id` task 指定が含まれていたため、重複実装は避けつつ baseline の再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、context parent index、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `app/Http/Requests/StoreCategoryRequest.php` / `app/Http/Requests/UpdateCategoryRequest.php` で同一 tenant / owner 内の root category のみ parent として許可し、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `tests/Feature/CategoryApiTest.php` と `tests/Feature/MemoryDomainModelTest.php` で parent create、tree response、request-context boundaries、invalid parent validation、empty-string parent normalization、model relation / cast が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 14:03:39 JST
+
+### 今回の task
+
+今回入力で指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば今回 task の範囲内だけで補う。
+
+### 実施内容
+
+- `$CODEX_HOME` が空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を確認した。
+- `task_board.md` と automation memory では `categories.parent_id` baseline が完了済みで、直近の次 task は secret unlock password 方針の人間判断になっていることを確認した。
+- 今回入力に `categories.parent_id` task 指定が含まれていたため、重複実装は避けつつ baseline の再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、context parent index、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `app/Http/Requests/StoreCategoryRequest.php` / `app/Http/Requests/UpdateCategoryRequest.php` で同一 tenant / owner 内の root category のみ parent として許可し、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `tests/Feature/CategoryApiTest.php` と `tests/Feature/MemoryDomainModelTest.php` で parent create、tree response、request-context boundaries、invalid parent validation、empty-string parent normalization、model relation / cast が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 13:04:28 JST
+
+### 今回の task
+
+今回入力で指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば今回 task の範囲内だけで補う。
+
+### 実施内容
+
+- shell の `CODEX_HOME` が空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接確認した。
+- `task_board.md` と automation memory では `categories.parent_id` baseline が完了済みで、直近の次 task は secret unlock password 方針の人間判断になっていることを確認した。
+- 今回入力に `categories.parent_id` task 指定が含まれていたため、重複実装は避けつつ baseline の再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、context parent index、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `app/Http/Requests/StoreCategoryRequest.php` / `app/Http/Requests/UpdateCategoryRequest.php` で同一 tenant / owner 内の root category のみ parent として許可し、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `tests/Feature/CategoryApiTest.php` と `tests/Feature/MemoryDomainModelTest.php` で parent create、tree response、request-context boundaries、invalid parent validation、empty-string parent normalization、model relation / cast が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 12:05:55 JST
+
+### 今回の task
+
+今回入力で指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば今回 task の範囲内だけで補う。
+
+### 実施内容
+
+- shell の `CODEX_HOME` が空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接確認した。
+- `task_board.md` と automation memory では `categories.parent_id` baseline が完了済みで、直近の次 task は secret unlock password 方針の人間判断になっていることを確認した。
+- 今回入力に `categories.parent_id` task 指定が含まれていたため、重複実装は避けつつ baseline の再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、context parent index、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `app/Http/Requests/StoreCategoryRequest.php` / `app/Http/Requests/UpdateCategoryRequest.php` で同一 tenant / owner 内の root category のみ parent として許可し、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `tests/Feature/CategoryApiTest.php` と `tests/Feature/MemoryDomainModelTest.php` で parent create、tree response、request-context boundaries、invalid parent validation、empty-string parent normalization、model relation / cast が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 11:03:57 JST
+
+### 今回の task
+
+今回入力で指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば今回 task の範囲内だけで補う。
+
+### 実施内容
+
+- shell の `CODEX_HOME` が空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接確認した。
+- `task_board.md` と automation memory では `categories.parent_id` baseline が完了済みで、直近の次 task は secret unlock password 方針の人間判断になっていることを確認した。
+- 今回入力に `categories.parent_id` task 指定が含まれていたため、重複実装は避けつつ baseline の再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、context parent index、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `app/Http/Requests/StoreCategoryRequest.php` / `app/Http/Requests/UpdateCategoryRequest.php` で同一 tenant / owner 内の root category のみ parent として許可し、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `tests/Feature/CategoryApiTest.php` と `tests/Feature/MemoryDomainModelTest.php` で parent create、tree response、request-context boundaries、invalid parent validation、empty-string parent normalization、model relation / cast が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 10:04:48 JST
+
+### 今回の task
+
+今回入力で指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば今回 task の範囲内だけで補う。
+
+### 実施内容
+
+- shell の `CODEX_HOME` が空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接確認した。
+- `task_board.md` と automation memory では `categories.parent_id` baseline が完了済みで、直近の次 task は secret unlock password 方針の人間判断になっていることを確認した。
+- 今回入力に `categories.parent_id` task 指定が含まれていたため、重複実装は避けつつ baseline の再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、context parent index、rollback が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `app/Http/Requests/StoreCategoryRequest.php` / `app/Http/Requests/UpdateCategoryRequest.php` で同一 tenant / owner 内の root category のみ parent として許可し、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `tests/Feature/CategoryApiTest.php` と `tests/Feature/MemoryDomainModelTest.php` で parent create、tree response、validation、relation / cast が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 09:05:56 JST
+
+### 今回の task
+
+secret unlock password を account password と共用するか、専用 password に分離するかの人間判断が今回入力に含まれているか確認する。明示決定がなければ実装変更せず、未決として記録する。
+
+### 実施内容
+
+- shell の `CODEX_HOME` が空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接確認した。
+- `task_board.md` と automation memory では `categories.parent_id` baseline が完了済みで、直近の次 task は secret unlock password 方針の人間判断になっていることを確認した。
+- `review_decision.md`、`SecretUnlockController`、`StoreSecretUnlockRequest`、`SecretUnlockApiTest`、API contract、OpenAPI の現状を確認した。
+- 今回入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
+- 現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の account password hash を検証し、15 分有効な unlock token を発行する。
+- 方針未決のため、`SecretUnlockController` / tests / API contract / OpenAPI の実装変更は行っていない。
+- `review_decision.md` の secret unlock password 方針の最終確認を 2026-05-07 09:05:56 JST に更新した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認と管理ファイル更新のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 08:03:01 JST
+
+### 今回の task
+
+secret unlock password を account password と共用するか、専用 password に分離するかの人間判断が今回入力に含まれているか確認する。明示決定がなければ実装変更せず、未決として記録する。
+
+### 実施内容
+
+- shell の `CODEX_HOME` が空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接確認した。
+- `task_board.md` と automation memory では `categories.parent_id` baseline が完了済みで、直近の次 task は secret unlock password 方針の人間判断になっていることを確認した。
+- `review_decision.md`、`SecretUnlockController`、`StoreSecretUnlockRequest`、`SecretUnlockApiTest`、API contract、OpenAPI の現状を確認した。
+- 今回入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
+- 現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の account password hash を検証し、15 分有効な unlock token を発行する。
+- 方針未決のため、`SecretUnlockController` / tests / API contract / OpenAPI の実装変更は行っていない。
+- `review_decision.md` の secret unlock password 方針の最終確認を 2026-05-07 08:03:01 JST に更新した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認と管理ファイル更新のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
 ## 2026-05-06 15:19:03 JST
 
 ### 今回の task
@@ -112,6 +1699,39 @@ secret unlock password を account password と共用するか、専用 password
 ### 次回 automation への引き継ぎ
 
 今回の task は未完了。次回も `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っている。明示決定があるまでは secret unlock 実装変更に進まない。
+
+## 2026-05-07 07:03:29 JST
+
+### 今回の task
+
+今回入力で指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば今回 task の範囲内だけで補う。
+
+### 実施内容
+
+- shell の `CODEX_HOME` が空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接確認した。
+- `task_board.md` と automation memory では `categories.parent_id` baseline が完了済みで、直近の次 task は secret unlock password 方針の人間判断になっていることを確認した。
+- 今回入力に `categories.parent_id` task 指定が含まれていたため、重複実装は避けつつ baseline の再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、context parent index が定義済みであることを確認した。
+- `app/Models/Category.php` で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `app/Http/Requests/StoreCategoryRequest.php` / `app/Http/Requests/UpdateCategoryRequest.php` で同一 tenant / owner 内の root category のみ parent として許可し、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `tests/Feature/CategoryApiTest.php` と `tests/Feature/MemoryDomainModelTest.php` で parent create、tree response、validation、relation / cast が検証済みであることを確認した。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
 
 ## 2026-05-06 14:13:17 JST
 
@@ -2991,3 +4611,101 @@ root category 削除時の child category 扱いを `review_decision.md` に整�
 ### 次回 automation への引き継ぎ
 
 今回の task は完了。次回は `root category 削除方針の人間判断を受ける` から開始する。推奨は `review_decision.md` の選択肢 B「children を持つ category は削除禁止」。削除禁止を採用する場合は、その次の task で `CategoryController@destroy` / `CategoryApiTest` / `docs/architecture/api_contract.md` / OpenAPI を 422 方針へ揃える。
+
+## 2026-05-07 00:07:29 JST
+
+### 今回の task
+
+今回入力で指定された `categories.parent_id` の migration / model / validation / tests baseline を再検証し、不足があれば追加する。
+
+### 実施内容
+
+- shell の `CODEX_HOME` が空だったため、既存運用パス `/Users/fukui/.codex/automations/ai-3/memory.md` を直接確認した。
+- `task_board.md` と automation memory では `categories.parent_id` baseline が完了済みで、直近の次 task は secret unlock password 方針の人間判断になっていることを確認した。
+- 今回入力に `categories.parent_id` task 指定が含まれていたため、重複実装は避けつつ baseline の再検証に scope を固定した。
+- `database/migrations/2026_05_05_010300_add_parent_id_to_categories_table.php` で nullable `parent_id`、self FK、`nullOnDelete()`、context parent index が定義済みであることを確認した。
+- `Category` model で `parent_id` fillable / integer cast / `parent()` / `children()` relation が定義済みであることを確認した。
+- `StoreCategoryRequest` / `UpdateCategoryRequest` で同一 tenant / owner 内の root category のみ parent として許可し、自己参照、3 階層以上、境界外 category、子を持つ root category のサブカテゴリ化を拒否する validation が実装済みであることを確認した。
+- `CategoryController` / API docs / OpenAPI で `tree=true` response と children あり削除禁止方針が反映済みであることを確認した。
+- `review_decision.md` に secret unlock password 方針が今回入力にも未決であることが追記されていることを確認した。現状 baseline は account password hash 検証のまま維持する。
+- 今回の追加 code change は不要だったため、管理ファイルと automation memory のみ更新した。
+
+### 変更ファイル一覧
+
+- `task_board.md`
+- `run_log.md`
+- `review_decision.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- `php artisan test tests/Feature/CategoryApiTest.php tests/Feature/MemoryDomainModelTest.php`: 10 passed, 128 assertions。
+- `php artisan migrate:fresh --env=testing --force`: `2026_05_05_010300_add_parent_id_to_categories_table` を含む migration が適用成功。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は完了。次回は `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を使っているため、account password 共用を正式採用するか、専用 unlock password に分離するかの明示決定があるまで `SecretUnlockController` / tests / API contract / OpenAPI は変更しない。
+
+## 2026-05-07 00:10:49 JST
+
+### 今回の task
+
+secret unlock password を account password と共用するか、専用 password に分離するかの人間判断が今回入力に含まれているか確認する。明示決定がなければ実装変更せず、未決として記録する。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、`run_log.md`、`review_decision.md` を確認した。
+- `task_board.md` と automation memory では `categories.parent_id` baseline が完了済みで、直近の次 task は secret unlock password 方針の人間判断になっていることを確認した。
+- 今回入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
+- 現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の account password hash を検証し、15 分有効な unlock token を発行する。
+- 方針未決のため、`SecretUnlockController` / tests / API contract / OpenAPI の実装変更は行っていない。
+- `review_decision.md` の secret unlock password 方針の最終確認を 2026-05-07 00:10:49 JST に更新した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認と管理ファイル更新のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は未完了。次回も `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っている。明示決定があるまでは secret unlock 実装変更に進まない。
+
+## 2026-05-07 01:02:34 JST
+
+### 今回の task
+
+secret unlock password を account password と共用するか、専用 password に分離するかの人間判断が今回入力に含まれているか確認する。明示決定がなければ実装変更せず、未決として記録する。
+
+### 実施内容
+
+- `/Users/fukui/.codex/automations/ai-3/memory.md`、`task_board.md`、`run_log.md`、`review_decision.md` を確認した。
+- shell の `CODEX_HOME` は今回も空だったため、automation memory は既存運用パスを直接参照した。
+- `task_board.md` と automation memory では `categories.parent_id` baseline が完了済みで、直近の次 task は secret unlock password 方針の人間判断になっていることを確認した。
+- 今回入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
+- 現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の account password hash を検証し、15 分有効な unlock token を発行する。
+- 方針未決のため、`SecretUnlockController` / tests / API contract / OpenAPI の実装変更は行っていない。
+- `review_decision.md` の secret unlock password 方針の最終確認を 2026-05-07 01:02:34 JST に更新した。
+
+### 変更ファイル一覧
+
+- `review_decision.md`
+- `task_board.md`
+- `run_log.md`
+- `/Users/fukui/.codex/automations/ai-3/memory.md`
+
+### 動作確認結果
+
+- 今回は判断確認と管理ファイル更新のみで code change がないため、PHP test は未実行。
+- `git diff --check`: 問題なし。
+
+### 次回 automation への引き継ぎ
+
+今回の task は未完了。次回も `secret unlock password 方針の人間判断を受ける` から開始する。現状 baseline は account password hash を secret unlock password として使っている。明示決定があるまでは secret unlock 実装変更に進まない。

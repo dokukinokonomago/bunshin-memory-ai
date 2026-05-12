@@ -78,6 +78,12 @@
 - `php artisan bunshin:issue-admin-token` は検証用 tenant / user を作成または再利用し、同名 token を revoke してから新 token を 1 回だけ表示する。
 - `sanctum` guard は内部の Sanctum 相当 implementation として登録済み。後で Laravel Sanctum package に置き換える場合も route contract は `auth:sanctum` のまま維持する。
 
+## SaaS / Auth readiness
+
+現状の auth は API 接続検証用 baseline であり、SaaS として必要な user login / logout / token lifecycle / password reset / tenant onboarding / member role / billing gate は未実装。
+
+不足機能と実装順は `docs/architecture/saas_auth_gap_analysis.md` を正とする。次の backend task は、token-first 方針のまま `POST /api/v1/auth/login` を追加し、email / password から短期または通常 token を発行できるようにすること。
+
 ## 管理画面モックアップ参照
 
 管理画面用の静的モックアップを `docs/references/admin-ui-mockup/` に配置している。Codex automation が backend API を実装する際は、必要に応じて `index.html` と `app.js` の API client を参照し、管理画面が必要とする endpoint、field、filter、secret memory 導線を確認する。
@@ -98,6 +104,6 @@
 
 ## 次の実装 task
 
-管理画面モックアップの Categories で `parent_id` の最小入力 / 表示を実 API に接続する。
+`POST /api/v1/auth/login` の backend baseline を追加する。
 
 記憶の海 / 宇宙画面の初期 backend / frontend baseline と smoke は完了済み。管理画面は本格 frontend 化せず、category hierarchy の接続確認に必要な最小差分だけ扱う。

@@ -235,13 +235,41 @@ root category を削除したら child category も削除する。
 # Review Decision: secret unlock password 方針
 
 作成: 2026-05-06 15:03:18 JST
-最終確認: 2026-05-06 15:03:18 JST
+最終確認: 2026-05-09 05:01:55 JST
 
 ## 判断状況
 
 未決。
 
 2026-05-06 15:03:18 JST の automation 入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
+
+2026-05-07 00:10:49 JST の automation 入力にも、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。現状 baseline は account password hash 検証のまま維持し、`SecretUnlockController` / tests / API contract / OpenAPI の変更は行わない。
+
+2026-05-07 01:02:34 JST の automation 入力にも、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。現状 baseline は account password hash 検証のまま維持し、`SecretUnlockController` / tests / API contract / OpenAPI の変更は行わない。
+
+2026-05-07 08:03:01 JST の automation 入力にも、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。現状 baseline は account password hash 検証のまま維持し、`SecretUnlockController` / tests / API contract / OpenAPI の変更は行わない。
+
+2026-05-07 09:05:56 JST の automation 入力にも、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。現状 baseline は account password hash 検証のまま維持し、`SecretUnlockController` / tests / API contract / OpenAPI の変更は行わない。
+
+2026-05-08 16:02:30 JST の automation 入力にも、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。現状 baseline は account password hash 検証のまま維持し、`SecretUnlockController` / tests / API contract / OpenAPI の変更は行わない。
+
+2026-05-08 20:02:51 JST の automation 入力にも、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。現状 baseline は account password hash 検証のまま維持し、`SecretUnlockController` / tests / API contract / OpenAPI の変更は行わない。
+
+2026-05-08 22:01:38 JST の automation 入力にも、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。現状 baseline は account password hash 検証のまま維持し、`SecretUnlockController` / tests / API contract / OpenAPI の変更は行わない。
+
+2026-05-08 23:03:45 JST の automation 入力にも、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。現状 baseline は account password hash 検証のまま維持し、`SecretUnlockController` / tests / API contract / OpenAPI の変更は行わない。
+
+2026-05-09 00:03:27 JST の automation 入力にも、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。現状 baseline は account password hash 検証のまま維持し、`SecretUnlockController` / tests / API contract / OpenAPI の変更は行わない。
+
+2026-05-09 01:02:22 JST の automation 入力にも、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。現状 baseline は account password hash 検証のまま維持し、`SecretUnlockController` / tests / API contract / OpenAPI の変更は行わない。
+
+2026-05-09 02:01:59 JST の automation 入力にも、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。現状 baseline は account password hash 検証のまま維持し、`SecretUnlockController` / tests / API contract / OpenAPI の変更は行わない。
+
+2026-05-09 03:03:32 JST の automation 入力にも、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。現状 baseline は account password hash 検証のまま維持し、`SecretUnlockController` / tests / API contract / OpenAPI の変更は行わない。
+
+2026-05-09 04:02:01 JST の automation 入力にも、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。現状 baseline は account password hash 検証のまま維持し、`SecretUnlockController` / tests / API contract / OpenAPI の変更は行わない。
+
+2026-05-09 05:01:55 JST の automation 入力にも、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。現状 baseline は account password hash 検証のまま維持し、`SecretUnlockController` / tests / API contract / OpenAPI の変更は行わない。
 
 現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の account password hash を検証し、短時間有効な unlock token を発行する。専用 password / recovery / rotation は未実装で、後続 task として検討対象に残っている。
 

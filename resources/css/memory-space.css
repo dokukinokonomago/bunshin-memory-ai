@@ -532,10 +532,6 @@ select {
         padding: 10px;
     }
 
-    .field--base {
-        display: none;
-    }
-
     .memory-space__status,
     .memory-space__detail {
         top: 54px;
