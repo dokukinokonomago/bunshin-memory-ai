@@ -7,9 +7,9 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
+                'resources/css/memory-space.css',
                 'resources/js/app.js',
-                'resources/css/pages/memories-create-v2.css',
-                'resources/js/pages/memories-create-v2.js',
+                'resources/js/memory-space.js',
             ],
             refresh: true,
         }),

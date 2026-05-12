@@ -1,15 +1,31 @@
 <?php
 
-use App\Http\Controllers\MemoryController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [MemoryController::class, 'home'])->name('home');
-Route::get('/memories', [MemoryController::class, 'index'])->name('memories.index');
-Route::get('/memories/bubbles', [MemoryController::class, 'bubbles'])->name('memories.bubbles');
-Route::get('/memories/create-preview', [MemoryController::class, 'createPreview'])->name('memories.create.preview');
-Route::get('/memories/create', [MemoryController::class, 'create'])->name('memories.create');
-Route::post('/memories', [MemoryController::class, 'store'])->name('memories.store');
-Route::get('/memories/{memory}/edit', [MemoryController::class, 'edit'])->name('memories.edit');
-Route::put('/memories/{memory}', [MemoryController::class, 'update'])->name('memories.update');
-Route::get('/memories/{memory}', [MemoryController::class, 'show'])->name('memories.show');
-Route::delete('/memories/{memory}', [MemoryController::class, 'destroy'])->name('memories.destroy');
+Route::get('/', function () {
+    return redirect()->route('memory-space');
+});
+
+Route::view('/memory-space', 'memory-space')->name('memory-space');
+
+Route::get('/admin', function () {
+    $html = file_get_contents(base_path('docs/references/admin-ui-mockup/index.html'));
+    $html = strtr($html, [
+        'href="styles.css"' => 'href="/admin-assets/styles.css"',
+        'src="app.js"' => 'src="/admin-assets/app.js"',
+    ]);
+
+    return response($html)->header('Content-Type', 'text/html; charset=UTF-8');
+})->name('admin');
+
+Route::get('/admin-assets/{asset}', function (string $asset) {
+    $contentTypes = [
+        'app.js' => 'application/javascript; charset=UTF-8',
+        'styles.css' => 'text/css; charset=UTF-8',
+    ];
+
+    return response()
+        ->file(base_path("docs/references/admin-ui-mockup/{$asset}"), [
+            'Content-Type' => $contentTypes[$asset],
+        ]);
+})->where('asset', 'styles\.css|app\.js');

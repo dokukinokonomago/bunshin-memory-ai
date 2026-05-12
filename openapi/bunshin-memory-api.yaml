@@ -1,0 +1,911 @@
+openapi: 3.1.0
+info:
+  title: Bunshin Memory API
+  version: 0.1.0
+  description: API-first backend contract for Bunshin AI memory services. Error responses under /api/v1 are JSON even when clients omit the Accept header.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: getHealth
+      security: []
+      responses:
+        "200":
+          description: Service status
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - service
+                  - status
+                  - version
+                properties:
+                  service:
+                    type: string
+                    const: bunshin-memory-api
+                  status:
+                    type: string
+                    const: ok
+                  version:
+                    type: string
+                    example: 0.1.0
+  /memories:
+    get:
+      summary: List memories
+      operationId: listMemories
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+            maxLength: 255
+          description: Partial match against title, body, tag name, and normalized tag name.
+        - name: period_key
+          in: query
+          schema:
+            type: string
+            enum:
+              - childhood
+              - elementary_school
+              - junior_high
+              - high_school
+              - university
+              - adult
+        - name: category_id
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: include_descendants
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: When category_id is provided, include memories assigned to descendant categories inside the request context.
+        - name: visibility
+          in: query
+          schema:
+            type: string
+            enum:
+              - private
+              - secret
+              - shared
+          description: Omit to exclude secret memories. Set secret explicitly to list only secret memories in the request context.
+      responses:
+        "200":
+          description: Memory list
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Memory"
+        "401":
+          description: Unauthenticated
+        "422":
+          description: Validation failed
+    post:
+      summary: Create memory
+      operationId: createMemory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - body
+                - visibility
+              properties:
+                period_key:
+                  type:
+                    - string
+                    - "null"
+                  enum:
+                    - childhood
+                    - elementary_school
+                    - junior_high
+                    - high_school
+                    - university
+                    - adult
+                    - null
+                occurred_on:
+                  type:
+                    - string
+                    - "null"
+                  format: date
+                title:
+                  type:
+                    - string
+                    - "null"
+                  maxLength: 255
+                body:
+                  type: string
+                  minLength: 1
+                emotion_label:
+                  type:
+                    - string
+                    - "null"
+                  maxLength: 40
+                emotion_intensity:
+                  type:
+                    - integer
+                    - "null"
+                  minimum: 1
+                  maximum: 5
+                visibility:
+                  type: string
+                  enum:
+                    - private
+                    - secret
+                    - shared
+                category_id:
+                  type:
+                    - integer
+                    - "null"
+                tags:
+                  type: array
+                  description: Tag names are normalized on write. Known initial aliases include ともだち/友人 -> 友達 and なつ -> 夏.
+                  maxItems: 20
+                  items:
+                    type: string
+                    minLength: 1
+                    maxLength: 40
+                metadata:
+                  type:
+                    - object
+                    - "null"
+                  additionalProperties: true
+      responses:
+        "201":
+          description: Memory created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Memory"
+        "401":
+          description: Unauthenticated
+        "422":
+          description: Validation failed
+  /memories/{memoryId}:
+    parameters:
+      - name: memoryId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get memory
+      operationId: getMemory
+      responses:
+        "200":
+          description: Memory detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Memory"
+        "401":
+          description: Unauthenticated
+        "404":
+          description: Memory not found in the request context
+    patch:
+      summary: Update memory
+      operationId: updateMemory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemoryUpdatePayload"
+      responses:
+        "200":
+          description: Memory updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Memory"
+        "401":
+          description: Unauthenticated
+        "404":
+          description: Memory not found in the request context
+        "422":
+          description: Validation failed
+    delete:
+      summary: Delete memory
+      operationId: deleteMemory
+      responses:
+        "204":
+          description: Memory soft-deleted and tag pivot detached
+        "401":
+          description: Unauthenticated
+        "404":
+          description: Memory not found in the request context
+  /memory-space:
+    get:
+      summary: Get memory-space read model
+      operationId: getMemorySpace
+      parameters:
+        - name: period_key
+          in: query
+          schema:
+            type: string
+            enum:
+              - childhood
+              - elementary_school
+              - junior_high
+              - high_school
+              - university
+              - adult
+        - name: category_id
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+          description: Filter memories and secret lock count to a category inside the request context.
+        - name: include_descendants
+          in: query
+          schema:
+            type: boolean
+            default: true
+          description: When category_id is provided, include descendant categories by default.
+        - name: include_secret
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: Include secret memories only when a valid X-Secret-Unlock token is also provided.
+        - name: X-Secret-Unlock
+          in: header
+          schema:
+            type: string
+          description: Short-lived secret unlock token issued by POST /secret-unlocks.
+      responses:
+        "200":
+          description: Memory-space read model
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/MemorySpace"
+        "401":
+          description: Unauthenticated
+        "422":
+          description: Validation failed
+  /secret-unlocks:
+    post:
+      summary: Issue a short-lived secret unlock token
+      operationId: createSecretUnlock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SecretUnlockCreatePayload"
+      responses:
+        "201":
+          description: Secret unlock token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/SecretUnlock"
+        "401":
+          description: Unauthenticated
+        "403":
+          description: Authenticated user has no tenant context
+        "422":
+          description: Validation failed or password is invalid
+  /categories:
+    get:
+      summary: List categories
+      operationId: listCategories
+      parameters:
+        - name: tree
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: When true, return root categories with nested children. The default response remains a flat list.
+      responses:
+        "200":
+          description: Category list
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Category"
+        "401":
+          description: Unauthenticated
+    post:
+      summary: Create category
+      operationId: createCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryCreatePayload"
+      responses:
+        "201":
+          description: Category created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Category"
+        "401":
+          description: Unauthenticated
+        "422":
+          description: Validation failed
+  /categories/{categoryId}:
+    parameters:
+      - name: categoryId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get category
+      operationId: getCategory
+      responses:
+        "200":
+          description: Category detail
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Category"
+        "401":
+          description: Unauthenticated
+        "404":
+          description: Category not found in request context
+    patch:
+      summary: Update category
+      operationId: updateCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryUpdatePayload"
+      responses:
+        "200":
+          description: Category updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Category"
+        "401":
+          description: Unauthenticated
+        "404":
+          description: Category not found in request context
+        "422":
+          description: Validation failed
+    delete:
+      summary: Delete category
+      operationId: deleteCategory
+      responses:
+        "204":
+          description: Category deleted
+        "401":
+          description: Unauthenticated
+        "404":
+          description: Category not found in request context
+        "422":
+          description: Category has children and must be emptied before deletion
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - errors
+                properties:
+                  message:
+                    type: string
+                    example: 子カテゴリを持つカテゴリは削除できません。
+                  errors:
+                    type: object
+                    required:
+                      - children
+                    properties:
+                      children:
+                        type: array
+                        items:
+                          type: string
+                        example:
+                          - 子カテゴリを移動または削除してから、カテゴリを削除してください。
+  /tags:
+    get:
+      summary: List tags
+      operationId: listTags
+      responses:
+        "200":
+          description: Tag list
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Tag"
+        "401":
+          description: Unauthenticated
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum-compatible personal access token
+  schemas:
+    Tag:
+      type: object
+      required:
+        - id
+        - name
+        - normalized_name
+        - usage_count
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        normalized_name:
+          type: string
+        usage_count:
+          type: integer
+    MemorySpace:
+      type: object
+      required:
+        - categories
+        - memories
+        - periods
+        - secret
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemorySpaceCategory"
+        memories:
+          type: array
+          description: Secret memories are included only when include_secret=true and X-Secret-Unlock is valid.
+          items:
+            $ref: "#/components/schemas/MemorySpaceMemory"
+        periods:
+          type: array
+          items:
+            $ref: "#/components/schemas/PeriodOption"
+        secret:
+          $ref: "#/components/schemas/SecretLockSummary"
+    MemorySpaceCategory:
+      type: object
+      required:
+        - id
+        - parent_id
+        - name
+        - slug
+        - sort_order
+        - memory_count
+        - locked_secret_count
+        - children
+      properties:
+        id:
+          type: integer
+        parent_id:
+          type:
+            - integer
+            - "null"
+        name:
+          type: string
+        slug:
+          type: string
+        sort_order:
+          type: integer
+        memory_count:
+          type: integer
+          description: Returned memory count aggregated across this category subtree for the current period filter.
+        locked_secret_count:
+          type: integer
+          description: Secret memory count still locked for this category subtree. Zero when secret memories are unlocked in the response.
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemorySpaceCategory"
+    MemorySpaceMemory:
+      type: object
+      required:
+        - id
+        - category_id
+        - title
+        - body
+        - emotion_scores
+        - importance_score
+        - beliefs
+        - chains
+        - tags
+        - visibility
+      properties:
+        id:
+          type: integer
+        category_id:
+          type:
+            - integer
+            - "null"
+        period_key:
+          type:
+            - string
+            - "null"
+        occurred_on:
+          type:
+            - string
+            - "null"
+          format: date
+        title:
+          type:
+            - string
+            - "null"
+        body:
+          type: string
+        emotion_label:
+          type:
+            - string
+            - "null"
+        emotion_intensity:
+          type:
+            - integer
+            - "null"
+        emotion_scores:
+          type: object
+          additionalProperties:
+            type: number
+        importance_score:
+          type:
+            - number
+            - "null"
+        beliefs:
+          type: array
+          items:
+            type: string
+        chains:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        visibility:
+          type: string
+          enum:
+            - private
+            - shared
+            - secret
+    PeriodOption:
+      type: object
+      required:
+        - key
+        - label
+      properties:
+        key:
+          type: string
+          enum:
+            - childhood
+            - elementary_school
+            - junior_high
+            - high_school
+            - university
+            - adult
+        label:
+          type: string
+    SecretLockSummary:
+      type: object
+      required:
+        - locked
+        - locked_count
+        - unlock_expires_at
+      properties:
+        locked:
+          type: boolean
+        locked_count:
+          type: integer
+        unlock_expires_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+    SecretUnlockCreatePayload:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+          maxLength: 1024
+          description: Initial baseline validates against the authenticated user's account password hash.
+    SecretUnlock:
+      type: object
+      required:
+        - unlock_token
+        - expires_at
+      properties:
+        unlock_token:
+          type: string
+          description: Opaque id-prefixed token returned once. Store only in session state on the client.
+        expires_at:
+          type: string
+          format: date-time
+    Category:
+      type: object
+      required:
+        - id
+        - parent_id
+        - name
+        - slug
+        - sort_order
+        - memory_count
+        - archived
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+        parent_id:
+          type:
+            - integer
+            - "null"
+        name:
+          type: string
+        slug:
+          type: string
+        sort_order:
+          type: integer
+        memory_count:
+          type: integer
+        archived:
+          type: boolean
+          const: false
+        children:
+          type: array
+          description: Present only when categories are requested with tree=true.
+          items:
+            $ref: "#/components/schemas/Category"
+        created_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+        updated_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+    CategoryCreatePayload:
+      type: object
+      required:
+        - name
+        - slug
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 80
+          pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        parent_id:
+          type:
+            - integer
+            - "null"
+        sort_order:
+          type: integer
+          minimum: 0
+          maximum: 999999
+    CategoryUpdatePayload:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 80
+          pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        parent_id:
+          type:
+            - integer
+            - "null"
+        sort_order:
+          type: integer
+          minimum: 0
+          maximum: 999999
+    Memory:
+      type: object
+      required:
+        - id
+        - body
+        - visibility
+        - tags
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+        period_key:
+          type:
+            - string
+            - "null"
+        occurred_on:
+          type:
+            - string
+            - "null"
+          format: date
+        title:
+          type:
+            - string
+            - "null"
+        body:
+          type: string
+        emotion_label:
+          type:
+            - string
+            - "null"
+        emotion_intensity:
+          type:
+            - integer
+            - "null"
+        visibility:
+          type: string
+          enum:
+            - private
+            - secret
+            - shared
+        category:
+          type:
+            - object
+            - "null"
+          required:
+            - id
+            - name
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+        tags:
+          type: array
+          items:
+            type: string
+        created_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+        updated_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+    MemoryUpdatePayload:
+      type: object
+      properties:
+        period_key:
+          type:
+            - string
+            - "null"
+          enum:
+            - childhood
+            - elementary_school
+            - junior_high
+            - high_school
+            - university
+            - adult
+            - null
+        occurred_on:
+          type:
+            - string
+            - "null"
+          format: date
+        title:
+          type:
+            - string
+            - "null"
+          maxLength: 255
+        body:
+          type: string
+          minLength: 1
+        emotion_label:
+          type:
+            - string
+            - "null"
+          maxLength: 40
+        emotion_intensity:
+          type:
+            - integer
+            - "null"
+          minimum: 1
+          maximum: 5
+        visibility:
+          type: string
+          enum:
+            - private
+            - secret
+            - shared
+        category_id:
+          type:
+            - integer
+            - "null"
+        tags:
+          type:
+            - array
+            - "null"
+          description: Omit to keep existing tags. Provide an array or null to sync tags using write-time normalization.
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 40
+        metadata:
+          type:
+            - object
+            - "null"
+          additionalProperties: true

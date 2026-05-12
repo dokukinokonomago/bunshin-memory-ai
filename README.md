@@ -1,41 +1,36 @@
-# 分身AI MVP
+# 分身AI バックエンド
 
-Laravel + MySQL を Docker 上で動かす構成です。記憶の登録、一覧、詳細、年代フィルター、削除を実装しています。
+この repository は、既存 MVP 資材を `legacy_assets/20260504_004800_existing_assets/` に退避したうえで、新規設計から作り直すバックエンドです。
 
-## 起動
+## 現在の方針
+
+- 既存 MVP の画面・Controller・DB 設計は legacy として扱う。
+- 新規実装は API-first の Laravel バックエンドとして進める。
+- まず設計ドキュメント、API 契約、データモデルを固定し、その後に migration / model / API を小さく実装する。
+- 1 回の automation では正式 task を 1 つだけ進める。
+
+## 新規設計ドキュメント
+
+- [バックエンド設計](docs/architecture/backend_design.md)
+- [データモデル設計](docs/architecture/data_model.md)
+- [API 契約](docs/architecture/api_contract.md)
+- [Fresh start decision](docs/decisions/0001-fresh-start.md)
+- [OpenAPI draft](openapi/bunshin-memory-api.yaml)
+
+## 開発
 
 ```bash
-docker compose up --build -d
+composer install
+php artisan test
+php artisan serve
 ```
 
-アプリ:
+ヘルスチェック:
 
 ```text
-http://localhost:28080
+GET /api/v1/health
 ```
 
-MySQL:
+## 次に作るもの
 
-```text
-host: 127.0.0.1
-port: 13306
-database: bunshin_ai
-user: bunshin
-password: secret
-root password: root
-```
-
-## 構成
-
-- `docker-compose.yml`: Laravel と MySQL の起動設定
-- `docker/app/Dockerfile`: PHP 8.3 + Apache + pdo_mysql
-- `docker/app/start-container.sh`: DB待機と migration 自動実行
-- `app/Http/Controllers/MemoryController.php`: MVPの画面処理
-- `app/Models/Memory.php`: 記憶モデル
-- `database/migrations/2026_04_15_000100_create_memories_table.php`: `memories` テーブル
-- `resources/views/memories/*.blade.php`: 画面テンプレート
-
-## 補足
-
-- Webポートは `28080`、MySQLポートは `13306` に変更しています。
-- コンテナ起動時に `php artisan migrate --force` を実行します。
+次回 automation は `memories` / `categories` / `tags` の migration と Eloquent model の最小セットから開始する。
