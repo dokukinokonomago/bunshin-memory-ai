@@ -9,10 +9,12 @@ Route::get('/', function () {
 Route::view('/memory-space', 'memory-space')->name('memory-space');
 
 Route::get('/admin', function () {
+    $stylesVersion = filemtime(base_path('docs/references/admin-ui-mockup/styles.css')) ?: time();
+    $appVersion = filemtime(base_path('docs/references/admin-ui-mockup/app.js')) ?: time();
     $html = file_get_contents(base_path('docs/references/admin-ui-mockup/index.html'));
     $html = strtr($html, [
-        'href="styles.css"' => 'href="/admin-assets/styles.css"',
-        'src="app.js"' => 'src="/admin-assets/app.js"',
+        'href="styles.css"' => 'href="/admin-assets/styles.css?v='.$stylesVersion.'"',
+        'src="app.js"' => 'src="/admin-assets/app.js?v='.$appVersion.'"',
     ]);
 
     return response($html)->header('Content-Type', 'text/html; charset=UTF-8');
