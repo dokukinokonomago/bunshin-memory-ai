@@ -23,6 +23,12 @@ class MemorySpaceFrontendTest extends TestCase
             ->assertSee('memory-space-canvas', false)
             ->assertSee('controls-toggle', false)
             ->assertSee('list-toggle', false)
+            ->assertSee('admin-link', false)
+            ->assertSee('href="http://localhost/admin"', false)
+            ->assertSee('login-form', false)
+            ->assertSee('login-email', false)
+            ->assertSee('login-password', false)
+            ->assertSee('login-status', false)
             ->assertSee('unlock-dialog', false);
     }
 
@@ -31,6 +37,8 @@ class MemorySpaceFrontendTest extends TestCase
         $this->get('/admin')
             ->assertOk()
             ->assertSee('分身AI', false)
+            ->assertSee('memory-space-link', false)
+            ->assertSee('href="/memory-space"', false)
             ->assertSee('/admin-assets/styles.css', false)
             ->assertSee('/admin-assets/app.js', false);
     }

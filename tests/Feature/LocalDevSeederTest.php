@@ -21,6 +21,8 @@ class LocalDevSeederTest extends TestCase
             ->firstOrFail();
 
         $this->assertSame('default', $user->tenant?->slug);
+        $this->assertSame(User::ROLE_OWNER, $user->role);
+        $this->assertTrue($user->checkSecretUnlockPassword('secret-password'));
         $this->assertTrue(
             PersonalAccessToken::findToken('local-dev-token')?->tokenable->is($user) ?? false
         );

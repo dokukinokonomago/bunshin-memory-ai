@@ -28,17 +28,26 @@ class DatabaseSeeder extends Seeder
 
         $tenant = Tenant::query()->firstOrCreate(
             ['slug' => 'default'],
-            ['name' => 'Default'],
+            [
+                'name' => 'Default',
+                'plan_key' => Tenant::PLAN_FREE,
+                'subscription_status' => Tenant::SUBSCRIPTION_STATUS_ACTIVE,
+            ],
         );
+        $tenant->ensurePublicId();
 
         $user = User::query()->updateOrCreate(
             ['email' => 'admin@example.test'],
             [
                 'tenant_id' => $tenant->id,
+                'role' => User::ROLE_OWNER,
+                'account_status' => User::ACCOUNT_STATUS_ACTIVE,
                 'name' => 'Admin User',
                 'password' => 'password',
+                'secret_unlock_password' => 'secret-password',
             ],
         );
+        $user->ensurePublicId();
 
         $user->personalAccessTokens()->updateOrCreate([
             'name' => 'local-dev',
@@ -79,7 +88,7 @@ class DatabaseSeeder extends Seeder
         int $sortOrder,
         ?Category $parent = null
     ): Category {
-        return Category::query()->updateOrCreate([
+        $category = Category::query()->updateOrCreate([
             'tenant_id' => $tenant->id,
             'owner_user_id' => $user->id,
             'slug' => $slug,
@@ -88,6 +97,9 @@ class DatabaseSeeder extends Seeder
             'name' => $name,
             'sort_order' => $sortOrder,
         ]);
+        $category->ensurePublicId();
+
+        return $category;
     }
 
     /**
@@ -194,6 +206,7 @@ class DatabaseSeeder extends Seeder
             'source' => 'seed',
             'metadata' => $data['metadata'],
         ]);
+        $memory->ensurePublicId();
 
         $tagIds = collect($data['tags'])
             ->map(fn (string $tagName): int => $this->tag($tenant, $tagName)->id)

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPrefixedPublicId;
+use App\Support\ScopedPublicIdResolver;
 use App\Support\TenantUserContext;
 use Database\Factories\MemoryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -29,13 +31,18 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Memory extends Model
 {
     /** @use HasFactory<MemoryFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasPrefixedPublicId, SoftDeletes;
 
     public const VISIBILITY_PRIVATE = 'private';
 
     public const VISIBILITY_SECRET = 'secret';
 
     public const VISIBILITY_SHARED = 'shared';
+
+    protected static function publicIdPrefix(): string
+    {
+        return 'mem';
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -127,6 +134,6 @@ class Memory extends Model
 
     public static function findForContext(TenantUserContext $context, int|string $id): ?self
     {
-        return static::queryForContext($context)->whereKey($id)->first();
+        return ScopedPublicIdResolver::memory($context, $id);
     }
 }

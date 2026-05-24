@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class IssueAdminTokenCommand extends Command
 {
@@ -16,6 +17,7 @@ class IssueAdminTokenCommand extends Command
         {--tenant-name= : Tenant name used when creating a tenant}
         {--email=admin@example.test : Admin user email}
         {--name=Admin User : Admin user name used when creating a user}
+        {--role=owner : Tenant role assigned to the user}
         {--token-name=admin-mockup : Personal access token name}
         {--expires-days=30 : Token lifetime in days}';
 
@@ -29,10 +31,12 @@ class IssueAdminTokenCommand extends Command
             'tenant_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email:rfc', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
+            'role' => ['required', 'string', Rule::in(User::ROLES)],
             'token_name' => ['required', 'string', 'max:255'],
             'expires_days' => ['required', 'integer', 'min:1', 'max:3650'],
         ], attributes: [
             'tenant_name' => 'tenant-name',
+            'role' => 'role',
             'token_name' => 'token-name',
             'expires_days' => 'expires-days',
         ]);
@@ -68,7 +72,11 @@ class IssueAdminTokenCommand extends Command
         $result = DB::transaction(function () use ($input, $existingUser): array {
             $tenant = Tenant::query()->firstOrCreate(
                 ['slug' => $input['tenant']],
-                ['name' => $input['tenant_name']],
+                [
+                    'name' => $input['tenant_name'],
+                    'plan_key' => Tenant::PLAN_FREE,
+                    'subscription_status' => Tenant::SUBSCRIPTION_STATUS_ACTIVE,
+                ],
             );
 
             if ($existingUser instanceof User) {
@@ -76,13 +84,17 @@ class IssueAdminTokenCommand extends Command
 
                 if ($user->tenant_id === null) {
                     $user->tenant()->associate($tenant);
-                    $user->save();
                 }
+
+                $user->role = $input['role'];
+                $user->save();
 
                 $userCreated = false;
             } else {
                 $user = User::query()->create([
                     'tenant_id' => $tenant->id,
+                    'role' => $input['role'],
+                    'account_status' => User::ACCOUNT_STATUS_ACTIVE,
                     'name' => $input['name'],
                     'email' => $input['email'],
                     'password' => Str::random(48),
@@ -108,6 +120,7 @@ class IssueAdminTokenCommand extends Command
                 'revoked_count' => $revokedCount,
                 'expires_at' => $expiresAt,
                 'plain_text_token' => $newAccessToken->plainTextToken,
+                'role' => $user->role,
                 'token_name' => $input['token_name'],
             ];
         });
@@ -125,6 +138,7 @@ class IssueAdminTokenCommand extends Command
             $result['user']->id,
             $result['user_created'] ? 'created' : 'existing',
         ));
+        $this->line('Role: '.$result['role']);
         $this->line('Token name: '.$result['token_name']);
         $this->line('Revoked existing tokens: '.$result['revoked_count']);
         $this->line('Expires at: '.$result['expires_at']->toIso8601String());
@@ -141,6 +155,7 @@ class IssueAdminTokenCommand extends Command
      *     tenant_name: string,
      *     email: string,
      *     name: string,
+     *     role: string,
      *     token_name: string,
      *     expires_days: string
      * }
@@ -155,6 +170,7 @@ class IssueAdminTokenCommand extends Command
             'tenant_name' => $tenantName,
             'email' => Str::lower($this->optionString('email', 'admin@example.test')),
             'name' => $this->optionString('name', 'Admin User'),
+            'role' => Str::lower($this->optionString('role', User::ROLE_OWNER)),
             'token_name' => $this->optionString('token-name', 'admin-mockup'),
             'expires_days' => $this->optionString('expires-days', '30'),
         ];

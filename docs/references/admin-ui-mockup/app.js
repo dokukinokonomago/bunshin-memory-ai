@@ -119,7 +119,7 @@ function memoryPayload(payload) {
     occurred_on: payload.occurred_on || null,
     emotion_label: payload.emotion_label || null,
     emotion_intensity: Number.isNaN(Number(payload.emotion_intensity)) ? null : Number(payload.emotion_intensity),
-    category_id: payload.category_id || payload.category?.id || null,
+    category_id: payload.category_id || payload.category_public_id || payload.category?.public_id || payload.category?.id || null,
     visibility: payload.visibility,
     tags: payload.tags || [],
   };
@@ -190,24 +190,82 @@ const periodLabels = {
 
 function periodLabel(k) { return periodLabels[k] || k; }
 
+function resourceId(resource) {
+  return resource?.public_id || resource?.id || '';
+}
+
+function categoryParentId(category) {
+  return category?.parent_public_id || category?.parent_id || '';
+}
+
+function findByResourceId(items, id) {
+  return items.find(item => String(resourceId(item)) === String(id));
+}
+
 function isRootCategory(category) {
   return category.parent_id === null || category.parent_id === undefined || category.parent_id === '';
 }
 
 function categoryParentMap(categories) {
-  return new Map(categories.map(category => [String(category.id), category]));
+  return new Map(categories.map(category => [String(resourceId(category)), category]));
 }
 
 function categoryParentLabel(category, categories) {
   if (isRootCategory(category)) return '—';
 
-  const parent = categoryParentMap(categories).get(String(category.parent_id));
-  return parent ? parent.name : `#${category.parent_id}`;
+  const parentId = categoryParentId(category);
+  const parent = categoryParentMap(categories).get(String(parentId));
+  return parent ? parent.name : `#${parentId}`;
 }
 
 function categoryDisplayName(category, categories) {
   const parentLabel = categoryParentLabel(category, categories);
   return parentLabel === '—' ? category.name : `${parentLabel} / ${category.name}`;
+}
+
+function compareCategoriesForDisplay(a, b) {
+  const sortA = Number.isFinite(Number(a.sort_order)) ? Number(a.sort_order) : 0;
+  const sortB = Number.isFinite(Number(b.sort_order)) ? Number(b.sort_order) : 0;
+
+  if (sortA !== sortB) return sortA - sortB;
+
+  return String(a.name || '').localeCompare(String(b.name || ''), 'ja');
+}
+
+function categoriesInTreeOrder(categories) {
+  const byId = categoryParentMap(categories);
+  const byParent = new Map();
+
+  categories.forEach(category => {
+    const parentKey = isRootCategory(category) ? null : String(categoryParentId(category));
+    const siblings = byParent.get(parentKey) || [];
+    siblings.push(category);
+    byParent.set(parentKey, siblings);
+  });
+
+  byParent.forEach(siblings => siblings.sort(compareCategoriesForDisplay));
+
+  const ordered = [];
+  const visited = new Set();
+
+  function append(category, depth = 0) {
+    const id = String(resourceId(category));
+    if (visited.has(id)) return;
+
+    visited.add(id);
+    ordered.push({ ...category, depth });
+
+    (byParent.get(id) || []).forEach(child => append(child, depth + 1));
+  }
+
+  const roots = (byParent.get(null) || [])
+    .concat(categories.filter(category => !isRootCategory(category) && !byId.has(String(categoryParentId(category)))))
+    .sort(compareCategoriesForDisplay);
+
+  roots.forEach(category => append(category, 0));
+  categories.slice().sort(compareCategoriesForDisplay).forEach(category => append(category, 0));
+
+  return ordered;
 }
 
 function relativeTime(iso) {
@@ -291,7 +349,7 @@ let currentPage = 'dashboard';
 function navigate(page) {
   currentPage = page;
   document.getElementById('page-title').textContent = pageTitles[page] || page;
-  document.querySelectorAll('.nav-item').forEach(el => {
+  document.querySelectorAll('.nav-item[data-page]').forEach(el => {
     el.classList.toggle('active', el.dataset.page === page);
   });
   renderPage(page);
@@ -329,6 +387,7 @@ async function renderDashboard(el) {
   ]);
 
   const recent = [...memories].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).slice(0, 5);
+  const orderedCategories = categoriesInTreeOrder(categories);
   const statusClass = health.status === 'ok' ? 'ok' : health.status === 'warn' ? 'warn' : 'error';
 
   updateApiStatusBadge(health.status);
@@ -375,7 +434,7 @@ async function renderDashboard(el) {
         </div>
         <div class="panel-body">
           ${recent.map(m => `
-            <div class="memory-list-item" onclick="openMemoryDetail('${m.id}')">
+            <div class="memory-list-item" onclick="openMemoryDetail('${esc(resourceId(m))}')">
               <div class="memory-list-item__body">
                 <div class="memory-list-item__title">${esc(m.title)}</div>
                 <div class="memory-list-item__meta">
@@ -399,9 +458,9 @@ async function renderDashboard(el) {
           <span class="panel-title">カテゴリ分布</span>
         </div>
         <div class="panel-body" style="padding:16px">
-          ${categories.filter(c => !c.archived).map(c => `
+          ${orderedCategories.filter(c => !c.archived).map(c => `
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-              <span style="font-size:12px;color:var(--text-secondary);min-width:80px">${esc(c.name)}</span>
+              <span style="font-size:12px;color:var(--text-secondary);min-width:80px">${esc(categoryDisplayName(c, categories))}</span>
               <div style="flex:1;background:var(--surface-2);border-radius:2px;height:6px;overflow:hidden">
                 <div style="height:100%;background:var(--accent);width:${Math.min(100, (c.memory_count / 30) * 100)}%;border-radius:2px"></div>
               </div>
@@ -423,6 +482,7 @@ let deleteTarget = null;
 
 async function renderMemories(el) {
   const [memories, categories] = await Promise.all([api.listMemories(memoryFilters), api.listCategories()]);
+  const orderedCategories = categoriesInTreeOrder(categories);
 
   el.innerHTML = `
     <div class="section-header">
@@ -444,7 +504,7 @@ async function renderMemories(el) {
       </select>
       <select class="filter-select" id="mem-category">
         <option value="">カテゴリ: すべて</option>
-        ${categories.filter(c => !c.archived).map(c => `<option value="${c.id}" ${String(memoryFilters.category_id) === String(c.id) ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}
+        ${orderedCategories.filter(c => !c.archived).map(c => `<option value="${esc(resourceId(c))}" ${String(memoryFilters.category_id) === String(resourceId(c)) ? 'selected' : ''}>${esc(categoryDisplayName(c, categories))}</option>`).join('')}
       </select>
     </div>
 
@@ -474,7 +534,7 @@ async function renderMemories(el) {
         </thead>
         <tbody>
           ${memories.map(m => `
-            <tr data-id="${m.id}">
+            <tr data-id="${esc(resourceId(m))}">
               <td class="td-title">${esc(m.title)}</td>
               <td><span class="period-label">${periodLabel(m.period_key)}</span></td>
               <td><span class="emotion-badge">${esc(m.emotion_label)}</span></td>
@@ -483,10 +543,10 @@ async function renderMemories(el) {
               <td><span class="badge badge--${m.visibility}">${m.visibility}</span></td>
               <td>
                 <div class="td-actions">
-                  <button class="btn-icon mem-edit-btn" data-id="${m.id}" aria-label="編集" title="編集">
+                  <button class="btn-icon mem-edit-btn" data-id="${esc(resourceId(m))}" aria-label="編集" title="編集">
                     <svg viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-9 9H2v-3L11 2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
                   </button>
-                  <button class="btn-icon mem-delete-btn" data-id="${m.id}" aria-label="削除" title="削除" style="color:var(--danger)">
+                  <button class="btn-icon mem-delete-btn" data-id="${esc(resourceId(m))}" aria-label="削除" title="削除" style="color:var(--danger)">
                     <svg viewBox="0 0 16 16" fill="none"><path d="M3 4h10M6 4V2h4v2M5 4v8a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </button>
                 </div>
@@ -519,7 +579,7 @@ async function renderMemories(el) {
   el.querySelectorAll('.mem-delete-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      const m = memories.find(x => x.id === btn.dataset.id);
+      const m = findByResourceId(memories, btn.dataset.id);
       confirmDelete(m);
     });
   });
@@ -594,7 +654,7 @@ async function renderSecret(el) {
         </thead>
         <tbody>
           ${secrets.map(m => `
-            <tr data-id="${m.id}">
+            <tr data-id="${esc(resourceId(m))}">
               <td class="td-title">${esc(m.title)}</td>
               <td><span class="period-label">${periodLabel(m.period_key)}</span></td>
               <td><span class="emotion-badge">${esc(m.emotion_label)}</span></td>
@@ -602,7 +662,7 @@ async function renderSecret(el) {
               <td style="color:var(--text-secondary)">${esc(m.category?.name || '—')}</td>
               <td>
                 <div class="td-actions">
-                  <button class="btn-icon sec-delete-btn" data-id="${m.id}" aria-label="削除" title="削除" style="color:var(--danger)">
+                  <button class="btn-icon sec-delete-btn" data-id="${esc(resourceId(m))}" aria-label="削除" title="削除" style="color:var(--danger)">
                     <svg viewBox="0 0 16 16" fill="none"><path d="M3 4h10M6 4V2h4v2M5 4v8a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </button>
                 </div>
@@ -630,7 +690,7 @@ async function renderSecret(el) {
   el.querySelectorAll('.sec-delete-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      const m = secrets.find(x => x.id === btn.dataset.id);
+      const m = findByResourceId(secrets, btn.dataset.id);
       confirmDelete(m);
     });
   });
@@ -641,6 +701,7 @@ async function renderSecret(el) {
 // ================================================================
 async function renderCategories(el) {
   const categories = await api.listCategories();
+  const orderedCategories = categoriesInTreeOrder(categories);
 
   el.innerHTML = `
     <div class="section-header">
@@ -668,7 +729,7 @@ async function renderCategories(el) {
           </tr>
         </thead>
         <tbody>
-          ${categories.map(c => `
+          ${orderedCategories.map(c => `
             <tr>
               <td class="td-title">
                 ${isRootCategory(c) ? '' : '<span style="color:var(--text-muted);font-weight:400">└ </span>'}${esc(c.name)}
@@ -683,10 +744,10 @@ async function renderCategories(el) {
               </td>
               <td>
                 <div class="td-actions">
-                  <button class="btn-icon cat-edit-btn" data-id="${c.id}" aria-label="編集" title="編集">
+                  <button class="btn-icon cat-edit-btn" data-id="${esc(resourceId(c))}" aria-label="編集" title="編集">
                     <svg viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-9 9H2v-3L11 2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
                   </button>
-                  <button class="btn-icon cat-delete-btn" data-id="${c.id}" aria-label="削除" title="削除" style="color:var(--danger)">
+                  <button class="btn-icon cat-delete-btn" data-id="${esc(resourceId(c))}" aria-label="削除" title="削除" style="color:var(--danger)">
                     <svg viewBox="0 0 16 16" fill="none"><path d="M3 4h10M6 4V2h4v2M5 4v8a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </button>
                 </div>
@@ -961,7 +1022,7 @@ async function openMemoryDetail(id) {
   document.getElementById('drawer-body').innerHTML = `
     <div class="detail-field">
       <div class="detail-field__label">ID</div>
-      <div class="detail-field__value" style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted)">${esc(m.id)}</div>
+      <div class="detail-field__value" style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted)">${esc(resourceId(m))}</div>
     </div>
     <div class="detail-field">
       <div class="detail-field__label">本文</div>
@@ -1023,7 +1084,7 @@ async function openMemoryModal(id) {
       api.listCategories(),
     ]);
     m = memory;
-    populateMemoryCategoryOptions(categories, m?.category?.id || '');
+    populateMemoryCategoryOptions(categories, resourceId(m?.category) || '');
   } catch (error) {
     showApiError(error);
     return;
@@ -1038,7 +1099,7 @@ async function openMemoryModal(id) {
       document.getElementById('f-occurred').value = m.occurred_on || '';
       document.getElementById('f-emotion').value = m.emotion_label || '';
       document.getElementById('f-intensity').value = m.emotion_intensity || 3;
-      document.getElementById('f-category').value = m.category?.id ? String(m.category.id) : '';
+      document.getElementById('f-category').value = resourceId(m.category) ? String(resourceId(m.category)) : '';
       document.getElementById('f-visibility').value = m.visibility || 'private';
       document.getElementById('f-tags').value = (m.tags || []).join(', ');
     }
@@ -1094,9 +1155,10 @@ async function openMemoryModal(id) {
 
 function populateMemoryCategoryOptions(categories, selectedId = '') {
   const select = document.getElementById('f-category');
+  const orderedCategories = categoriesInTreeOrder(categories);
   select.innerHTML = `
     <option value="">未分類</option>
-    ${categories.filter(c => !c.archived).map(c => `<option value="${c.id}">${esc(categoryDisplayName(c, categories))}</option>`).join('')}
+    ${orderedCategories.filter(c => !c.archived).map(c => `<option value="${esc(resourceId(c))}">${esc(categoryDisplayName(c, categories))}</option>`).join('')}
   `;
   select.value = selectedId ? String(selectedId) : '';
 }
@@ -1104,11 +1166,11 @@ function populateMemoryCategoryOptions(categories, selectedId = '') {
 function populateCategoryParentOptions(categories, selectedId = '', excludeId = null) {
   const select = document.getElementById('cat-parent');
   const exclude = excludeId === null ? null : String(excludeId);
-  const roots = categories.filter(c => !c.archived && isRootCategory(c) && String(c.id) !== exclude);
+  const roots = categoriesInTreeOrder(categories).filter(c => !c.archived && isRootCategory(c) && String(resourceId(c)) !== exclude);
 
   select.innerHTML = `
     <option value="">なし（大カテゴリ）</option>
-    ${roots.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}
+    ${roots.map(c => `<option value="${esc(resourceId(c))}">${esc(c.name)}</option>`).join('')}
   `;
   select.value = selectedId ? String(selectedId) : '';
 }
@@ -1126,7 +1188,7 @@ function confirmDelete(m) {
 async function executeDelete() {
   if (!deleteTarget) return;
   try {
-    await api.deleteMemory(deleteTarget.id);
+    await api.deleteMemory(resourceId(deleteTarget));
     showToast('削除しました');
     closeModal('delete-modal-backdrop');
     closeDrawer();
@@ -1156,7 +1218,7 @@ async function openCategoryModal(id) {
     return;
   }
 
-  populateCategoryParentOptions(categories, category?.parent_id || '', id);
+  populateCategoryParentOptions(categories, categoryParentId(category) || '', id);
 
   if (id) {
     document.getElementById('cat-name').value = category.name;
@@ -1233,7 +1295,7 @@ function closeDrawer() {
 // ================================================================
 function bindGlobalEvents() {
   // Nav
-  document.querySelectorAll('.nav-item').forEach(el => {
+  document.querySelectorAll('.nav-item[data-page]').forEach(el => {
     el.addEventListener('click', e => { e.preventDefault(); navigate(el.dataset.page); });
   });
 
@@ -1243,7 +1305,7 @@ function bindGlobalEvents() {
     if (e.target === document.getElementById('drawer-backdrop')) closeDrawer();
   });
   document.getElementById('drawer-edit').addEventListener('click', () => {
-    if (memoryCurrent) { closeDrawer(); openMemoryModal(memoryCurrent.id); }
+    if (memoryCurrent) { closeDrawer(); openMemoryModal(resourceId(memoryCurrent)); }
   });
   document.getElementById('drawer-delete').addEventListener('click', () => {
     if (memoryCurrent) confirmDelete(memoryCurrent);

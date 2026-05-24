@@ -30,13 +30,13 @@ class MemorySpaceController extends Controller
     {
         $context = TenantUserContext::fromUser($request->user());
         $filters = $request->validated();
-        $categoryIds = $this->categoryFilterIds($context, $filters);
+        $categoryIds = $this->categoryFilterIds($context, $request, $filters);
         $secretUnlockToken = $this->validSecretUnlockToken($request, $context);
         $includeUnlockedSecrets = ($filters['include_secret'] ?? false) === true
             && $secretUnlockToken instanceof SecretUnlockToken;
 
         $memories = Memory::queryForContext($context)
-            ->with('tags')
+            ->with(['category', 'tags'])
             ->when(
                 ! $includeUnlockedSecrets,
                 static fn (Builder $query): Builder => $query->visibleByDefault()
@@ -85,13 +85,20 @@ class MemorySpaceController extends Controller
      * @param  array<string, mixed>  $filters
      * @return array<int, int>|null
      */
-    private function categoryFilterIds(TenantUserContext $context, array $filters): ?array
-    {
+    private function categoryFilterIds(
+        TenantUserContext $context,
+        MemorySpaceRequest $request,
+        array $filters
+    ): ?array {
         if (($filters['category_id'] ?? null) === null) {
             return null;
         }
 
-        $categoryId = (int) $filters['category_id'];
+        $categoryId = $request->resolvedCategoryFilterId();
+
+        if ($categoryId === null) {
+            return null;
+        }
 
         if (($filters['include_descendants'] ?? true) === false) {
             return Category::queryForContext($context)->whereKey($categoryId)->exists()
@@ -165,6 +172,7 @@ class MemorySpaceController extends Controller
     private function categoryTree(TenantUserContext $context, ?string $periodKey, bool $includeUnlockedSecrets): array
     {
         $categories = Category::queryForContext($context)
+            ->with('parent')
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
@@ -222,7 +230,9 @@ class MemorySpaceController extends Controller
 
         return [[
             'id' => (int) $category->getKey(),
+            'public_id' => $category->public_id,
             'parent_id' => $category->parent_id === null ? null : (int) $category->parent_id,
+            'parent_public_id' => $category->parent?->public_id,
             'name' => $category->name,
             'slug' => $category->slug,
             'sort_order' => (int) $category->sort_order,
@@ -291,7 +301,9 @@ class MemorySpaceController extends Controller
 
         return [
             'id' => (int) $memory->getKey(),
+            'public_id' => $memory->public_id,
             'category_id' => $memory->category_id === null ? null : (int) $memory->category_id,
+            'category_public_id' => $memory->category?->public_id,
             'period_key' => $memory->period_key,
             'occurred_on' => $memory->occurred_on?->toDateString(),
             'title' => $memory->title,

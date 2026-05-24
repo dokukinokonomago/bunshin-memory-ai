@@ -67,6 +67,29 @@ class TokenAuthTest extends TestCase
             ->assertUnauthorized();
     }
 
+    public function test_existing_bearer_tokens_for_disabled_and_suspended_users_are_rejected(): void
+    {
+        $tenant = Tenant::query()->create([
+            'name' => '分身AI',
+            'slug' => 'bunshin-ai',
+        ]);
+
+        foreach ([User::ACCOUNT_STATUS_DISABLED, User::ACCOUNT_STATUS_SUSPENDED] as $status) {
+            $user = User::factory()->create([
+                'tenant_id' => $tenant->id,
+                'account_status' => $status,
+            ]);
+            $token = $user->createApiToken("{$status}-test");
+
+            $this
+                ->withHeader('Authorization', 'Bearer '.$token->plainTextToken)
+                ->getJson('/api/v1/categories')
+                ->assertUnauthorized();
+
+            $this->assertNull($token->accessToken->fresh()->last_used_at);
+        }
+    }
+
     public function test_plain_bearer_token_without_id_prefix_authenticates_api_routes(): void
     {
         $tenant = Tenant::query()->create([

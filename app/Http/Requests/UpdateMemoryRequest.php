@@ -3,11 +3,18 @@
 namespace App\Http\Requests;
 
 use App\Models\Memory;
+use App\Support\ScopedPublicIdResolver;
+use App\Support\TenantUserContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class UpdateMemoryRequest extends FormRequest
 {
+    private bool $routeMemoryResolved = false;
+
+    private ?Memory $routeMemory = null;
+
     public function authorize(): bool
     {
         return $this->user()?->tenant_id !== null;
@@ -42,17 +49,43 @@ class UpdateMemoryRequest extends FormRequest
             'category_id' => [
                 'sometimes',
                 'nullable',
-                'integer',
-                Rule::exists('categories', 'id')->where(static function ($query) use ($user): void {
-                    $query
-                        ->where('tenant_id', $user?->tenant_id)
-                        ->where('owner_user_id', $user?->getKey());
-                }),
+                function (string $attribute, mixed $value, \Closure $fail) use ($user): void {
+                    if (ScopedPublicIdResolver::isBlankIdentifier($value)) {
+                        return;
+                    }
+
+                    if (! ScopedPublicIdResolver::isCategoryIdentifier($value)) {
+                        $fail('The '.$attribute.' field must be a valid category identifier.');
+
+                        return;
+                    }
+
+                    if (! $user?->tenant_id) {
+                        return;
+                    }
+
+                    if (! ScopedPublicIdResolver::category(TenantUserContext::fromUser($user), $value)) {
+                        $fail('The selected '.$attribute.' is invalid.');
+                    }
+                },
             ],
             'tags' => ['sometimes', 'nullable', 'array', 'max:20'],
             'tags.*' => ['required', 'string', 'min:1', 'max:40', 'distinct:strict'],
             'metadata' => ['sometimes', 'nullable', 'array'],
         ];
+    }
+
+    public function resolvedCategoryId(): ?int
+    {
+        $value = $this->input('category_id');
+
+        if (ScopedPublicIdResolver::isBlankIdentifier($value)) {
+            return null;
+        }
+
+        $category = ScopedPublicIdResolver::category(TenantUserContext::fromUser($this->user()), $value);
+
+        return $category === null ? null : (int) $category->getKey();
     }
 
     protected function prepareForValidation(): void
@@ -71,6 +104,14 @@ class UpdateMemoryRequest extends FormRequest
             }
         }
 
+        if (array_key_exists('category_id', $input) && is_string($input['category_id'])) {
+            $input['category_id'] = trim($input['category_id']);
+        }
+
+        if (($input['category_id'] ?? null) === '') {
+            $input['category_id'] = null;
+        }
+
         if (isset($input['tags']) && is_array($input['tags'])) {
             $input['tags'] = array_map(
                 static fn (mixed $tag): mixed => is_string($tag) ? trim($tag) : $tag,
@@ -79,5 +120,31 @@ class UpdateMemoryRequest extends FormRequest
         }
 
         $this->replace($input);
+
+        if ($this->user()?->tenant_id !== null && ! $this->routeMemory()) {
+            throw new NotFoundHttpException;
+        }
+    }
+
+    private function routeMemory(): ?Memory
+    {
+        if ($this->routeMemoryResolved) {
+            return $this->routeMemory;
+        }
+
+        $this->routeMemoryResolved = true;
+
+        $user = $this->user();
+
+        if (! $user?->tenant_id) {
+            return null;
+        }
+
+        $this->routeMemory = ScopedPublicIdResolver::memory(
+            TenantUserContext::fromUser($user),
+            $this->route('memory'),
+        );
+
+        return $this->routeMemory;
     }
 }

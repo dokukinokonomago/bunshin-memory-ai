@@ -18,9 +18,21 @@
 
 ## 起動
 
+通常の local 起動では、backend / queue / log tail / Vite とあわせて migration と seed も自動実行する。
+
+```bash
+composer dev
+```
+
+この起動では `admin@example.test`、固定 Bearer token `local-dev-token`、確認用 category / memory / tag seed data が自動で用意される。
+
+個別 terminal で起動したい場合は、先に seed を実行する。
+
 Terminal 1:
 
 ```bash
+php artisan migrate --force
+php artisan db:seed --force
 php artisan serve --host=127.0.0.1 --port=8000
 ```
 
@@ -33,14 +45,6 @@ php -S 127.0.0.1:8001 -t docs/references/admin-ui-mockup
 ブラウザで `http://127.0.0.1:8001/` を開く。Settings の API Base URL は別 origin から API を呼ぶため、`http://127.0.0.1:8000/api/v1` を使う。
 
 ## Token と Settings
-
-local 開発環境では、まず seed を実行する。
-
-Terminal 3:
-
-```bash
-php artisan db:seed
-```
 
 `http://127.0.0.1:8000/admin` または `http://127.0.0.1:8000/memory-space` で開く場合、Settings / Bearer input は `local-dev-token` を自動使用する。ブラウザに古い `id|...` 形式の token が残っている場合も local token に寄せる。
 

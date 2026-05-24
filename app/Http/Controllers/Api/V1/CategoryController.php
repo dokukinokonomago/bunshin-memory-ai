@@ -8,6 +8,9 @@ use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
+use App\Models\SecurityEvent;
+use App\Support\SecurityEventLogger;
+use App\Support\TenantQuotaGuard;
 use App\Support\TenantUserContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -17,6 +20,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CategoryController extends Controller
 {
+    public function __construct(private readonly SecurityEventLogger $securityEvents) {}
+
     public function index(CategoryContextRequest $request): AnonymousResourceCollection
     {
         $context = TenantUserContext::fromUser($request->user());
@@ -31,11 +36,13 @@ class CategoryController extends Controller
                             ->with([
                                 'children' => static function ($query): void {
                                     $query
+                                        ->with('parent')
                                         ->withCount('memories')
                                         ->orderBy('sort_order')
                                         ->orderBy('name');
                                 },
                             ])
+                            ->with('parent')
                             ->withCount('memories')
                             ->orderBy('sort_order')
                             ->orderBy('name');
@@ -50,6 +57,7 @@ class CategoryController extends Controller
         }
 
         $categories = Category::queryForContext($context)
+            ->with('parent')
             ->withCount('memories')
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -61,16 +69,32 @@ class CategoryController extends Controller
     public function store(StoreCategoryRequest $request): JsonResponse
     {
         $context = TenantUserContext::fromUser($request->user());
+        TenantQuotaGuard::forTenant($context->tenant())->ensureCanCreateCategory();
+
         $data = $request->validated();
 
         $category = Category::query()->create([
             'tenant_id' => $context->tenantId(),
             'owner_user_id' => $context->userId(),
-            'parent_id' => $data['parent_id'] ?? null,
+            'parent_id' => $request->resolvedParentId(),
             'name' => $data['name'],
             'slug' => $data['slug'],
             'sort_order' => $data['sort_order'] ?? 0,
         ])->loadCount('memories');
+        $category->load('parent');
+
+        $this->securityEvents->log(
+            request: $request,
+            eventType: SecurityEvent::TYPE_CATEGORY_CREATE,
+            outcome: SecurityEvent::OUTCOME_SUCCESS,
+            tenant: $context->tenant(),
+            user: $context->user(),
+            metadata: [
+                'resource_type' => 'category',
+                'resource_public_id' => $category->public_id,
+                'parent_public_id' => $category->parent?->public_id,
+            ],
+        );
 
         return (new CategoryResource($category))
             ->response()
@@ -85,9 +109,33 @@ class CategoryController extends Controller
     public function update(UpdateCategoryRequest $request, int|string $category): CategoryResource
     {
         $category = $this->findCategoryForRequest($request, $category);
-        $category->fill($request->validated());
+        $data = $request->validated();
+        $changedFields = array_keys($data);
+
+        if (array_key_exists('parent_id', $data)) {
+            $data['parent_id'] = $request->resolvedParentId();
+        }
+
+        $category->fill($data);
         $category->save();
+        $category->load('parent');
         $category->loadCount('memories');
+
+        $context = TenantUserContext::fromUser($request->user());
+
+        $this->securityEvents->log(
+            request: $request,
+            eventType: SecurityEvent::TYPE_CATEGORY_UPDATE,
+            outcome: SecurityEvent::OUTCOME_SUCCESS,
+            tenant: $context->tenant(),
+            user: $context->user(),
+            metadata: [
+                'resource_type' => 'category',
+                'resource_public_id' => $category->public_id,
+                'parent_public_id' => $category->parent?->public_id,
+                'changed_fields' => $changedFields,
+            ],
+        );
 
         return new CategoryResource($category);
     }
@@ -105,8 +153,25 @@ class CategoryController extends Controller
             ], HttpStatus::HTTP_UNPROCESSABLE_ENTITY);
         }
 
+        $context = TenantUserContext::fromUser($request->user());
+        $metadata = [
+            'resource_type' => 'category',
+            'resource_public_id' => $category->public_id,
+            'parent_public_id' => $category->parent?->public_id,
+            'affected_memory_count' => $category->memories()->count(),
+        ];
+
         $category->memories()->update(['category_id' => null]);
         $category->delete();
+
+        $this->securityEvents->log(
+            request: $request,
+            eventType: SecurityEvent::TYPE_CATEGORY_DELETE,
+            outcome: SecurityEvent::OUTCOME_SUCCESS,
+            tenant: $context->tenant(),
+            user: $context->user(),
+            metadata: $metadata,
+        );
 
         return response()->noContent();
     }
@@ -122,6 +187,6 @@ class CategoryController extends Controller
             throw new NotFoundHttpException;
         }
 
-        return $model->loadCount('memories');
+        return $model->load('parent')->loadCount('memories');
     }
 }

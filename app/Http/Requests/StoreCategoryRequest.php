@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Support\ScopedPublicIdResolver;
+use App\Support\TenantUserContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -35,16 +37,43 @@ class StoreCategoryRequest extends FormRequest
             ],
             'parent_id' => [
                 'nullable',
-                'integer',
-                Rule::exists('categories', 'id')->where(static function ($query) use ($user): void {
-                    $query
-                        ->where('tenant_id', $user?->tenant_id)
-                        ->where('owner_user_id', $user?->getKey())
-                        ->whereNull('parent_id');
-                }),
+                function (string $attribute, mixed $value, \Closure $fail) use ($user): void {
+                    if (ScopedPublicIdResolver::isBlankIdentifier($value)) {
+                        return;
+                    }
+
+                    if (! ScopedPublicIdResolver::isCategoryIdentifier($value)) {
+                        $fail('The '.$attribute.' field must be a valid category identifier.');
+
+                        return;
+                    }
+
+                    if (! $user?->tenant_id) {
+                        return;
+                    }
+
+                    $parent = ScopedPublicIdResolver::category(TenantUserContext::fromUser($user), $value);
+
+                    if (! $parent || $parent->parent_id !== null) {
+                        $fail('The selected '.$attribute.' is invalid.');
+                    }
+                },
             ],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:999999'],
         ];
+    }
+
+    public function resolvedParentId(): ?int
+    {
+        $value = $this->input('parent_id');
+
+        if (ScopedPublicIdResolver::isBlankIdentifier($value)) {
+            return null;
+        }
+
+        $parent = ScopedPublicIdResolver::category(TenantUserContext::fromUser($this->user()), $value);
+
+        return $parent === null ? null : (int) $parent->getKey();
     }
 
     protected function prepareForValidation(): void
@@ -59,6 +88,10 @@ class StoreCategoryRequest extends FormRequest
 
         if (isset($input['slug']) && is_string($input['slug'])) {
             $input['slug'] = strtolower($input['slug']);
+        }
+
+        if (array_key_exists('parent_id', $input) && is_string($input['parent_id'])) {
+            $input['parent_id'] = trim($input['parent_id']);
         }
 
         if (array_key_exists('parent_id', $input) && $input['parent_id'] === '') {

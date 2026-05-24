@@ -10,6 +10,11 @@ if (root) {
         controlsToggle: document.getElementById('controls-toggle'),
         listToggle: document.getElementById('list-toggle'),
         controls: document.getElementById('memory-space-controls'),
+        loginForm: document.getElementById('login-form'),
+        loginEmail: document.getElementById('login-email'),
+        loginPassword: document.getElementById('login-password'),
+        loginSubmit: document.getElementById('login-submit'),
+        loginStatus: document.getElementById('login-status'),
         apiBase: document.getElementById('api-base'),
         apiToken: document.getElementById('api-token'),
         period: document.getElementById('period-filter'),
@@ -53,6 +58,7 @@ if (root) {
     const state = {
         apiBase: root.dataset.apiBase || '/api/v1',
         token: '',
+        tokenSource: 'manual',
         periodKey: '',
         categoryId: '',
         includeDescendants: true,
@@ -183,6 +189,9 @@ if (root) {
         els.period.addEventListener('change', () => loadMemorySpace());
         els.category.addEventListener('change', () => loadMemorySpace());
         els.includeDescendants.addEventListener('change', () => loadMemorySpace());
+        els.loginForm.addEventListener('submit', submitLogin);
+        els.loginEmail.addEventListener('input', clearLoginStatus);
+        els.loginPassword.addEventListener('input', clearLoginStatus);
         els.unlock.addEventListener('click', openUnlockDialog);
         els.unlockCancel.addEventListener('click', closeUnlockDialog);
         els.unlockForm.addEventListener('submit', submitUnlock);
@@ -269,9 +278,54 @@ if (root) {
             hideDetail();
             setStatus(statusMessage(), 'ok');
         } catch (error) {
-            setStatus(error.message, 'error');
+            if (error.status === 401) {
+                handleAuthenticationRequired(error.message);
+            } else {
+                setStatus(error.message, 'error');
+            }
         } finally {
             setControlsDisabled(false);
+        }
+    }
+
+    async function submitLogin(event) {
+        event.preventDefault();
+        readControls();
+        clearLoginStatus();
+
+        const email = els.loginEmail.value.trim();
+        const password = els.loginPassword.value;
+
+        if (!email || !password) {
+            setLoginStatus('Email と password が必要です。', 'error');
+            return;
+        }
+
+        setAuthControlsDisabled(true);
+        setLoginStatus('ログイン中...', '');
+
+        try {
+            const response = await apiFetch('/auth/login', {
+                method: 'POST',
+                auth: false,
+                body: JSON.stringify({ email, password }),
+            });
+            const token = response.data?.access_token || '';
+
+            if (!token) {
+                throw new Error('Login response に access token がありません。');
+            }
+
+            applyToken(token, 'login');
+            state.unlockToken = '';
+            state.unlockExpiresAt = null;
+            els.loginPassword.value = '';
+            setLoginStatus(loginSuccessMessage(response.data), 'ok');
+            await loadMemorySpace();
+        } catch (error) {
+            setLoginStatus(error.message, 'error');
+        } finally {
+            setAuthControlsDisabled(false);
         }
     }
 
@@ -304,23 +358,31 @@ if (root) {
             closeUnlockDialog();
             await loadMemorySpace();
         } catch (error) {
+            if (error.status === 401) {
+                handleAuthenticationRequired(error.message);
+            }
+
             setUnlockError(error.message);
         }
     }
 
     async function apiFetch(path, options = {}) {
         const apiBase = trimTrailingSlash(state.apiBase || '/api/v1');
+        const { auth = true, ...fetchOptions } = options;
         const headers = new Headers(options.headers || {});
 
         headers.set('Accept', 'application/json');
-        headers.set('Authorization', authorizationHeader(state.token));
+
+        if (auth) {
+            headers.set('Authorization', authorizationHeader(state.token));
+        }
 
         if (options.body) {
             headers.set('Content-Type', 'application/json');
         }
 
         const response = await fetch(`${apiBase}${path}`, {
-            ...options,
+            ...fetchOptions,
             headers,
         });
 
@@ -336,7 +398,11 @@ if (root) {
         }
 
         if (!response.ok) {
-            throw new Error(errorMessage(response, payload));
+            const error = new Error(errorMessage(response, payload));
+            error.status = response.status;
+            error.payload = payload;
+
+            throw error;
         }
 
         return payload || {};
@@ -366,7 +432,13 @@ if (root) {
 
     function readControls() {
         state.apiBase = trimTrailingSlash(els.apiBase.value.trim() || '/api/v1');
-        state.token = els.apiToken.value.trim();
+        const nextToken = els.apiToken.value.trim();
+
+        if (nextToken !== state.token) {
+            state.tokenSource = 'manual';
+        }
+
+        state.token = nextToken;
         state.periodKey = els.period.value;
         state.categoryId = els.category.value;
         state.includeDescendants = els.includeDescendants.checked;
@@ -381,8 +453,7 @@ if (root) {
         }
 
         if (saved.token) {
-            state.token = saved.token;
-            els.apiToken.value = saved.token;
+            applyToken(saved.token, saved.tokenSource, false);
         }
     }
 
@@ -390,25 +461,28 @@ if (root) {
         try {
             const saved = JSON.parse(localStorage.getItem(SHARED_API_CONFIG_STORAGE_KEY) || '{}');
 
+            const savedToken = typeof saved.token === 'string' ? saved.token.trim() : '';
+            const savedTokenSource = typeof saved.token_source === 'string' ? saved.token_source : 'manual';
+
             return {
                 baseUrl: typeof saved.baseUrl === 'string' ? saved.baseUrl.trim() : '',
-                token: defaultLocalDevToken(typeof saved.token === 'string' ? saved.token.trim() : ''),
+                ...defaultLocalDevToken(savedToken, savedTokenSource),
             };
         } catch {
-            return { baseUrl: '', token: defaultLocalDevToken('') };
+            return { baseUrl: '', ...defaultLocalDevToken('', 'manual') };
         }
     }
 
-    function defaultLocalDevToken(savedToken) {
+    function defaultLocalDevToken(savedToken, tokenSource) {
         if (!isLocalDevHost()) {
-            return savedToken;
+            return { token: savedToken, tokenSource };
         }
 
-        if (!savedToken || savedToken.includes('|')) {
-            return LOCAL_DEV_TOKEN;
+        if (!savedToken || (savedToken.includes('|') && tokenSource !== 'login')) {
+            return { token: LOCAL_DEV_TOKEN, tokenSource: 'local-dev' };
         }
 
-        return savedToken;
+        return { token: savedToken, tokenSource };
     }
 
     function isLocalDevHost() {
@@ -420,10 +494,29 @@ if (root) {
             localStorage.setItem(SHARED_API_CONFIG_STORAGE_KEY, JSON.stringify({
                 baseUrl: state.apiBase || '/api/v1',
                 token: state.token || '',
+                token_source: state.tokenSource || 'manual',
             }));
         } catch {
             // localStorage can be unavailable in restricted browser contexts.
         }
+    }
+
+    function applyToken(token, tokenSource = 'manual', save = true) {
+        state.token = token;
+        state.tokenSource = tokenSource;
+        els.apiToken.value = token;
+
+        if (save) {
+            saveSharedApiConfig();
+        }
+    }
+
+    function resourceId(resource) {
+        return resource?.public_id || resource?.id || '';
+    }
+
+    function memoryCategoryId(memory) {
+        return memory?.category_public_id || memory?.category_id || '';
     }
 
     function syncFilterOptions() {
@@ -440,7 +533,7 @@ if (root) {
         );
 
         const categoryOptions = flattenCategories(state.categories).map((category) => ({
-            value: String(category.id),
+            value: String(resourceId(category)),
             label: `${'　'.repeat(category.depth)}${category.name}`,
         }));
 
@@ -477,7 +570,7 @@ if (root) {
         const flattened = flattenCategories(roots);
 
         for (const category of flattened) {
-            categoryMap.set(Number(category.id), category);
+            categoryMap.set(String(resourceId(category)), category);
         }
 
         if (!isWebglAvailable()) {
@@ -487,8 +580,8 @@ if (root) {
         roots.forEach((category, index) => {
             const color = palette[index % palette.length];
             const position = rootPosition(index, roots.length);
-            categoryPositionMap.set(Number(category.id), position);
-            categoryColorMap.set(Number(category.id), color);
+            categoryPositionMap.set(String(resourceId(category)), position);
+            categoryColorMap.set(String(resourceId(category)), color);
 
             const group = makeRootCategory(category, color, position);
             rootGroups.push(group);
@@ -513,8 +606,8 @@ if (root) {
             parentPosition.z + relative.z,
         );
 
-        categoryPositionMap.set(Number(category.id), position);
-        categoryColorMap.set(Number(category.id), color);
+        categoryPositionMap.set(String(resourceId(category)), position);
+        categoryColorMap.set(String(resourceId(category)), color);
 
         const group = makeChildCategory(category, parent, color, position);
         childGroups.push(group);
@@ -531,7 +624,7 @@ if (root) {
         const memoryBuckets = new Map();
 
         for (const memory of state.memories) {
-            const categoryId = memory.category_id ? Number(memory.category_id) : 0;
+            const categoryId = memoryCategoryId(memory) ? String(memoryCategoryId(memory)) : 'uncategorized';
             const bucket = memoryBuckets.get(categoryId) || [];
             bucket.push(memory);
             memoryBuckets.set(categoryId, bucket);
@@ -541,6 +634,7 @@ if (root) {
             const basePosition = categoryPositionMap.get(categoryId) || new THREE.Vector3(0, -280, 0);
             const color = categoryColorMap.get(categoryId) || palette[0];
             const category = categoryMap.get(categoryId) || {
+                public_id: '',
                 id: 0,
                 name: '未分類',
                 parentName: '記憶',
@@ -1009,13 +1103,13 @@ if (root) {
         }
 
         state.memories.slice(0, 80).forEach((memory) => {
-            const category = categoryMap.get(Number(memory.category_id));
+            const category = categoryMap.get(String(memoryCategoryId(memory)));
             const item = document.createElement('button');
             item.className = 'memory-list__item';
             item.type = 'button';
-            item.dataset.memoryId = String(memory.id);
+            item.dataset.memoryId = String(resourceId(memory));
 
-            if (state.activeMemoryId === Number(memory.id)) {
+            if (state.activeMemoryId === String(resourceId(memory))) {
                 item.classList.add('is-active');
             }
 
@@ -1045,7 +1139,7 @@ if (root) {
     }
 
     function showMemoryDetail(memory, category) {
-        state.activeMemoryId = Number(memory.id);
+        state.activeMemoryId = String(resourceId(memory));
         els.detail.hidden = false;
         els.detailCrumb.textContent = detailCrumb(category, memory);
         els.detailTitle.textContent = memory.title || 'Untitled';
@@ -1208,6 +1302,30 @@ if (root) {
         els.unlockError.textContent = message;
     }
 
+    function clearLoginStatus() {
+        setLoginStatus('', '');
+    }
+
+    function setLoginStatus(message, type) {
+        els.loginStatus.textContent = message;
+        els.loginStatus.classList.toggle('is-error', type === 'error');
+        els.loginStatus.classList.toggle('is-ok', type === 'ok');
+    }
+
+    function loginSuccessMessage(data) {
+        const userName = data?.user?.name || data?.user?.email || 'user';
+        const tenantName = data?.tenant?.name || 'tenant';
+
+        return `${userName} / ${tenantName} でログインしました。`;
+    }
+
+    function handleAuthenticationRequired(message) {
+        setPanelOpen('controls', true);
+        setStatus('認証に失敗しました。ログインするか Bearer token を更新してください。', 'error');
+        setLoginStatus(message || '401 Unauthorized', 'error');
+        els.loginEmail.focus();
+    }
+
     function setStatus(message, type) {
         els.status.textContent = message;
         els.status.classList.toggle('is-error', type === 'error');
@@ -1215,7 +1333,24 @@ if (root) {
     }
 
     function setControlsDisabled(disabled) {
-        [els.load, els.unlock, els.period, els.category, els.includeDescendants, els.apiBase, els.apiToken].forEach((element) => {
+        [
+            els.load,
+            els.unlock,
+            els.period,
+            els.category,
+            els.includeDescendants,
+            els.apiBase,
+            els.apiToken,
+            els.loginEmail,
+            els.loginPassword,
+            els.loginSubmit,
+        ].forEach((element) => {
+            element.disabled = disabled;
+        });
+    }
+
+    function setAuthControlsDisabled(disabled) {
+        [els.loginEmail, els.loginPassword, els.loginSubmit, els.apiBase].forEach((element) => {
             element.disabled = disabled;
         });
     }
@@ -1352,7 +1487,7 @@ if (root) {
 
     function syntheticRootsForUncategorizedMemories() {
         return state.memories.length > 0
-            ? [{ id: 0, name: '未分類', children: [], memory_count: state.memories.length, locked_secret_count: 0 }]
+            ? [{ public_id: 'uncategorized', id: 0, name: '未分類', children: [], memory_count: state.memories.length, locked_secret_count: 0 }]
             : [];
     }
 

@@ -2,11 +2,255 @@ openapi: 3.1.0
 info:
   title: Bunshin Memory API
   version: 0.1.0
-  description: API-first backend contract for Bunshin AI memory services. Error responses under /api/v1 are JSON even when clients omit the Accept header.
+  description: API-first backend contract for Bunshin AI memory services. Error responses under /api/v1 are JSON even when clients omit the Accept header. New client requests should use prefixed public ids; integer ids remain only as v1 transition compatibility where documented.
 servers:
   - url: /api/v1
 security:
   - bearerAuth: []
+x-bunshin-billing-policy:
+  x-bunshin-status: checkout_portal_webhook_reconciliation_archive_cancellation_implemented
+  decision: docs/decisions/0029-billing-provider-integration.md
+  archive_cancellation_decision: docs/decisions/0030-tenant-archive-billing-provider-cancellation.md
+  adjustment_policy_decision: docs/decisions/0032-automated-billing-adjustments-policy.md
+  customer_request_flow_decision: docs/decisions/0033-customer-billing-dispute-refund-request-flow.md
+  implementation_status: data_model_checkout_portal_webhook_receiver_reconciliation_and_archive_cancellation_implemented
+  runtime_source_of_truth:
+    api_quota_gate: local_tenant_fields
+    paid_subscription_sync: verified_provider_webhooks_or_operator_reconciliation_apply
+    checkout_redirect_authoritative: false
+    portal_return_authoritative: false
+  local_tenant_fields:
+    existing:
+      - plan_key
+      - subscription_status
+      - trial_ends_at
+      - subscription_ends_at
+    provider_linkage:
+      - billing_provider
+      - billing_customer_id
+      - billing_subscription_id
+      - billing_price_id
+      - billing_cancel_at_period_end
+      - billing_last_synced_at
+  webhook_storage:
+    status: implemented
+    table: billing_webhook_events
+    stores_raw_payload: false
+    idempotency_key: billing_provider + provider_event_id
+    status_values:
+      - received
+      - processed
+      - ignored
+      - failed
+  public_endpoints:
+    checkout_sessions:
+      method: POST
+      path: /api/v1/billing/checkout-sessions
+      status: implemented
+      owner_only: true
+      verified_email_required: true
+      mutates_local_plan_before_webhook: false
+    portal_sessions:
+      method: POST
+      path: /api/v1/billing/portal-sessions
+      status: implemented
+      owner_only: true
+      verified_email_required: true
+      mutates_local_plan_before_webhook: false
+    webhook:
+      method: POST
+      path: /api/v1/billing/webhooks/{provider}
+      status: implemented
+      bearer_auth: false
+      provider_signature_required: true
+      duplicate_provider_event: idempotent_noop
+      paid_entitlement_requires_known_price_mapping: true
+    customer_adjustment_requests:
+      status: v1_deferred
+      public_http_api: false
+      support_only_outside_product_backend: true
+      accepts_refund_or_dispute_requests: false
+  internal_reconciliation:
+    status: implemented
+    command: php artisan bunshin:reconcile-billing-provider
+    public_http_api: false
+    default_mode: dry_run_no_mutation
+    apply_requires:
+      - explicit --apply
+      - non_archived_tenant
+      - matching_provider_customer
+      - known_provider_subscription
+      - known_price_plan_mapping
+      - known_provider_status_mapping
+    output_excludes_provider_ids: true
+    security_event: billing.reconciliation
+    runbook: docs/operations/billing_provider_reconciliation_runbook.md
+  archive_provider_cancellation:
+    status: implemented
+    public_http_api: false
+    archive_endpoint: /api/v1/tenant/archive
+    local_archive_first: true
+    provider_call_inside_db_transaction: false
+    provider_failure_rolls_back_archive: false
+    initial_provider_action: immediate_subscription_cancellation
+    response_field: data.billing_provider_cancellation
+    response_status_values:
+      - succeeded
+      - skipped
+      - requires_operator_review
+    request_payload_accepts_provider_ids_or_refund_options: false
+    request_payload_accepts_customer_refund_or_dispute_intake: false
+    automatic_refunds_or_credits: false
+    automatic_proration_or_invoice_finalization: false
+    period_end_cancellation_option: false
+    automated_adjustments_status: v1_deferred_product_finance_legal_policy_required
+    customer_visible_request_flow_status: v1_deferred_support_only_outside_product_backend
+    security_event: billing.subscription_cancel.request
+    stores_provider_ids_in_security_event: false
+    stores_raw_provider_response: false
+    provider_webhooks_can_reactivate_archived_tenant: false
+  default_exclude_from_storage:
+    - card data
+    - billing address
+    - tax id
+    - raw customer email
+    - raw webhook payload
+    - raw provider response
+    - signature secret
+    - checkout URL
+    - portal URL
+    - provider API key
+    - refund id
+    - invoice id
+    - dispute id
+    - provider object URL
+    - customer refund or dispute request text
+    - billing attachment
+x-bunshin-internal-jobs:
+  tenantPurgeArchivedTenants:
+    x-bunshin-status: implemented
+    command: php artisan bunshin:purge-archived-tenants
+    description: Internal operator or scheduled command. Purges archived tenants only after persisted scheduled_deletion_at is due, keeps a tenant tombstone, deletes tenant-owned content and credentials, anonymizes users, scrubs pre-existing security events, and records a scrub-safe auth.tenant.purge event. No public HTTP endpoint is exposed.
+    eligibility:
+      archived_at: not_null
+      scheduled_deletion_at: due
+      purged_at: null
+    options:
+      - --dry-run
+      - --limit
+      - tenant argument
+  securityEventPruning:
+    x-bunshin-status: implemented
+    decision: docs/decisions/0027-security-event-pruning-policy.md
+    command: php artisan bunshin:prune-security-events
+    description: Internal operator or scheduled command. Prunes security_events according to the 180-day retention policy, including null-tenant events, non-purged tenant events, and purged-tenant scrubbed audit rows after purged_at is older than the retention cutoff. No public HTTP endpoint is exposed.
+    schedule:
+      default_cadence: daily 04:15 UTC
+      enabled_by: BUNSHIN_SECURITY_EVENT_PRUNE_SCHEDULE_ENABLED
+      default_limit: 5000
+      output_log: storage/logs/security-event-prune-schedule.log
+    retention:
+      default_days: 180
+      config: BUNSHIN_SECURITY_EVENT_RETENTION_DAYS
+      purged_tenant_basis: tenants.purged_at
+      non_purged_basis: security_events.created_at
+    options:
+      - --dry-run
+      - --limit
+      - tenant argument
+  billingProviderReconciliation:
+    x-bunshin-status: implemented
+    decision: docs/decisions/0029-billing-provider-integration.md
+    command: php artisan bunshin:reconcile-billing-provider
+    description: Internal manual operator command. Compares configured provider subscription state with local tenant billing fields after webhook outages. Default mode is dry-run and does not mutate rows; --apply updates only safe mapped drift. No public HTTP endpoint is exposed.
+    schedule:
+      default_cadence: none_manual_only
+    options:
+      - --apply
+      - --limit
+      - tenant argument
+    default_exclude_from_output_and_security_events:
+      - provider customer id
+      - provider subscription id
+      - provider price id
+      - raw provider response
+      - provider API key
+      - raw customer email
+      - card data
+      - billing address
+      - tax id
+x-bunshin-audit-policy:
+  x-bunshin-status: implemented
+  decision: docs/decisions/0026-broader-audit-log-admin-impersonation.md
+  pruning_decision: docs/decisions/0027-security-event-pruning-policy.md
+  external_logging_search_decision: docs/decisions/0028-external-logging-search-integration.md
+  sink: security_events
+  retention_target_days: 180
+  external_logging_search:
+    x-bunshin-status: deferred
+    public_http_api: false
+    provider: not_selected
+    purpose:
+      - support investigation with scrub-safe audit facts
+      - operational analytics
+      - incident response
+      - future compliance archive only with separate policy
+    delivery:
+      controller_synchronous_delivery: rejected
+      shape: queue_or_outbox_sanitized_projection_when_implemented
+    source_of_truth:
+      authorization: primary_application_database
+      tenant_boundary: primary_application_database
+      secret_unlock: primary_application_database
+    projection_rules:
+      send_raw_security_events_rows: false
+      allowed_field_classes:
+        - event timestamp
+        - event type
+        - outcome
+        - tenant public id
+        - actor or subject public id
+        - resource type and public id
+        - scrub-safe enums and changed field names
+        - scrub-safe aggregate counts
+      default_exclude:
+        - subject email
+        - invited email
+        - IP address
+        - user agent
+        - raw metadata
+        - raw request payloads
+        - raw validation errors
+        - memory titles
+        - memory bodies
+        - category names
+        - tag names
+        - secret content
+        - export bundles
+        - plain credentials
+        - token values
+        - signed URL secrets
+  implemented_event_coverage:
+    - token lifecycle writes
+    - tenant member management writes
+    - profile and secret unlock password changes
+    - memory writes
+    - category writes
+  metadata_rules:
+    use_public_ids: true
+    exclude:
+      - memory titles
+      - memory bodies
+      - category names
+      - tag names
+      - secret content
+      - export bundles
+      - plain credentials
+      - token values
+      - raw request payloads
+  admin_impersonation:
+    initial_scope: excluded
+    notes: Tenant owners/admins can manage members through explicit endpoints, but cannot impersonate another user, mint another user's token, bypass secret unlock, or read another user's private/secret memories as that user.
 paths:
   /health:
     get:
@@ -34,6 +278,895 @@ paths:
                   version:
                     type: string
                     example: 0.1.0
+  /auth/signup:
+    post:
+      summary: Create an initial owner and tenant with an invite token
+      operationId: signup
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthSignupPayload"
+      responses:
+        "201":
+          description: Tenant, owner user, and signup token created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AuthLogin"
+        "403":
+          description: Invalid or unconfigured onboarding invite token
+        "429":
+          description: Signup rate limit exceeded
+        "422":
+          description: Validation failed
+  /auth/login:
+    post:
+      summary: Issue a Bearer token with email and password
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthLoginPayload"
+      responses:
+        "201":
+          description: Login token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AuthLogin"
+        "401":
+          description: Invalid credentials
+        "403":
+          description: User has no tenant context, account is not active, or tenant is archived
+        "429":
+          description: Login rate limit exceeded
+        "422":
+          description: Validation failed
+  /auth/password/forgot:
+    post:
+      summary: Request a password reset link
+      operationId: requestPasswordReset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthPasswordForgotPayload"
+      responses:
+        "202":
+          description: Password reset request accepted without revealing whether the email exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthPasswordForgotResponse"
+        "429":
+          description: Password reset request rate limit exceeded
+        "422":
+          description: Validation failed
+  /auth/password/reset:
+    post:
+      summary: Reset password with a reset token
+      operationId: resetPassword
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthPasswordResetPayload"
+      responses:
+        "204":
+          description: Password reset and existing Bearer tokens revoked
+        "429":
+          description: Password reset rate limit exceeded
+        "422":
+          description: Validation failed or reset token is invalid
+  /auth/password:
+    put:
+      summary: Change the current authenticated user's account password
+      operationId: changePassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthPasswordChangePayload"
+      responses:
+        "204":
+          description: Account password changed and existing Bearer tokens revoked
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User has no tenant context
+        "429":
+          description: Password change rate limit exceeded
+        "422":
+          description: Validation failed or current password is invalid
+  /auth/email/verify/{id}/{hash}:
+    get:
+      summary: Verify a user's email address with a signed link
+      operationId: verifyEmail
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - name: hash
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Email verified or already verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthEmailVerificationResponse"
+        "403":
+          description: Signature/hash invalid, expired, or user has no tenant context
+        "404":
+          description: Verification user not found
+  /auth/email/change/verify/{id}/{hash}:
+    get:
+      summary: Verify a pending email change with a signed link
+      operationId: verifyEmailChange
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - name: hash
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pending email changed and marked verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthEmailChangeVerificationResponse"
+        "403":
+          description: Signature/hash invalid, expired, missing pending email, or user has no tenant context
+        "404":
+          description: Email change user not found
+        "422":
+          description: Pending email is no longer available
+  /auth/email/verification-notification:
+    post:
+      summary: Resend the current user's email verification notification
+      operationId: resendEmailVerification
+      responses:
+        "202":
+          description: Verification notification sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthEmailVerificationNotificationResponse"
+        "200":
+          description: Email is already verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthEmailVerificationResponse"
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User has no tenant context
+        "429":
+          description: Verification notification rate limit exceeded
+  /auth/email:
+    put:
+      summary: Request an email change for the current authenticated user
+      operationId: requestEmailChange
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthEmailChangePayload"
+      responses:
+        "202":
+          description: Email change verification notification sent to pending email
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthEmailChangeRequestResponse"
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User has no tenant context
+        "429":
+          description: Email change request rate limit exceeded
+        "422":
+          description: Validation failed or requested email is unavailable
+  /auth/me:
+    get:
+      summary: Get the current authenticated user, tenant, and token context
+      operationId: getCurrentAuthSession
+      responses:
+        "200":
+          description: Current auth session
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AuthSession"
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User has no tenant context
+  /auth/profile:
+    patch:
+      summary: Update the current authenticated user's profile
+      operationId: updateProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthProfileUpdatePayload"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AuthProfile"
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User has no tenant context
+        "422":
+          description: Validation failed or email change attempted
+  /auth/account/export:
+    post:
+      summary: Export the current authenticated user's account data
+      description: Implemented self-service JSON export. Secret memory bodies, tags, and metadata are returned only when include_secret=true and a valid X-Secret-Unlock token is provided.
+      x-bunshin-status: implemented
+      operationId: exportCurrentAccount
+      parameters:
+        - name: X-Secret-Unlock
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Current user's secret unlock token. Required only when include_secret=true.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountExportPayload"
+      responses:
+        "200":
+          description: Current user's export bundle
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AccountExport"
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User has no tenant context or account is not active
+        "422":
+          description: Validation failed, current password is invalid, or secret unlock token is invalid
+        "429":
+          description: Account lifecycle rate limit exceeded
+  /auth/account:
+    delete:
+      summary: Delete the current authenticated user's account
+      description: Self-service account deletion. It anonymizes the user row, revokes credentials, and erases owned data without exposing secret memory contents.
+      x-bunshin-status: implemented
+      operationId: deleteCurrentAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountDeletionPayload"
+      responses:
+        "204":
+          description: Account anonymized and owned data erased
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User has no tenant context or account is not active
+        "422":
+          description: Validation failed, current password is invalid, confirmation is invalid, or user is the last active owner
+        "429":
+          description: Account lifecycle rate limit exceeded
+  /auth/logout:
+    post:
+      summary: Revoke the current Bearer token
+      operationId: logout
+      responses:
+        "204":
+          description: Current token revoked
+        "401":
+          description: Unauthenticated
+  /auth/tokens:
+    get:
+      summary: List current user's Bearer token metadata
+      operationId: listAuthTokens
+      responses:
+        "200":
+          description: Current user's token metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AuthTokenListItem"
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User has no tenant context
+  /auth/tokens/revoke-all:
+    post:
+      summary: Revoke all current user's Bearer tokens
+      operationId: revokeAllAuthTokens
+      responses:
+        "204":
+          description: Current user's tokens revoked
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User has no tenant context
+  /auth/tokens/rotate:
+    post:
+      summary: Rotate the current Bearer token
+      operationId: rotateAuthToken
+      responses:
+        "201":
+          description: Current token rotated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AuthTokenRotation"
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User has no tenant context
+  /auth/tokens/{token}:
+    delete:
+      summary: Revoke one owned Bearer token
+      operationId: revokeAuthToken
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "204":
+          description: Token revoked
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User has no tenant context
+        "404":
+          description: Token not found in current user scope
+  /tenant/members:
+    get:
+      summary: List current tenant members
+      operationId: listTenantMembers
+      responses:
+        "200":
+          description: Current tenant members
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TenantMember"
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User cannot manage tenant members
+  /tenant/members/{member}:
+    delete:
+      summary: Revoke one tenant member's access
+      operationId: revokeTenantMember
+      parameters:
+      - name: member
+        in: path
+        required: true
+        schema:
+          oneOf:
+            - type: string
+              pattern: "^usr_[0-9A-HJKMNP-TV-Z]{26}$"
+            - type: integer
+              minimum: 1
+        description: User public id is preferred. Numeric user ids are accepted only during the v1 transition.
+      responses:
+        "204":
+          description: Member access revoked and member Bearer tokens deleted
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User cannot manage tenant members
+        "404":
+          description: Member not found in current tenant
+        "422":
+          description: Self revoke or owner safety validation failed
+  /tenant/members/{member}/role:
+    patch:
+      summary: Update one tenant member role
+      operationId: updateTenantMemberRole
+      parameters:
+      - name: member
+        in: path
+        required: true
+        schema:
+          oneOf:
+            - type: string
+              pattern: "^usr_[0-9A-HJKMNP-TV-Z]{26}$"
+            - type: integer
+              minimum: 1
+        description: User public id is preferred. Numeric user ids are accepted only during the v1 transition.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantMemberRoleUpdatePayload"
+      responses:
+        "200":
+          description: Member role updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/TenantMember"
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User cannot manage tenant members
+        "404":
+          description: Member not found in current tenant
+        "422":
+          description: Validation failed
+  /tenant/members/{member}/account-status:
+    patch:
+      summary: Update one tenant member account status
+      description: Tenant-scoped status management endpoint. Successful requests delete the target user's Bearer tokens and secret unlock tokens, including reactivation, so old credentials do not become usable again.
+      x-bunshin-status: implemented
+      operationId: updateTenantMemberAccountStatus
+      parameters:
+      - name: member
+        in: path
+        required: true
+        schema:
+          oneOf:
+            - type: string
+              pattern: "^usr_[0-9A-HJKMNP-TV-Z]{26}$"
+            - type: integer
+              minimum: 1
+        description: User public id is preferred. Numeric user ids are accepted only during the v1 transition.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantMemberAccountStatusUpdatePayload"
+      responses:
+        "200":
+          description: Member account status updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/TenantMember"
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User cannot manage tenant members
+        "404":
+          description: Member not found in current tenant
+        "422":
+          description: Self-target, owner boundary, last active owner, or validation failure
+        "429":
+          description: Tenant security action rate limit exceeded
+  /tenant/members/{member}/secret-unlock-password/force-rotation:
+    post:
+      summary: Force a tenant member to reset their secret unlock password
+      description: Clears the target user's dedicated unlock password and revokes existing secret unlock tokens without returning secret data or a temporary password. Bearer tokens are not revoked.
+      x-bunshin-status: implemented
+      operationId: forceTenantMemberSecretUnlockPasswordRotation
+      parameters:
+      - name: member
+        in: path
+        required: true
+        schema:
+          oneOf:
+            - type: string
+              pattern: "^usr_[0-9A-HJKMNP-TV-Z]{26}$"
+            - type: integer
+              minimum: 1
+        description: User public id is preferred. Numeric user ids are accepted only during the v1 transition.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SecretUnlockPasswordForceRotationPayload"
+      responses:
+        "200":
+          description: Secret unlock password cleared and existing secret unlock tokens revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/SecretUnlockPasswordForceRotationStatus"
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User cannot manage tenant members or attempted self-targeting
+        "404":
+          description: Member not found in current tenant
+        "422":
+          description: Validation failed
+        "429":
+          description: Tenant security action rate limit exceeded
+  /tenant/invitations:
+    get:
+      summary: List current tenant member invitations
+      operationId: listTenantMemberInvitations
+      responses:
+        "200":
+          description: Current tenant member invitations
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TenantMemberInvitation"
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User cannot manage tenant members
+    post:
+      summary: Create a tenant member invitation
+      operationId: createTenantMemberInvitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantMemberInvitationCreatePayload"
+      responses:
+        "201":
+          description: Tenant member invitation created; plain invite token returned once and sent to the invitee email by notification
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/TenantMemberInvitationCreated"
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User cannot manage tenant members
+        "422":
+          description: Validation failed
+  /tenant/invitations/accept:
+    post:
+      summary: Accept a tenant member invitation and create a user
+      operationId: acceptTenantMemberInvitation
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantMemberInvitationAcceptPayload"
+      responses:
+        "201":
+          description: User created and Bearer token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AuthLogin"
+        "429":
+          description: Invitation accept rate limit exceeded
+        "422":
+          description: Validation failed or invitation token is invalid
+  /tenant/invitations/{invitation}:
+    delete:
+      summary: Revoke one pending tenant member invitation
+      operationId: revokeTenantMemberInvitation
+      parameters:
+        - name: invitation
+          in: path
+          required: true
+          description: Invitation public id (`inv_01...`) or positive numeric id during v1 transition compatibility.
+          schema:
+            type: string
+            pattern: "^(inv_[0-9A-HJKMNP-TV-Z]{26}|[1-9][0-9]*)$"
+      responses:
+        "204":
+          description: Invitation revoked
+        "401":
+          description: Unauthenticated
+        "403":
+          description: User cannot manage tenant members
+        "404":
+          description: Invitation not found in current tenant
+        "422":
+          description: Accepted invitations cannot be revoked
+  /tenant/export:
+    post:
+      summary: Export current tenant operational data
+      description: Owner-only tenant export. It returns tenant operations metadata and aggregate inventory, but does not expose memory titles, bodies, tags, metadata, raw audit metadata, token values, or other users' private/secret memory content.
+      x-bunshin-status: implemented
+      operationId: exportCurrentTenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantExportPayload"
+      responses:
+        "200":
+          description: Current tenant export bundle
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/TenantExport"
+        "401":
+          description: Unauthenticated or archived tenant Bearer token
+        "403":
+          description: User has no tenant context, account is not active, or user is not an owner
+        "422":
+          description: Validation failed or current password is invalid
+        "429":
+          description: Tenant lifecycle rate limit exceeded
+  /tenant/archive:
+    post:
+      summary: Archive current tenant
+      description: >-
+        Owner-only archive-first tenant closure. Freezes the tenant, revokes tenant credentials, revokes pending invitations, closes local subscription state, schedules later purge without immediately hard-deleting tenant data, and attempts linked provider subscription cancellation after the local archive transaction. Provider failure does not roll back local archive. V1 does not accept refund, proration, period-end cancellation, cancellation date, or provider id fields. Permanent purge is handled by the implemented internal bunshin:purge-archived-tenants command, not by a public HTTP endpoint.
+      x-bunshin-status: implemented
+      operationId: archiveCurrentTenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantArchivePayload"
+      responses:
+        "202":
+          description: Tenant archive accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - data
+                properties:
+                  message:
+                    type: string
+                    const: Tenant archive has been scheduled.
+                  data:
+                    $ref: "#/components/schemas/TenantArchiveStatus"
+        "401":
+          description: Unauthenticated or archived tenant Bearer token
+        "403":
+          description: User has no tenant context, account is not active, or user is not an owner
+        "422":
+          description: Validation failed, current password is invalid, or confirmation is invalid
+        "429":
+          description: Tenant lifecycle rate limit exceeded
+  /billing/checkout-sessions:
+    post:
+      summary: Create a hosted billing checkout session
+      description: Owner-only and verified-email gated billing action. The endpoint may lazily create and store a provider customer id, then returns a one-time hosted checkout URL for a configured plan/price mapping. Configured success/cancel URLs are product-frontend handoff routes only, not backend callbacks. This endpoint and checkout redirects do not mutate local plan_key or subscription_status; paid state is synchronized only by verified provider webhooks or explicit operator reconciliation apply.
+      x-bunshin-status: implemented
+      operationId: createBillingCheckoutSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BillingCheckoutSessionCreatePayload"
+      responses:
+        "201":
+          description: Hosted checkout session created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/BillingSession"
+        "401":
+          description: Unauthenticated or archived tenant Bearer token
+        "403":
+          description: User has no tenant context, is not an owner, or email is not verified
+        "422":
+          description: Unknown plan mapping or tenant is linked to a different billing provider
+        "429":
+          description: Billing action rate limit exceeded
+        "502":
+          description: Billing provider request failed
+        "503":
+          description: Billing provider is disabled or misconfigured
+  /billing/portal-sessions:
+    post:
+      summary: Create a hosted billing customer portal session
+      description: Owner-only and verified-email gated billing action. The endpoint returns a one-time hosted customer portal URL for an existing provider customer. The configured portal return URL is a product-frontend handoff route only, not a backend callback. This endpoint and portal returns do not mutate local plan_key or subscription_status; paid state is synchronized only by verified provider webhooks or explicit operator reconciliation apply.
+      x-bunshin-status: implemented
+      operationId: createBillingPortalSession
+      responses:
+        "201":
+          description: Hosted customer portal session created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/BillingSession"
+        "401":
+          description: Unauthenticated or archived tenant Bearer token
+        "403":
+          description: User has no tenant context, is not an owner, or email is not verified
+        "422":
+          description: Tenant has no billing customer or is linked to a different billing provider
+        "429":
+          description: Billing action rate limit exceeded
+        "502":
+          description: Billing provider request failed
+        "503":
+          description: Billing provider is disabled or misconfigured
+  /billing/webhooks/{provider}:
+    post:
+      summary: Receive a billing provider webhook
+      description: Public provider webhook endpoint outside Bearer auth. The endpoint requires the configured provider, verifies the provider signature, stores only scrub-safe processing metadata in billing_webhook_events, treats duplicate provider event ids as idempotent no-ops, and updates local tenant plan state only when a verified checkout completion or subscription event maps to a known price.
+      x-bunshin-status: implemented
+      operationId: receiveBillingWebhook
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - stripe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              description: Provider-specific raw webhook JSON. The raw body is used in-memory for signature verification and is not stored.
+      responses:
+        "200":
+          description: Webhook accepted, ignored, failed safely, or duplicate-accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                      - provider
+                      - event_type
+                      - processing_status
+                    properties:
+                      provider:
+                        type: string
+                        example: stripe
+                      event_type:
+                        type: string
+                        example: customer.subscription.updated
+                      processing_status:
+                        type: string
+                        enum:
+                          - processed
+                          - ignored
+                          - failed
+                          - duplicate
+        "400":
+          description: Missing or invalid provider signature, malformed JSON, or invalid webhook shape
+        "503":
+          description: Billing provider is disabled, unsupported, or missing webhook configuration
   /memories:
     get:
       summary: List memories
@@ -59,8 +1192,12 @@ paths:
         - name: category_id
           in: query
           schema:
-            type: integer
-            minimum: 1
+            oneOf:
+              - type: string
+                pattern: "^cat_[0-9A-HJKMNP-TV-Z]{26}$"
+              - type: integer
+                minimum: 1
+          description: Category public id is preferred. Numeric category ids are accepted only during the v1 transition.
         - name: include_descendants
           in: query
           schema:
@@ -150,9 +1287,13 @@ paths:
                     - secret
                     - shared
                 category_id:
-                  type:
-                    - integer
-                    - "null"
+                  description: Category public id is preferred. Numeric category ids are accepted only during the v1 transition.
+                  oneOf:
+                    - type: string
+                      pattern: "^cat_[0-9A-HJKMNP-TV-Z]{26}$"
+                    - type: integer
+                      minimum: 1
+                    - type: "null"
                 tags:
                   type: array
                   description: Tag names are normalized on write. Known initial aliases include ともだち/友人 -> 友達 and なつ -> 夏.
@@ -180,15 +1321,22 @@ paths:
                     $ref: "#/components/schemas/Memory"
         "401":
           description: Unauthenticated
+        "402":
+          description: Tenant subscription is not active
         "422":
-          description: Validation failed
+          description: Validation failed or memory quota exceeded
   /memories/{memoryId}:
     parameters:
       - name: memoryId
         in: path
         required: true
         schema:
-          type: string
+          oneOf:
+            - type: string
+              pattern: "^mem_[0-9A-HJKMNP-TV-Z]{26}$"
+            - type: integer
+              minimum: 1
+        description: Memory public id is preferred. Numeric memory ids are accepted only during the v1 transition.
     get:
       summary: Get memory
       operationId: getMemory
@@ -264,9 +1412,12 @@ paths:
         - name: category_id
           in: query
           schema:
-            type: integer
-            minimum: 1
-          description: Filter memories and secret lock count to a category inside the request context.
+            oneOf:
+              - type: string
+                pattern: "^cat_[0-9A-HJKMNP-TV-Z]{26}$"
+              - type: integer
+                minimum: 1
+          description: Filter memories and secret lock count to a category inside the request context. Category public id is preferred; numeric category ids are accepted only during the v1 transition.
         - name: include_descendants
           in: query
           schema:
@@ -327,7 +1478,126 @@ paths:
         "403":
           description: Authenticated user has no tenant context
         "422":
-          description: Validation failed or password is invalid
+          description: Validation failed, unlock password is not configured, or password is invalid
+  /secret-unlock-password:
+    put:
+      summary: Set or change the dedicated secret unlock password
+      operationId: updateSecretUnlockPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SecretUnlockPasswordUpdatePayload"
+      responses:
+        "200":
+          description: Secret unlock password updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/SecretUnlockPasswordStatus"
+        "401":
+          description: Unauthenticated
+        "403":
+          description: Authenticated user has no tenant context
+        "422":
+          description: Validation failed, account password is invalid, current unlock password is invalid, or password reuse is not allowed
+  /secret-unlock-password/recovery/request:
+    post:
+      summary: Request a secret unlock password recovery link
+      description: Requires Bearer token auth, current account password, tenant context, active account, and verified email before sending a signed recovery link. A successful request does not change the current unlock password or revoke existing secret unlock tokens.
+      x-bunshin-status: implemented
+      operationId: requestSecretUnlockPasswordRecovery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SecretUnlockPasswordRecoveryRequestPayload"
+      responses:
+        "202":
+          description: Recovery link accepted for delivery
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+                    const: Secret unlock password recovery link has been sent.
+        "401":
+          description: Unauthenticated
+        "403":
+          description: Authenticated user has no tenant context or verified email
+        "422":
+          description: Validation failed or account password is invalid
+        "429":
+          description: Recovery request rate limit exceeded
+  /secret-unlock-password/recovery/{id}/{hash}:
+    put:
+      summary: Complete secret unlock password recovery
+      description: Requires Bearer token auth for the same user, a valid signed recovery URL, verified email, current account password, and a new dedicated unlock password. A successful completion updates the dedicated unlock password and revokes existing secret unlock tokens without revoking Bearer tokens.
+      x-bunshin-status: implemented
+      operationId: completeSecretUnlockPasswordRecovery
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - name: hash
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: expires
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: Signed URL expiry timestamp.
+        - name: signature
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Signed URL signature.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SecretUnlockPasswordRecoveryCompletePayload"
+      responses:
+        "200":
+          description: Secret unlock password recovered and existing secret unlock tokens revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/SecretUnlockPasswordRecoveryStatus"
+        "401":
+          description: Unauthenticated
+        "403":
+          description: Invalid signed URL, wrong authenticated user, missing tenant context, or unverified email
+        "404":
+          description: Recovery user not found
+        "422":
+          description: Validation failed, account password is invalid, or password reuse is not allowed
+        "429":
+          description: Recovery completion rate limit exceeded
   /categories:
     get:
       summary: List categories
@@ -378,15 +1648,22 @@ paths:
                     $ref: "#/components/schemas/Category"
         "401":
           description: Unauthenticated
+        "402":
+          description: Tenant subscription is not active
         "422":
-          description: Validation failed
+          description: Validation failed or category quota exceeded
   /categories/{categoryId}:
     parameters:
       - name: categoryId
         in: path
         required: true
         schema:
-          type: string
+          oneOf:
+            - type: string
+              pattern: "^cat_[0-9A-HJKMNP-TV-Z]{26}$"
+            - type: integer
+              minimum: 1
+        description: Category public id is preferred. Numeric category ids are accepted only during the v1 transition.
     get:
       summary: Get category
       operationId: getCategory
@@ -494,6 +1771,1005 @@ components:
       scheme: bearer
       bearerFormat: Sanctum-compatible personal access token
   schemas:
+    AuthSignupPayload:
+      type: object
+      required:
+        - invite_token
+        - tenant_name
+        - tenant_slug
+        - name
+        - email
+        - password
+        - password_confirmation
+      properties:
+        invite_token:
+          type: string
+          maxLength: 2048
+        tenant_name:
+          type: string
+          maxLength: 255
+        tenant_slug:
+          type: string
+          maxLength: 80
+          pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          minLength: 8
+          maxLength: 1024
+        password_confirmation:
+          type: string
+          minLength: 8
+          maxLength: 1024
+    AuthLoginPayload:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          minLength: 1
+          maxLength: 1024
+    AuthLogin:
+      type: object
+      required:
+        - token_type
+        - access_token
+        - expires_at
+        - user
+        - tenant
+      properties:
+        token_type:
+          type: string
+          const: Bearer
+        access_token:
+          type: string
+          description: Opaque id-prefixed personal access token returned once. Send as Authorization Bearer value.
+        expires_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+        user:
+          $ref: "#/components/schemas/AuthUser"
+        tenant:
+          $ref: "#/components/schemas/AuthTenant"
+    AuthPasswordForgotPayload:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+    AuthPasswordForgotResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          const: If an account exists for this email, a password reset link has been sent.
+    AuthPasswordResetPayload:
+      type: object
+      required:
+        - email
+        - token
+        - password
+        - password_confirmation
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        token:
+          type: string
+          maxLength: 2048
+        password:
+          type: string
+          minLength: 8
+          maxLength: 1024
+        password_confirmation:
+          type: string
+          minLength: 8
+          maxLength: 1024
+    AuthPasswordChangePayload:
+      type: object
+      required:
+        - current_password
+        - password
+        - password_confirmation
+      properties:
+        current_password:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          description: Current account password.
+        password:
+          type: string
+          minLength: 8
+          maxLength: 1024
+          description: New account password. Must differ from current_password.
+        password_confirmation:
+          type: string
+          minLength: 8
+          maxLength: 1024
+    AuthEmailVerificationNotificationResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          const: Email verification link has been sent.
+    AuthEmailVerificationResponse:
+      type: object
+      required:
+        - message
+        - data
+      properties:
+        message:
+          type: string
+          examples:
+            - Email has been verified.
+            - Email is already verified.
+        data:
+          type: object
+          required:
+            - user
+          properties:
+            user:
+              $ref: "#/components/schemas/AuthUser"
+    AuthEmailChangePayload:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: New email address. The server trims and lowercases before validation and stores it as pending_email until verification.
+    AuthEmailChangeRequestResponse:
+      type: object
+      required:
+        - message
+        - data
+      properties:
+        message:
+          type: string
+          const: Email change verification link has been sent.
+        data:
+          type: object
+          required:
+            - user
+          properties:
+            user:
+              $ref: "#/components/schemas/AuthUser"
+    AuthEmailChangeVerificationResponse:
+      type: object
+      required:
+        - message
+        - data
+      properties:
+        message:
+          type: string
+          const: Email has been changed.
+        data:
+          type: object
+          required:
+            - user
+          properties:
+            user:
+              $ref: "#/components/schemas/AuthUser"
+    AuthSession:
+      type: object
+      required:
+        - user
+        - tenant
+        - token
+      properties:
+        user:
+          $ref: "#/components/schemas/AuthUser"
+        tenant:
+          $ref: "#/components/schemas/AuthTenant"
+        token:
+          $ref: "#/components/schemas/AuthToken"
+    AuthProfileUpdatePayload:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: New display profile name. The server trims whitespace before validation and storage.
+    AuthProfile:
+      type: object
+      required:
+        - user
+      properties:
+        user:
+          $ref: "#/components/schemas/AuthUser"
+    AccountExportPayload:
+      type: object
+      additionalProperties: false
+      required:
+        - current_password
+      properties:
+        current_password:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          description: Current account password.
+        include_secret:
+          type: boolean
+          default: false
+          description: When true, the request must include a valid X-Secret-Unlock token for the current user.
+    AccountExport:
+      type: object
+      required:
+        - exported_at
+        - user
+        - tenant
+        - categories
+        - tags
+        - memories
+      properties:
+        exported_at:
+          type: string
+          format: date-time
+        user:
+          $ref: "#/components/schemas/AuthUser"
+        tenant:
+          $ref: "#/components/schemas/AuthTenant"
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
+        tags:
+          type: array
+          description: Tags attached to exported memory content. Secret-only tags are omitted unless secret memories are unlocked for this export.
+          items:
+            $ref: "#/components/schemas/Tag"
+        memories:
+          type: array
+          items:
+            $ref: "#/components/schemas/AccountExportMemory"
+    AccountExportMemory:
+      type: object
+      required:
+        - id
+        - public_id
+        - visibility
+        - locked
+      properties:
+        id:
+          type: integer
+        public_id:
+          type: string
+          pattern: "^mem_[0-9A-HJKMNP-TV-Z]{26}$"
+        locked:
+          type: boolean
+          description: True when secret content is intentionally omitted from the export item.
+        period_key:
+          type:
+            - string
+            - "null"
+        occurred_on:
+          type:
+            - string
+            - "null"
+          format: date
+        title:
+          type:
+            - string
+            - "null"
+        body:
+          type:
+            - string
+            - "null"
+        emotion_label:
+          type:
+            - string
+            - "null"
+        emotion_intensity:
+          type:
+            - integer
+            - "null"
+        visibility:
+          type: string
+          enum:
+            - private
+            - secret
+            - shared
+        category:
+          type:
+            - object
+            - "null"
+          required:
+            - id
+            - public_id
+            - name
+          properties:
+            id:
+              type: integer
+            public_id:
+              type: string
+              pattern: "^cat_[0-9A-HJKMNP-TV-Z]{26}$"
+            name:
+              type: string
+        tags:
+          type: array
+          items:
+            type: string
+        metadata:
+          type:
+            - object
+            - "null"
+          additionalProperties: true
+        created_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+        updated_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+    AccountDeletionPayload:
+      type: object
+      additionalProperties: false
+      required:
+        - current_password
+        - confirmation
+      properties:
+        current_password:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          description: Current account password.
+        confirmation:
+          type: string
+          const: DELETE
+        reason:
+          type:
+            - string
+            - "null"
+          maxLength: 500
+    AuthToken:
+      type: object
+      required:
+        - id
+        - public_id
+        - name
+        - abilities
+        - last_used_at
+        - expires_at
+        - created_at
+      properties:
+        id:
+          type: integer
+        public_id:
+          type: string
+          pattern: "^usr_[0-9A-HJKMNP-TV-Z]{26}$"
+        name:
+          type: string
+        abilities:
+          type: array
+          items:
+            type: string
+        last_used_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+        expires_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+        created_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+    AuthTokenListItem:
+      allOf:
+        - $ref: "#/components/schemas/AuthToken"
+        - type: object
+          required:
+            - is_current
+          properties:
+            is_current:
+              type: boolean
+    AuthTokenRotation:
+      type: object
+      required:
+        - token_type
+        - access_token
+        - expires_at
+        - token
+      properties:
+        token_type:
+          type: string
+          const: Bearer
+        access_token:
+          type: string
+          description: Opaque id-prefixed personal access token returned once. Send as Authorization Bearer value.
+        expires_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+        token:
+          $ref: "#/components/schemas/AuthTokenListItem"
+    AuthUser:
+      type: object
+      required:
+        - id
+        - public_id
+        - name
+        - email
+        - pending_email
+        - pending_email_requested_at
+        - role
+        - account_status
+        - is_email_verified
+        - email_verified_at
+      properties:
+        id:
+          type: integer
+        public_id:
+          type: string
+          pattern: "^usr_[0-9A-HJKMNP-TV-Z]{26}$"
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        pending_email:
+          type:
+            - string
+            - "null"
+          format: email
+        pending_email_requested_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+        role:
+          type: string
+          enum:
+            - owner
+            - admin
+            - member
+        account_status:
+          type: string
+          description: Only active users can log in or authenticate with existing Bearer tokens.
+          enum:
+            - active
+            - disabled
+            - suspended
+        is_email_verified:
+          type: boolean
+        email_verified_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+    AuthTenant:
+      type: object
+      required:
+        - id
+        - public_id
+        - name
+        - slug
+        - plan_key
+        - subscription_status
+        - has_active_plan
+        - trial_ends_at
+        - subscription_ends_at
+      properties:
+        id:
+          type: integer
+        public_id:
+          type: string
+          pattern: "^ten_[0-9A-HJKMNP-TV-Z]{26}$"
+        name:
+          type: string
+        slug:
+          type: string
+        plan_key:
+          type:
+            - string
+            - "null"
+          examples:
+            - free
+        subscription_status:
+          type:
+            - string
+            - "null"
+          enum:
+            - active
+            - trialing
+            - past_due
+            - canceled
+            - incomplete
+            - null
+        has_active_plan:
+          type: boolean
+        trial_ends_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+        subscription_ends_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+    TenantMember:
+      type: object
+      required:
+        - id
+        - public_id
+        - name
+        - email
+        - role
+        - account_status
+        - is_email_verified
+        - email_verified_at
+      properties:
+        id:
+          type: integer
+        public_id:
+          type: string
+          pattern: "^usr_[0-9A-HJKMNP-TV-Z]{26}$"
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum:
+            - owner
+            - admin
+            - member
+        account_status:
+          type: string
+          enum:
+            - active
+            - disabled
+            - suspended
+        is_email_verified:
+          type: boolean
+        email_verified_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+    TenantMemberRoleUpdatePayload:
+      type: object
+      required:
+        - role
+      properties:
+        role:
+          type: string
+          enum:
+            - owner
+            - admin
+            - member
+    TenantMemberAccountStatusUpdatePayload:
+      type: object
+      required:
+        - account_status
+      properties:
+        account_status:
+          type: string
+          enum:
+            - active
+            - disabled
+            - suspended
+        reason:
+          type:
+            - string
+            - "null"
+          maxLength: 500
+    TenantMemberInvitationCreatePayload:
+      type: object
+      required:
+        - email
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        role:
+          type: string
+          enum:
+            - owner
+            - admin
+            - member
+    TenantMemberInvitationAcceptPayload:
+      type: object
+      required:
+        - token
+        - name
+        - password
+        - password_confirmation
+      properties:
+        token:
+          type: string
+          maxLength: 2048
+        name:
+          type: string
+          maxLength: 255
+        password:
+          type: string
+          minLength: 8
+          maxLength: 1024
+        password_confirmation:
+          type: string
+          minLength: 8
+          maxLength: 1024
+    TenantMemberInvitation:
+      type: object
+      required:
+        - id
+        - public_id
+        - email
+        - role
+        - status
+        - invited_by_user_id
+        - invited_by_user_public_id
+        - accepted_user_id
+        - accepted_user_public_id
+        - expires_at
+        - accepted_at
+        - revoked_at
+        - created_at
+      properties:
+        id:
+          type: integer
+        public_id:
+          type: string
+          pattern: "^inv_[0-9A-HJKMNP-TV-Z]{26}$"
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum:
+            - owner
+            - admin
+            - member
+        status:
+          type: string
+          enum:
+            - pending
+            - accepted
+            - revoked
+            - expired
+        invited_by_user_id:
+          type:
+            - integer
+            - "null"
+        invited_by_user_public_id:
+          type:
+            - string
+            - "null"
+          pattern: "^usr_[0-9A-HJKMNP-TV-Z]{26}$"
+        accepted_user_id:
+          type:
+            - integer
+            - "null"
+        accepted_user_public_id:
+          type:
+            - string
+            - "null"
+          pattern: "^usr_[0-9A-HJKMNP-TV-Z]{26}$"
+        expires_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+        accepted_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+        revoked_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+        created_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+    TenantMemberInvitationCreated:
+      allOf:
+        - $ref: "#/components/schemas/TenantMemberInvitation"
+        - type: object
+          required:
+            - invite_token
+          properties:
+            invite_token:
+              type: string
+              description: Opaque invitation token returned once and sent to the invitee email by notification. New tokens use `inv_...|plainTextToken`; legacy numeric `id|plainTextToken` remains accepted during v1 transition. Store only the hash server-side.
+    TenantExportPayload:
+      type: object
+      additionalProperties: false
+      required:
+        - current_password
+      properties:
+        current_password:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          description: Current account password for the authenticated owner.
+    TenantExport:
+      type: object
+      required:
+        - exported_at
+        - tenant
+        - members
+        - invitations
+        - quota
+        - memory_inventory
+        - security_event_summary
+      properties:
+        exported_at:
+          type: string
+          format: date-time
+        tenant:
+          $ref: "#/components/schemas/AuthTenant"
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/TenantMember"
+        invitations:
+          type: array
+          description: Invitation history without plain invite tokens or token hashes.
+          items:
+            $ref: "#/components/schemas/TenantMemberInvitation"
+        quota:
+          $ref: "#/components/schemas/TenantExportQuota"
+        memory_inventory:
+          type: array
+          description: Aggregate-only memory inventory. Does not include titles, bodies, tags, metadata, or secret content.
+          items:
+            $ref: "#/components/schemas/TenantMemoryInventoryItem"
+        security_event_summary:
+          type: array
+          description: Aggregate-only security event summary. Does not include raw metadata, IP addresses, or user agents.
+          items:
+            $ref: "#/components/schemas/TenantSecurityEventSummaryItem"
+    TenantExportQuota:
+      type: object
+      required:
+        - members_count
+        - active_memories_count
+        - categories_count
+      properties:
+        members_count:
+          type: integer
+          minimum: 0
+        active_memories_count:
+          type: integer
+          minimum: 0
+        categories_count:
+          type: integer
+          minimum: 0
+    TenantMemoryInventoryItem:
+      type: object
+      required:
+        - owner_user_public_id
+        - visibility
+        - count
+      properties:
+        owner_user_public_id:
+          type: string
+          pattern: "^usr_[0-9A-HJKMNP-TV-Z]{26}$"
+        visibility:
+          type: string
+          enum:
+            - private
+            - secret
+            - shared
+        category_public_id:
+          type:
+            - string
+            - "null"
+          pattern: "^cat_[0-9A-HJKMNP-TV-Z]{26}$"
+        period_key:
+          type:
+            - string
+            - "null"
+        count:
+          type: integer
+          minimum: 0
+    TenantSecurityEventSummaryItem:
+      type: object
+      required:
+        - event_type
+        - outcome
+        - count
+      properties:
+        event_type:
+          type: string
+        outcome:
+          type: string
+          enum:
+            - success
+            - failure
+            - requested
+            - skipped
+        count:
+          type: integer
+          minimum: 0
+        last_seen_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+    TenantArchivePayload:
+      type: object
+      additionalProperties: false
+      required:
+        - current_password
+        - confirmation
+      properties:
+        current_password:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          description: Current account password for the authenticated owner.
+        confirmation:
+          type: string
+          description: Exact `ARCHIVE <tenant_slug>` confirmation string.
+          example: ARCHIVE bunshin-ai
+        reason:
+          type:
+            - string
+            - "null"
+          maxLength: 500
+    TenantArchiveStatus:
+      type: object
+      required:
+        - tenant_public_id
+        - archived_at
+        - scheduled_deletion_at
+        - billing_provider_cancellation
+      properties:
+        tenant_public_id:
+          type: string
+          pattern: "^ten_[0-9A-HJKMNP-TV-Z]{26}$"
+        archived_at:
+          type: string
+          format: date-time
+        scheduled_deletion_at:
+          type: string
+          format: date-time
+        billing_provider_cancellation:
+          $ref: "#/components/schemas/TenantArchiveBillingProviderCancellation"
+    TenantArchiveBillingProviderCancellation:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - succeeded
+            - skipped
+            - requires_operator_review
+        provider:
+          type: string
+          description: Configured provider key only. Provider customer, subscription, and price ids are never returned.
+          example: stripe
+        reason:
+          type: string
+          enum:
+            - provider_cancelled
+            - billing_disabled
+            - provider_missing
+            - provider_unsupported
+            - missing_billing_provider
+            - provider_mismatch
+            - missing_billing_subscription
+            - provider_configuration_incomplete
+            - provider_request_failed
+    BillingCheckoutSessionCreatePayload:
+      type: object
+      additionalProperties: false
+      required:
+        - plan_key
+      properties:
+        plan_key:
+          type: string
+          description: Local plan key that must be mapped to a configured provider price id. Provider price ids are never accepted from the client.
+          enum:
+            - pro
+    BillingTenantStatus:
+      type: object
+      required:
+        - public_id
+        - plan_key
+        - subscription_status
+        - has_active_plan
+      properties:
+        public_id:
+          type:
+            - string
+            - "null"
+          pattern: "^ten_[0-9A-HJKMNP-TV-Z]{26}$"
+        plan_key:
+          type:
+            - string
+            - "null"
+        subscription_status:
+          type:
+            - string
+            - "null"
+          enum:
+            - active
+            - trialing
+            - past_due
+            - canceled
+            - incomplete
+            - null
+        has_active_plan:
+          type: boolean
+    BillingSession:
+      type: object
+      required:
+        - mode
+        - provider
+        - url
+        - tenant
+      properties:
+        mode:
+          type: string
+          enum:
+            - checkout
+            - portal
+        provider:
+          type: string
+          example: stripe
+        plan_key:
+          type:
+            - string
+            - "null"
+          description: Present for checkout sessions.
+          example: pro
+        url:
+          type: string
+          format: uri
+          description: One-time hosted provider URL returned to the client. It is not stored in the database or security event metadata. Returning from the provider to configured frontend routes is not billing authority; clients must refresh tenant state and wait for webhook-backed updates.
+        tenant:
+          $ref: "#/components/schemas/BillingTenantStatus"
     Tag:
       type: object
       required:
@@ -537,7 +2813,9 @@ components:
       type: object
       required:
         - id
+        - public_id
         - parent_id
+        - parent_public_id
         - name
         - slug
         - sort_order
@@ -547,10 +2825,18 @@ components:
       properties:
         id:
           type: integer
+        public_id:
+          type: string
+          pattern: "^cat_[0-9A-HJKMNP-TV-Z]{26}$"
         parent_id:
           type:
             - integer
             - "null"
+        parent_public_id:
+          type:
+            - string
+            - "null"
+          pattern: "^cat_[0-9A-HJKMNP-TV-Z]{26}$"
         name:
           type: string
         slug:
@@ -571,7 +2857,9 @@ components:
       type: object
       required:
         - id
+        - public_id
         - category_id
+        - category_public_id
         - title
         - body
         - emotion_scores
@@ -583,10 +2871,18 @@ components:
       properties:
         id:
           type: integer
+        public_id:
+          type: string
+          pattern: "^mem_[0-9A-HJKMNP-TV-Z]{26}$"
         category_id:
           type:
             - integer
             - "null"
+        category_public_id:
+          type:
+            - string
+            - "null"
+          pattern: "^cat_[0-9A-HJKMNP-TV-Z]{26}$"
         period_key:
           type:
             - string
@@ -677,7 +2973,7 @@ components:
         password:
           type: string
           maxLength: 1024
-          description: Initial baseline validates against the authenticated user's account password hash.
+          description: Dedicated user scoped unlock password. This is validated against users.secret_unlock_password, not the account password hash.
     SecretUnlock:
       type: object
       required:
@@ -690,11 +2986,123 @@ components:
         expires_at:
           type: string
           format: date-time
+    SecretUnlockPasswordUpdatePayload:
+      type: object
+      required:
+        - account_password
+        - password
+        - password_confirmation
+      properties:
+        account_password:
+          type: string
+          maxLength: 1024
+          description: Current account password. Always required before setting or changing the dedicated unlock password.
+        current_password:
+          type:
+            - string
+            - "null"
+          maxLength: 1024
+          description: Current dedicated unlock password. Required when one is already configured.
+        password:
+          type: string
+          minLength: 8
+          maxLength: 1024
+          description: New dedicated unlock password. Must differ from the account password and, when changing, from the current unlock password.
+        password_confirmation:
+          type: string
+          minLength: 8
+          maxLength: 1024
+    SecretUnlockPasswordStatus:
+      type: object
+      required:
+        - has_secret_unlock_password
+        - mode
+      properties:
+        has_secret_unlock_password:
+          type: boolean
+          const: true
+        mode:
+          type: string
+          enum:
+            - set
+            - changed
+    SecretUnlockPasswordRecoveryRequestPayload:
+      type: object
+      required:
+        - account_password
+      properties:
+        account_password:
+          type: string
+          maxLength: 1024
+          description: Current account password. Required before a signed recovery link is sent.
+    SecretUnlockPasswordRecoveryCompletePayload:
+      type: object
+      required:
+        - account_password
+        - password
+        - password_confirmation
+      properties:
+        account_password:
+          type: string
+          maxLength: 1024
+          description: Current account password. Required in addition to the signed recovery URL.
+        password:
+          type: string
+          minLength: 8
+          maxLength: 1024
+          description: New dedicated unlock password. Must differ from the account password and from the existing unlock password when one is configured.
+        password_confirmation:
+          type: string
+          minLength: 8
+          maxLength: 1024
+    SecretUnlockPasswordRecoveryStatus:
+      type: object
+      required:
+        - has_secret_unlock_password
+        - mode
+      properties:
+        has_secret_unlock_password:
+          type: boolean
+          const: true
+        mode:
+          type: string
+          const: recovered
+    SecretUnlockPasswordForceRotationPayload:
+      type: object
+      properties:
+        reason:
+          type:
+            - string
+            - "null"
+          maxLength: 500
+          description: Optional manager-visible reason saved in security event metadata. Must not contain plain passwords, tokens, or secret memory content.
+    SecretUnlockPasswordForceRotationStatus:
+      type: object
+      required:
+        - user_id
+        - user_public_id
+        - has_secret_unlock_password
+        - mode
+      properties:
+        user_id:
+          type: integer
+          minimum: 1
+        user_public_id:
+          type: string
+          pattern: "^usr_[0-9A-HJKMNP-TV-Z]{26}$"
+        has_secret_unlock_password:
+          type: boolean
+          const: false
+        mode:
+          type: string
+          const: forced_rotation
     Category:
       type: object
       required:
         - id
+        - public_id
         - parent_id
+        - parent_public_id
         - name
         - slug
         - sort_order
@@ -705,10 +3113,18 @@ components:
       properties:
         id:
           type: integer
+        public_id:
+          type: string
+          pattern: "^cat_[0-9A-HJKMNP-TV-Z]{26}$"
         parent_id:
           type:
             - integer
             - "null"
+        parent_public_id:
+          type:
+            - string
+            - "null"
+          pattern: "^cat_[0-9A-HJKMNP-TV-Z]{26}$"
         name:
           type: string
         slug:
@@ -751,9 +3167,13 @@ components:
           maxLength: 80
           pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$"
         parent_id:
-          type:
-            - integer
-            - "null"
+          description: Parent category public id is preferred. Numeric category ids are accepted only during the v1 transition.
+          oneOf:
+            - type: string
+              pattern: "^cat_[0-9A-HJKMNP-TV-Z]{26}$"
+            - type: integer
+              minimum: 1
+            - type: "null"
         sort_order:
           type: integer
           minimum: 0
@@ -771,9 +3191,13 @@ components:
           maxLength: 80
           pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$"
         parent_id:
-          type:
-            - integer
-            - "null"
+          description: Parent category public id is preferred. Numeric category ids are accepted only during the v1 transition.
+          oneOf:
+            - type: string
+              pattern: "^cat_[0-9A-HJKMNP-TV-Z]{26}$"
+            - type: integer
+              minimum: 1
+            - type: "null"
         sort_order:
           type: integer
           minimum: 0
@@ -782,6 +3206,7 @@ components:
       type: object
       required:
         - id
+        - public_id
         - body
         - visibility
         - tags
@@ -790,6 +3215,9 @@ components:
       properties:
         id:
           type: integer
+        public_id:
+          type: string
+          pattern: "^mem_[0-9A-HJKMNP-TV-Z]{26}$"
         period_key:
           type:
             - string
@@ -825,10 +3253,14 @@ components:
             - "null"
           required:
             - id
+            - public_id
             - name
           properties:
             id:
               type: integer
+            public_id:
+              type: string
+              pattern: "^cat_[0-9A-HJKMNP-TV-Z]{26}$"
             name:
               type: string
         tags:
@@ -891,9 +3323,13 @@ components:
             - secret
             - shared
         category_id:
-          type:
-            - integer
-            - "null"
+          description: Category public id is preferred. Numeric category ids are accepted only during the v1 transition.
+          oneOf:
+            - type: string
+              pattern: "^cat_[0-9A-HJKMNP-TV-Z]{26}$"
+            - type: integer
+              minimum: 1
+            - type: "null"
         tags:
           type:
             - array

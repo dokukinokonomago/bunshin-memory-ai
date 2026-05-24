@@ -235,11 +235,23 @@ root category を削除したら child category も削除する。
 # Review Decision: secret unlock password 方針
 
 作成: 2026-05-06 15:03:18 JST
-最終確認: 2026-05-09 05:01:55 JST
+最終確認: 2026-05-14 00:02:51 JST
 
 ## 判断状況
 
-未決。
+決定済み。
+
+2026-05-13 21:33:02 JST に、ユーザーが推奨方針どおり採用してよいと明示したため、選択肢 B の「専用 unlock password に分離する」を正式採用する。以後、secret unlock を触る task では account password 共用を正式方針として広げず、user scoped unlock credential、設定 / 変更 / recovery / rotation の最小 API を設計する。
+
+2026-05-13 23:10:13 JST に、`users.secret_unlock_password` の専用 hash と `POST /api/v1/secret-unlocks` の専用 password 検証へ移行した。account password hash は secret unlock 判定に使わない。setup / change / recovery / rotation API は後続 task とする。
+
+2026-05-14 00:02:51 JST に、`PUT /api/v1/secret-unlock-password` の setup / change API を追加した。初回 setup は account password を確認し、change は account password と現在の unlock password を確認する。新 unlock password は account password と同じ値にできず、change では現在の unlock password と同じ値にもできない。成功時は発行済み `secret_unlock_tokens` を削除する。recovery / forced rotation は後続 task として残す。
+
+2026-05-14 10:01:43 JST に、`POST /api/v1/secret-unlock-password/recovery/request` を追加した。Bearer token、tenant context、verified email、account password を確認し、30 分有効な signed recovery link を verified email に送る。成功時も `users.secret_unlock_password` と既存 `secret_unlock_tokens` は変更しない。recovery completion / forced rotation は後続 task として残す。
+
+2026-05-14 11:02:46 JST に、`PUT /api/v1/secret-unlock-password/recovery/{id}/{hash}` を追加した。signed recovery link、same-user Bearer token、verified email、account password を確認し、current unlock password は要求せずに dedicated unlock password を再設定する。新 unlock password は account password と既存 unlock password の再利用を拒否する。成功時は既存 `secret_unlock_tokens` を削除し、Bearer token は revoke しない。forced rotation は後続 task として残す。
+
+2026-05-14 12:03:03 JST に、`POST /api/v1/tenant/members/{member}/secret-unlock-password/force-rotation` を追加した。tenant manager policy と owner / admin role boundary を使い、acting user 自身は対象外にする。成功時は対象 user の `secret_unlock_password` を `null` に戻し、既存 `secret_unlock_tokens` を削除する。対象 user の Bearer token は revoke せず、secret 内容、temporary password、plain unlock token は返さない。
 
 2026-05-06 15:03:18 JST の automation 入力には、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。
 
@@ -271,7 +283,7 @@ root category を削除したら child category も削除する。
 
 2026-05-09 05:01:55 JST の automation 入力にも、secret unlock password を account password と共用し続けるか、専用 unlock password に分離するかの明示決定は含まれていなかった。現状 baseline は account password hash 検証のまま維持し、`SecretUnlockController` / tests / API contract / OpenAPI の変更は行わない。
 
-現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の account password hash を検証し、短時間有効な unlock token を発行する。専用 password / recovery / rotation は未実装で、後続 task として検討対象に残っている。
+現状 baseline は、`POST /api/v1/secret-unlocks` で認証済み user の `users.secret_unlock_password` hash を検証し、短時間有効な unlock token を発行する。account password hash は unlock 判定に使わない。setup / change は `PUT /api/v1/secret-unlock-password` で実装済み。recovery request は `POST /api/v1/secret-unlock-password/recovery/request`、recovery completion は `PUT /api/v1/secret-unlock-password/recovery/{id}/{hash}`、manager forced rotation は `POST /api/v1/tenant/members/{member}/secret-unlock-password/force-rotation` で実装済み。
 
 ## 判断したいこと
 
@@ -325,8 +337,10 @@ secret memory unlock 専用の password hash を user scoped に持ち、account
 
 ## 決定内容
 
-未決。明示決定があるまで、現行 baseline の account password hash 検証から実装変更しない。
+選択肢 B の「専用 unlock password に分離する」を正式採用する。
+
+現行 baseline は `users.secret_unlock_password` の専用 hash 検証へ移行済み。account password hash 検証には戻さない。setup / change API も追加済みで、成功時には既存 unlock token を失効させる。
 
 ## 決定後の次 task
 
-専用 unlock password に分離する場合は、user scoped unlock credential の migration / model / validation / tests を小さい task として切る。account password 共用を正式採用する場合は、docs / OpenAPI に暫定ではなく正式方針として反映する。
+account password change API、profile update API、email change API、account suspension / disabled user の認証拒否 baseline、secret unlock password recovery / forced rotation API の設計、secret unlock password recovery request / completion endpoint、tenant member secret unlock password forced rotation endpoint、prefixed ULID public id response baseline、memories / categories public id resolver implementation、first-party frontend request 移行、tenant member management route params の `usr_` public id lookup、tenant member invitation の `inv_` public id lookup は 2026-05-14 に追加 / 実装済み。account status 変更 API / reactivation 方針は `docs/decisions/0022-account-status-management-api.md` に従い 2026-05-15 に実装済み。2026-05-15 に管理画面モックアップ接続要否も確認し、現行 mockup に tenant members view / account status 操作導線がないため接続改修は不要と判断した。account deletion / export 方針も `docs/decisions/0023-account-deletion-export.md` に従い 2026-05-15 に設計済みで、self-service account export endpoint と self-service account deletion endpoint は実装済み。tenant-wide export endpoint と tenant deletion/archive 方針設計も完了済み。tenant archive lifecycle fields、archived-tenant auth rejection、tenant archive endpoint は実装済み。tenant purge retention policy、tenant purge command / tests、scheduler 登録、production runbook は `docs/decisions/0025-tenant-purge-retention-policy.md` に従い 2026-05-15 に実装済み。broader audit log / admin impersonation 方針決定と broader audit logging 実装は完了済み。tenant member invitation delivery email / notification は実装済み。smoke test 作成 data の参照有無再確認は 2026-05-16 に完了済み。audit log pruning command の retention / execution 方針設計、command、scheduler、schedule tests、operations runbook は実装済み。external logging/search integration は `docs/decisions/0028-external-logging-search-integration.md` で設計済みで、初期実装は deferred。billing provider integration scope と webhook handling は `docs/decisions/0029-billing-provider-integration.md` で設計済みで、billing provider data model migration / model support / tests、checkout / customer portal API、billing webhook receiver と signature verification / idempotency tests、provider-local reconciliation command / operations runbook、tenant archive billing provider cancellation handling は実装済み。tenant archive billing cancellation failure triage の operations runbook は追加済み。dedicated retry command は decision 0031 により v1 deferred。automated billing adjustments は decision 0032 により v1 deferred。customer-visible billing dispute / refund request flow は decision 0033 により v1 deferred / support-only outside product backend。
