@@ -46,6 +46,7 @@ class IssueAdminTokenCommandTest extends TestCase
         [$tokenId, $rawToken] = explode('|', $plainTextToken, 2);
 
         $this->assertSame($tenant->id, $user->tenant_id);
+        $this->assertSame(User::ROLE_OWNER, $user->role);
         $this->assertSame('Admin User', $user->name);
         $this->assertSame((string) $token->id, $tokenId);
         $this->assertSame(hash('sha256', $rawToken), $token->token);
@@ -101,6 +102,21 @@ class IssueAdminTokenCommandTest extends TestCase
         $this->assertSame(SymfonyCommand::FAILURE, $exitCode);
         $this->assertStringContainsString('Invalid options.', $output);
         $this->assertStringContainsString('expires-days', $output);
+        $this->assertNull($plainTextToken);
+        $this->assertDatabaseCount('tenants', 0);
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
+
+    public function test_command_validates_role_option_without_creating_records(): void
+    {
+        [$exitCode, $output, $plainTextToken] = $this->issueToken([
+            '--role' => 'super-admin',
+        ]);
+
+        $this->assertSame(SymfonyCommand::FAILURE, $exitCode);
+        $this->assertStringContainsString('Invalid options.', $output);
+        $this->assertStringContainsString('role', $output);
         $this->assertNull($plainTextToken);
         $this->assertDatabaseCount('tenants', 0);
         $this->assertDatabaseCount('users', 0);

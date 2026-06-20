@@ -1,0 +1,14 @@
+Mechanical verification
+- `build_artifact_deck.mjs` completed successfully for 7 slides.
+- `check_layout_quality.mjs` passed on all final slide layouts with 0 errors and 0 warnings.
+
+Visual review
+- Cover and close slides keep the emotional product world while preserving readable left-side messaging.
+- Workflow slide explains the system concretely: talk -> structure -> explore.
+- Product screen slide uses a real local memory-space capture rather than generated UI.
+- Privacy slide communicates selective access without shifting into a cold security-product tone.
+
+Deliverables
+- `output/memoriru-client-intro.pptx`
+- `output/memoriru-client-intro.pdf`
+- `preview/contact-sheet.png`

@@ -18,6 +18,7 @@ class MemoryResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'public_id' => $this->public_id,
             'period_key' => $this->period_key,
             'occurred_on' => $this->occurred_on?->toDateString(),
             'title' => $this->title,
@@ -32,6 +33,7 @@ class MemoryResource extends JsonResource
 
                 return [
                     'id' => $this->category->id,
+                    'public_id' => $this->category->public_id,
                     'name' => $this->category->name,
                 ];
             }, null),

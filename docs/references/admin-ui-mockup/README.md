@@ -26,6 +26,7 @@ frontend 実装そのものをこの backend automation で進めるためのも
 - `php artisan bunshin:issue-admin-token` で tenant / user / token を作成し、表示された `Bearer token:` の値を Settings に貼る。
 - 同じ `--email` / `--token-name` で再実行すると既存 token は revoke され、新しい token だけが有効になる。
 - `visibility=secret` は通常 memory list に混ぜず、明示取得時だけ返す前提で API を設計・実装する。
+- table row `data-id`、modal edit/delete id、category select value、`category_id` / `parent_id` request payload は integer `id` ではなく `public_id` / `category_public_id` / `parent_public_id` を使う。integer id は v1 transition 中の互換値としてだけ扱う。
 - mockup と backend 設計 docs が食い違う場合は、`docs/architecture/` と `docs/decisions/` を正とし、mockup から必要な API 要件だけを task_board に追加候補として記録する。
 
 ## Token 発行
@@ -36,7 +37,7 @@ local 開発環境で固定 token を使う場合:
 php artisan db:seed
 ```
 
-この場合の Bearer token は `local-dev-token`。secret unlock の初期 password は seeded user の account password である `password`。確認用に root category / subcategory、通常 memory 3 件、secret memory 1 件、tags が作成される。
+この場合の Bearer token は `local-dev-token`。secret unlock の初期 password は seeded user の専用 unlock password である `secret-password`。確認用に root category / subcategory、通常 memory 3 件、secret memory 1 件、tags が作成される。
 
 任意の one-time token を発行する場合:
 

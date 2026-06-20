@@ -1,0 +1,19 @@
+What to preserve from the product sources
+- Soft, reflective emotional tone from the LP.
+- Distinctive "memory space / universe" metaphor from the product screen and architecture docs.
+- Strong privacy stance: secret memories are separate by design.
+
+What to improve for this deck
+- Shift from consumer LP tone to concise client-facing product explanation.
+- Replace lyrical long-form copy with claim-driven slide headlines.
+- Add clearer product-system framing: conversation -> structure -> exploration -> future AI value.
+
+What not to imitate
+- Long marketing paragraphs from the LP.
+- Decorative website interactions or web-only UI motifs.
+- Any generated image text or pseudo-interface artifacts.
+
+Visual direction
+- Editorial, warm, premium, not generic SaaS.
+- Opaque panels and strong whitespace instead of translucent dashboard overlays.
+- Real screen only where factual product proof is needed.

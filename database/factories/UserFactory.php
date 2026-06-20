@@ -18,6 +18,11 @@ class UserFactory extends Factory
     protected static ?string $password;
 
     /**
+     * The current secret unlock password being used by the factory.
+     */
+    protected static ?string $secretUnlockPassword;
+
+    /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
@@ -27,8 +32,11 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'role' => User::ROLE_MEMBER,
+            'account_status' => User::ACCOUNT_STATUS_ACTIVE,
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'secret_unlock_password' => static::$secretUnlockPassword ??= Hash::make('secret-password'),
             'remember_token' => Str::random(10),
         ];
     }

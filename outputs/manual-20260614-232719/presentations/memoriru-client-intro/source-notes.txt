@@ -1,0 +1,26 @@
+Primary product sources
+- `/Users/dinho/Desktop/ホーム/ITシステム制作/2026/分身AI/メモリルLP.html`
+  - Core positioning copy: 記憶を残す、感情を受け取る、未来の自分と再会する。
+- `/Users/dinho/Desktop/ホーム/ITシステム制作/2026/分身AI/docs/architecture/memory_space_screen.md`
+  - Product behavior: category hierarchy, emotion axis, period axis, secret memory separation, memory-space exploration.
+- `/Users/dinho/Desktop/ホーム/ITシステム制作/2026/分身AI/docs/architecture/api_contract.md`
+  - Secret unlock and dedicated protection flow.
+
+Verified product image
+- `/Users/dinho/Desktop/ホーム/ITシステム制作/2026/分身AI/outputs/manual-20260614-232719/presentations/memoriru-client-intro/assets/memory-space-ui.png`
+  - Real local screenshot of the memory-space screen.
+  - Used only on the product experience slide.
+
+Generated visual assets
+- `hero-memory-shore.png`
+  - image2.0 generated hero visual for memory accumulation concept.
+- `workflow-memory-map.png`
+  - image2.0 generated concept art for conversation-to-memory structuring.
+- `privacy-sanctuary.png`
+  - image2.0 generated privacy metaphor visual.
+- `future-companion.png`
+  - image2.0 generated closing visual for future bunshin AI concept.
+
+Provenance policy
+- Generated images are mood-setting support and do not depict literal UI states.
+- No logos, trademarks, customer names, or fabricated metrics are introduced.

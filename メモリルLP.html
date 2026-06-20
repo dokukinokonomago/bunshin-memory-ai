@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>メモリル — あなたの記憶と、これからの物語</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@300;400;500&family=Shippori+Mincho:wght@400;500;600&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --cream: #FAF8F4;
+    --warm-white: #FDF9F3;
+    --mist: #F0EAE0;
+    --fog: #E8DFCF;
+    --soft-brown: #C4A882;
+    --warm-mid: #9E7F5A;
+    --deep-earth: #5C4A32;
+    --ink: #2C2218;
+    --blush: #F2D4C4;
+    --rose-mist: #E8C4B4;
+    --sky-pale: #D8E8F0;
+    --lavender-soft: #E4DCF0;
+    --sage: #D4E4D0;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    line-height: 1.9;
+  }
+
+  /* ===== NOISE TEXTURE OVERLAY ===== */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* ===== FLOATING PARTICLES ===== */
+  .particles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    overflow: hidden;
+  }
+
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0;
+    animation: float-up linear infinite;
+  }
+
+  @keyframes float-up {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 0.4; }
+    90% { opacity: 0.15; }
+    100% { transform: translateY(-20vh) scale(1.2); opacity: 0; }
+  }
+
+  /* ===== NAV ===== */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0; right: 0;
+    z-index: 100;
+    padding: 1.5rem 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.4s ease;
+  }
+
+  nav.scrolled {
+    background: rgba(250,248,244,0.92);
+    backdrop-filter: blur(20px);
+    padding: 1rem 3rem;
+    border-bottom: 0.5px solid var(--fog);
+  }
+
+  .nav-logo {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--deep-earth);
+    letter-spacing: 0.08em;
+  }
+
+  .nav-cta {
+    background: transparent;
+    border: 0.5px solid var(--soft-brown);
+    color: var(--deep-earth);
+    padding: 8px 22px;
+    border-radius: 50px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .nav-cta:hover {
+    background: var(--deep-earth);
+    color: var(--cream);
+    border-color: var(--deep-earth);
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    text-align: center;
+    padding: 4rem 2rem;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 40%, rgba(242,212,196,0.35) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 20% 80%, rgba(216,232,240,0.3) 0%, transparent 50%),
+      radial-gradient(ellipse 40% 50% at 80% 20%, rgba(228,220,240,0.25) 0%, transparent 50%),
+      var(--cream);
+  }
+
+  .hero-content { position: relative; z-index: 10; max-width: 720px; }
+
+  .eyebrow {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.35em;
+    color: var(--warm-mid);
+    text-transform: uppercase;
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    animation: fade-up 1s ease 0.3s forwards;
+  }
+
+  .hero-logo {
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(72px, 12vw, 108px);
+    font-weight: 600;
+    color: var(--deep-earth);
+    letter-spacing: 0.06em;
+    line-height: 1;
+    margin-bottom: 1rem;
+    opacity: 0;
+    animation: fade-up 1.2s ease 0.5s forwards;
+    position: relative;
+  }
+
+  .hero-logo::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 1.5px;
+    background: linear-gradient(90deg, transparent, var(--soft-brown), transparent);
+    margin: 1.5rem auto 0;
+  }
+
+  .hero-tagline {
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(17px, 2.5vw, 22px);
+    font-weight: 400;
+    color: var(--warm-mid);
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.08em;
+    line-height: 1.7;
+    opacity: 0;
+    animation: fade-up 1s ease 0.9s forwards;
+  }
+
+  .hero-sub {
+    font-size: 14px;
+    color: var(--soft-brown);
+    letter-spacing: 0.05em;
+    line-height: 2;
+    margin-bottom: 3.5rem;
+    opacity: 0;
+    animation: fade-up 1s ease 1.1s forwards;
+  }
+
+  .cta-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fade-up 1s ease 1.4s forwards;
+  }
+
+  .btn-primary {
+    background: var(--deep-earth);
+    color: var(--cream);
+    border: none;
+    padding: 14px 36px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+  }
+
+  .btn-primary:hover {
+    background: var(--warm-mid);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(92,74,50,0.2);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--deep-earth);
+    border: 1px solid var(--fog);
+    padding: 13px 36px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--soft-brown);
+    color: var(--warm-mid);
+    transform: translateY(-2px);
+  }
+
+  /* ===== SCROLL INDICATOR ===== */
+  .scroll-hint {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    animation: fade-up 1s ease 2s forwards;
+    z-index: 10;
+  }
+
+  .scroll-hint span {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--soft-brown);
+  }
+
+  .scroll-line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--soft-brown), transparent);
+    animation: pulse-line 2s ease infinite;
+  }
+
+  @keyframes pulse-line {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  /* ===== STORY SECTION ===== */
+  .story {
+    padding: 8rem 2rem;
+    max-width: 680px;
+    margin: 0 auto;
+    text-align: center;
+    position: relative;
+  }
+
+  .story-label {
+    font-size: 10px;
+    letter-spacing: 0.4em;
+    color: var(--soft-brown);
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    display: block;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+  }
+
+  .story-text {
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(18px, 2.8vw, 25px);
+    font-weight: 400;
+    color: var(--deep-earth);
+    line-height: 2.2;
+    letter-spacing: 0.06em;
+    margin-bottom: 3rem;
+  }
+
+  .story-sub {
+    font-size: 14px;
+    color: var(--warm-mid);
+    line-height: 2.2;
+    letter-spacing: 0.04em;
+  }
+
+  /* ===== DIVIDER ===== */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    max-width: 300px;
+    margin: 0 auto 5rem;
+    opacity: 0.4;
+  }
+
+  .divider-line { flex: 1; height: 0.5px; background: var(--soft-brown); }
+  .divider-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--soft-brown); }
+
+  /* ===== FEATURES ===== */
+  .memories {
+    padding: 4rem 2rem 8rem;
+    background: var(--warm-white);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .memories::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 0% 50%, rgba(212,228,208,0.2) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 100% 50%, rgba(228,220,240,0.2) 0%, transparent 60%);
+  }
+
+  .memories-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  .section-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(26px, 4vw, 38px);
+    font-weight: 500;
+    color: var(--deep-earth);
+    letter-spacing: 0.06em;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+
+  .section-desc {
+    font-size: 14px;
+    color: var(--warm-mid);
+    letter-spacing: 0.05em;
+    line-height: 2;
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .memory-card {
+    background: var(--cream);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    border: 0.5px solid var(--fog);
+    transition: all 0.5s ease;
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+  }
+
+  .memory-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .memory-card.c1::before { background: linear-gradient(90deg, var(--blush), var(--rose-mist)); }
+  .memory-card.c2::before { background: linear-gradient(90deg, var(--sky-pale), #B8D4E4); }
+  .memory-card.c3::before { background: linear-gradient(90deg, var(--lavender-soft), #C8B8E4); }
+  .memory-card.c4::before { background: linear-gradient(90deg, var(--sage), #B4D0B0); }
+
+  .memory-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 60px rgba(92,74,50,0.1);
+    border-color: var(--mist);
+  }
+
+  .memory-card:hover::before { opacity: 1; }
+
+  .card-icon {
+    font-size: 28px;
+    margin-bottom: 1.2rem;
+    display: block;
+  }
+
+  .card-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--deep-earth);
+    margin-bottom: 0.8rem;
+    letter-spacing: 0.06em;
+  }
+
+  .card-text {
+    font-size: 13.5px;
+    color: var(--warm-mid);
+    line-height: 2;
+    letter-spacing: 0.03em;
+  }
+
+  /* ===== TIMELINE ===== */
+  .timeline-section {
+    padding: 8rem 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .timeline {
+    position: relative;
+    margin-top: 4rem;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 28px;
+    top: 0; bottom: 0;
+    width: 0.5px;
+    background: linear-gradient(to bottom, transparent, var(--fog) 10%, var(--fog) 90%, transparent);
+  }
+
+  .timeline-item {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 3.5rem;
+    align-items: flex-start;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.7s ease;
+  }
+
+  .timeline-item.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .timeline-dot {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+    border: 2px solid var(--cream);
+  }
+
+  .d1 { background: #F8E8E0; }
+  .d2 { background: #E0ECF4; }
+  .d3 { background: #ECE8F8; }
+  .d4 { background: #E4F0E0; }
+
+  .timeline-content { padding-top: 8px; }
+
+  .timeline-step {
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    color: var(--soft-brown);
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+  }
+
+  .timeline-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--deep-earth);
+    margin-bottom: 0.6rem;
+    letter-spacing: 0.04em;
+  }
+
+  .timeline-text {
+    font-size: 14px;
+    color: var(--warm-mid);
+    line-height: 2;
+    letter-spacing: 0.03em;
+  }
+
+  /* ===== TESTIMONIALS ===== */
+  .testimonial-section {
+    padding: 6rem 2rem;
+    background: var(--mist);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .testimonial-section::before {
+    content: '\201C';
+    font-family: 'Shippori Mincho', serif;
+    font-size: 300px;
+    color: rgba(92,74,50,0.06);
+    position: absolute;
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .testimonials-wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+  }
+
+  .testimonial {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+
+  .testimonial.active {
+    display: block;
+    opacity: 1;
+  }
+
+  .testimonial-text {
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(17px, 2.5vw, 22px);
+    color: var(--deep-earth);
+    line-height: 2.2;
+    letter-spacing: 0.05em;
+    margin-bottom: 2rem;
+    font-weight: 400;
+  }
+
+  .testimonial-author {
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    color: var(--soft-brown);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+  }
+
+  .testimonial-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 2.5rem;
+  }
+
+  .t-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--fog);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    padding: 0;
+  }
+
+  .t-dot.active {
+    background: var(--warm-mid);
+    transform: scale(1.3);
+  }
+
+  /* ===== FINAL CTA ===== */
+  .final-cta {
+    padding: 10rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .final-cta::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 60% at 50% 50%, rgba(242,212,196,0.4) 0%, transparent 65%),
+      var(--cream);
+  }
+
+  .final-cta-inner {
+    position: relative;
+    z-index: 2;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .final-logo {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 52px;
+    font-weight: 600;
+    color: var(--deep-earth);
+    letter-spacing: 0.1em;
+    margin-bottom: 1.5rem;
+  }
+
+  .final-text {
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(16px, 2vw, 20px);
+    color: var(--warm-mid);
+    line-height: 2.2;
+    letter-spacing: 0.06em;
+    margin-bottom: 3rem;
+  }
+
+  .final-note {
+    font-size: 12px;
+    color: var(--soft-brown);
+    letter-spacing: 0.08em;
+    margin-top: 1.5rem;
+    opacity: 0.7;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+  }
+
+  /* ===== FOOTER ===== */
+  footer {
+    padding: 3rem 2rem;
+    text-align: center;
+    border-top: 0.5px solid var(--fog);
+  }
+
+  .footer-logo {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 20px;
+    color: var(--warm-mid);
+    letter-spacing: 0.15em;
+    margin-bottom: 1rem;
+  }
+
+  .footer-text {
+    font-size: 11px;
+    color: var(--soft-brown);
+    letter-spacing: 0.15em;
+    opacity: 0.6;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+  }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 640px) {
+    nav { padding: 1.2rem 1.5rem; }
+    nav.scrolled { padding: 0.8rem 1.5rem; }
+    .hero { padding: 6rem 1.5rem 4rem; }
+    .story { padding: 5rem 1.5rem; }
+    .memories { padding: 3rem 1.5rem 5rem; }
+    .timeline-section { padding: 5rem 1.5rem; }
+    .final-cta { padding: 6rem 1.5rem; }
+    .timeline::before { left: 22px; }
+    .timeline-dot { width: 44px; height: 44px; font-size: 16px; }
+    .timeline-item { gap: 1.2rem; }
+    .cta-group { flex-direction: column; align-items: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PARTICLES -->
+<div class="particles" id="particles"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-logo">メモリル</div>
+  <button class="nav-cta" onclick="scrollToFinal()">無料で始める</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <p class="eyebrow">あなたの記憶と、これからの物語</p>
+    <h1 class="hero-logo">メモリル</h1>
+    <p class="hero-tagline">
+      言葉にできなかった気持ちを、<br>
+      忘れたくない瞬間を、<br>
+      あなたの代わりに、ずっと覚えていたい。
+    </p>
+    <p class="hero-sub">
+      人生のすべての断片が、<br>
+      いつか一つの「あなた」になる。
+    </p>
+    <div class="cta-group">
+      <button class="btn-primary" onclick="scrollToFinal()">記憶を残しはじめる</button>
+      <button class="btn-ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">使い方を見る</button>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- STORY -->
+<section class="story">
+  <span class="story-label reveal">Story</span>
+  <p class="story-text reveal">
+    「あの日、なにを思っていたっけ」<br>
+    「あの言葉、どう伝えたらよかったんだろう」
+  </p>
+  <p class="story-sub reveal">
+    人は毎日、無数の感情とことばを生きています。<br>
+    でも多くは、朝の光の中で溶けてしまう。<br><br>
+    メモリルは、あなたが感じたことを一緒に受け取り、<br>
+    いつでも戻ってこられる場所を作ります。<br>
+    日記でも、SNSでも、アルバムでもない——<br>
+    <em style="font-family:'Shippori Mincho',serif; font-style:normal; color:var(--deep-earth);">あなただけの、静かな記憶の庭。</em>
+  </p>
+</section>
+
+<div class="divider reveal">
+  <div class="divider-line"></div>
+  <div class="divider-dot"></div>
+  <div class="divider-line"></div>
+</div>
+
+<!-- FEATURES -->
+<section class="memories">
+  <div class="memories-inner">
+    <div class="section-header reveal">
+      <span class="story-label">What is メモリル</span>
+      <h2 class="section-title">あなたの気持ちを、<br>逃さないために</h2>
+      <p class="section-desc">AIが、ただ聴くだけでなく、あなたの言葉の奥にある<br>気持ちを一緒に見つけていきます。</p>
+    </div>
+    <div class="cards-grid">
+      <div class="memory-card c1 reveal">
+        <span class="card-icon">🌸</span>
+        <h3 class="card-title">話しかけるだけでいい</h3>
+        <p class="card-text">今日あったこと、モヤモヤした気持ち、嬉しかったこと。言葉にならなくても、メモリルは受け取ります。</p>
+      </div>
+      <div class="memory-card c2 reveal">
+        <span class="card-icon">🌊</span>
+        <h3 class="card-title">記憶が積み重なる</h3>
+        <p class="card-text">一度話したことを覚えています。「あのとき」と「いま」がつながって、あなたの物語になっていく。</p>
+      </div>
+      <div class="memory-card c3 reveal">
+        <span class="card-icon">✨</span>
+        <h3 class="card-title">気づきを届けてくれる</h3>
+        <p class="card-text">「最近よく○○って言ってるね」。自分では気づかなかった感情のパターンを、そっと教えてくれます。</p>
+      </div>
+      <div class="memory-card c4 reveal">
+        <span class="card-icon">🍃</span>
+        <h3 class="card-title">あなただけの空間</h3>
+        <p class="card-text">ここで話したことは、ここだけのこと。誰にも見せなくていい、完全にプライベートな記憶の場所。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="timeline-section" id="how">
+  <div class="section-header reveal">
+    <span class="story-label">How it works</span>
+    <h2 class="section-title">こんなふうに使います</h2>
+    <p class="section-desc">難しい操作はなにもありません。<br>ただ、話しかけてみてください。</p>
+  </div>
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-dot d1">🌙</div>
+      <div class="timeline-content">
+        <p class="timeline-step">Step 01</p>
+        <h3 class="timeline-title">今日の気持ちを話す</h3>
+        <p class="timeline-text">「今日ちょっと疲れた」でも「なんか嬉しかった」でも。完璧な文章じゃなくていい。そのままの言葉で。</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot d2">🌿</div>
+      <div class="timeline-content">
+        <p class="timeline-step">Step 02</p>
+        <h3 class="timeline-title">メモリルが一緒に深める</h3>
+        <p class="timeline-text">「それ、どんなふうに嬉しかった？」メモリルはあなたに寄り添いながら、気持ちをもっとクリアにする手伝いをします。</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot d3">📖</div>
+      <div class="timeline-content">
+        <p class="timeline-step">Step 03</p>
+        <h3 class="timeline-title">記憶として残る</h3>
+        <p class="timeline-text">会話は自動で「記憶のかけら」になります。写真のように、言葉のスナップショットが積み重なっていきます。</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot d4">🌟</div>
+      <div class="timeline-content">
+        <p class="timeline-step">Step 04</p>
+        <h3 class="timeline-title">いつか振り返る</h3>
+        <p class="timeline-text">「1年前の私はこんなことを思っていたんだ」。過去の自分と静かに再会できる。それがメモリルです。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonial-section">
+  <div class="testimonials-wrap">
+    <span class="story-label reveal" style="display:block; margin-bottom:3rem;">Voices</span>
+    <div id="testimonials">
+      <div class="testimonial active">
+        <p class="testimonial-text">「毎晩、眠る前にメモリルに話しかけるのが習慣になった。日記は続かなかったけど、これは不思議と続いている。」</p>
+        <p class="testimonial-author">HARUKA, 28 — デザイナー</p>
+      </div>
+      <div class="testimonial">
+        <p class="testimonial-text">「半年分の記憶を見返したら、自分が思っていたより成長していた。それを知れたことが、いちばんの収穫だった。」</p>
+        <p class="testimonial-author">KENJI, 34 — フリーランス</p>
+      </div>
+      <div class="testimonial">
+        <p class="testimonial-text">「誰にも言えないことを、メモリルにだけ話している。ここだけは、ちゃんと自分でいられる気がする。」</p>
+        <p class="testimonial-author">MIKU, 22 — 大学院生</p>
+      </div>
+    </div>
+    <div class="testimonial-dots">
+      <button class="t-dot active" onclick="switchTestimonial(0)" aria-label="1つ目の声"></button>
+      <button class="t-dot" onclick="switchTestimonial(1)" aria-label="2つ目の声"></button>
+      <button class="t-dot" onclick="switchTestimonial(2)" aria-label="3つ目の声"></button>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta" id="final">
+  <div class="final-cta-inner">
+    <div class="final-logo reveal">メモリル</div>
+    <p class="final-text reveal">
+      今日の気持ちを、<br>
+      明日の自分のために残しておこう。<br><br>
+      あなたの人生は、語られるべき物語です。
+    </p>
+    <div class="cta-group reveal" style="flex-direction:column; align-items:center; gap:1.2rem;">
+      <button class="btn-primary" style="padding:16px 48px; font-size:15px;">無料で記憶を残しはじめる</button>
+      <p class="final-note">クレジットカード不要 · いつでも削除可能 · あなたの記憶はあなたのもの</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">メモリル</div>
+  <p class="footer-text">© 2025 メモリル · Privacy · Terms</p>
+</footer>
+
+<script>
+  // ===== PARTICLES =====
+  const pc = document.getElementById('particles');
+  const colors = ['#F2D4C4','#D8E8F0','#E4DCF0','#D4E4D0','#E8DFCF'];
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 6 + 3;
+    p.style.cssText = `
+      width:${size}px;
+      height:${size}px;
+      left:${Math.random() * 100}%;
+      background:${colors[Math.floor(Math.random() * colors.length)]};
+      animation-duration:${12 + Math.random() * 20}s;
+      animation-delay:${Math.random() * 15}s;
+    `;
+    pc.appendChild(p);
+  }
+
+  // ===== SCROLL NAV =====
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  // ===== INTERSECTION OBSERVER (reveal) =====
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), 80);
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ===== TIMELINE OBSERVER =====
+  const tlObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const idx = [...document.querySelectorAll('.timeline-item')].indexOf(e.target);
+        setTimeout(() => e.target.classList.add('visible'), idx * 180);
+        tlObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.2 });
+
+  document.querySelectorAll('.timeline-item').forEach(el => tlObserver.observe(el));
+
+  // ===== TESTIMONIALS =====
+  let currentT = 0;
+  const testimonials = document.querySelectorAll('.testimonial');
+  const dots = document.querySelectorAll('.t-dot');
+
+  function switchTestimonial(idx) {
+    testimonials[currentT].classList.remove('active');
+    dots[currentT].classList.remove('active');
+    currentT = idx;
+    testimonials[currentT].classList.add('active');
+    dots[currentT].classList.add('active');
+  }
+
+  setInterval(() => {
+    switchTestimonial((currentT + 1) % testimonials.length);
+  }, 5000);
+
+  // ===== SCROLL TO FINAL =====
+  function scrollToFinal() {
+    document.getElementById('final').scrollIntoView({ behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>

@@ -10,9 +10,12 @@ use App\Http\Requests\UpdateMemoryRequest;
 use App\Http\Resources\MemoryResource;
 use App\Models\Category;
 use App\Models\Memory;
+use App\Models\SecurityEvent;
 use App\Models\Tag;
 use App\Support\NormalizedTagName;
+use App\Support\SecurityEventLogger;
 use App\Support\TagNameNormalizer;
+use App\Support\TenantQuotaGuard;
 use App\Support\TenantUserContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -25,6 +28,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class MemoryController extends Controller
 {
+    public function __construct(private readonly SecurityEventLogger $securityEvents) {}
+
     public function index(ListMemoriesRequest $request): AnonymousResourceCollection
     {
         $context = TenantUserContext::fromUser($request->user());
@@ -32,6 +37,7 @@ class MemoryController extends Controller
 
         $query = Memory::queryForContext($context)
             ->with(['category', 'tags']);
+        $categoryFilterId = $request->resolvedCategoryFilterId();
 
         $this->applyVisibilityFilter($query, $filters['visibility'] ?? null);
 
@@ -39,9 +45,9 @@ class MemoryController extends Controller
             $query->where('period_key', $filters['period_key']);
         }
 
-        if (($filters['category_id'] ?? null) !== null) {
+        if ($categoryFilterId !== null) {
             if (($filters['include_descendants'] ?? false) === true) {
-                $categoryIds = $this->categoryIdsWithDescendants($context, (int) $filters['category_id']);
+                $categoryIds = $this->categoryIdsWithDescendants($context, $categoryFilterId);
 
                 if ($categoryIds === []) {
                     $query->whereRaw('1 = 0');
@@ -49,7 +55,7 @@ class MemoryController extends Controller
                     $query->whereIn('category_id', $categoryIds);
                 }
             } else {
-                $query->where('category_id', $filters['category_id']);
+                $query->where('category_id', $categoryFilterId);
             }
         }
 
@@ -68,16 +74,19 @@ class MemoryController extends Controller
     public function store(StoreMemoryRequest $request): JsonResponse
     {
         $context = TenantUserContext::fromUser($request->user());
+        TenantQuotaGuard::forTenant($context->tenant())->ensureCanCreateMemory();
+
         $data = $request->validated();
         $tagNames = $data['tags'] ?? [];
+        $categoryId = $request->resolvedCategoryId();
 
         unset($data['tags']);
 
-        $memory = DB::transaction(function () use ($context, $data, $tagNames): Memory {
+        $memory = DB::transaction(function () use ($context, $data, $tagNames, $categoryId): Memory {
             $memory = Memory::query()->create([
                 'tenant_id' => $context->tenantId(),
                 'owner_user_id' => $context->userId(),
-                'category_id' => $data['category_id'] ?? null,
+                'category_id' => $categoryId,
                 'period_key' => $data['period_key'] ?? null,
                 'occurred_on' => $data['occurred_on'] ?? null,
                 'title' => $data['title'] ?? null,
@@ -93,6 +102,21 @@ class MemoryController extends Controller
 
             return $memory->load(['category', 'tags']);
         });
+
+        $this->securityEvents->log(
+            request: $request,
+            eventType: SecurityEvent::TYPE_MEMORY_CREATE,
+            outcome: SecurityEvent::OUTCOME_SUCCESS,
+            tenant: $context->tenant(),
+            user: $context->user(),
+            metadata: [
+                'resource_type' => 'memory',
+                'resource_public_id' => $memory->public_id,
+                'visibility' => $memory->visibility,
+                'category_public_id' => $memory->category?->public_id,
+                'tag_count' => $memory->tags->count(),
+            ],
+        );
 
         return (new MemoryResource($memory))
             ->response()
@@ -110,9 +134,14 @@ class MemoryController extends Controller
         $memory = $this->findMemoryForRequest($request, $memory);
         $data = $request->validated();
         $hasTags = array_key_exists('tags', $data);
+        $changedFields = array_keys($data);
         $tagNames = $data['tags'] ?? [];
 
         unset($data['tags']);
+
+        if (array_key_exists('category_id', $data)) {
+            $data['category_id'] = $request->resolvedCategoryId();
+        }
 
         $memory = DB::transaction(function () use ($context, $memory, $data, $hasTags, $tagNames): Memory {
             $memory->fill($data);
@@ -126,17 +155,50 @@ class MemoryController extends Controller
             return $memory->load(['category', 'tags']);
         });
 
+        $this->securityEvents->log(
+            request: $request,
+            eventType: SecurityEvent::TYPE_MEMORY_UPDATE,
+            outcome: SecurityEvent::OUTCOME_SUCCESS,
+            tenant: $context->tenant(),
+            user: $context->user(),
+            metadata: [
+                'resource_type' => 'memory',
+                'resource_public_id' => $memory->public_id,
+                'visibility' => $memory->visibility,
+                'category_public_id' => $memory->category?->public_id,
+                'tag_count' => $memory->tags->count(),
+                'changed_fields' => $changedFields,
+            ],
+        );
+
         return new MemoryResource($memory);
     }
 
     public function destroy(MemoryContextRequest $request, int|string $memory): Response
     {
+        $context = TenantUserContext::fromUser($request->user());
         $memory = $this->findMemoryForRequest($request, $memory);
+        $metadata = [
+            'resource_type' => 'memory',
+            'resource_public_id' => $memory->public_id,
+            'visibility' => $memory->visibility,
+            'category_public_id' => $memory->category?->public_id,
+            'tag_count' => $memory->tags->count(),
+        ];
 
         DB::transaction(static function () use ($memory): void {
             $memory->tags()->detach();
             $memory->delete();
         });
+
+        $this->securityEvents->log(
+            request: $request,
+            eventType: SecurityEvent::TYPE_MEMORY_DELETE,
+            outcome: SecurityEvent::OUTCOME_SUCCESS,
+            tenant: $context->tenant(),
+            user: $context->user(),
+            metadata: $metadata,
+        );
 
         return response()->noContent();
     }

@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Models\Memory;
+use App\Support\ScopedPublicIdResolver;
+use App\Support\TenantUserContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -41,17 +43,43 @@ class StoreMemoryRequest extends FormRequest
             ])],
             'category_id' => [
                 'nullable',
-                'integer',
-                Rule::exists('categories', 'id')->where(static function ($query) use ($user): void {
-                    $query
-                        ->where('tenant_id', $user?->tenant_id)
-                        ->where('owner_user_id', $user?->getKey());
-                }),
+                function (string $attribute, mixed $value, \Closure $fail) use ($user): void {
+                    if (ScopedPublicIdResolver::isBlankIdentifier($value)) {
+                        return;
+                    }
+
+                    if (! ScopedPublicIdResolver::isCategoryIdentifier($value)) {
+                        $fail('The '.$attribute.' field must be a valid category identifier.');
+
+                        return;
+                    }
+
+                    if (! $user?->tenant_id) {
+                        return;
+                    }
+
+                    if (! ScopedPublicIdResolver::category(TenantUserContext::fromUser($user), $value)) {
+                        $fail('The selected '.$attribute.' is invalid.');
+                    }
+                },
             ],
             'tags' => ['nullable', 'array', 'max:20'],
             'tags.*' => ['required', 'string', 'min:1', 'max:40', 'distinct:strict'],
             'metadata' => ['nullable', 'array'],
         ];
+    }
+
+    public function resolvedCategoryId(): ?int
+    {
+        $value = $this->input('category_id');
+
+        if (ScopedPublicIdResolver::isBlankIdentifier($value)) {
+            return null;
+        }
+
+        $category = ScopedPublicIdResolver::category(TenantUserContext::fromUser($this->user()), $value);
+
+        return $category === null ? null : (int) $category->getKey();
     }
 
     protected function prepareForValidation(): void
@@ -68,6 +96,14 @@ class StoreMemoryRequest extends FormRequest
             if (($input[$nullableField] ?? null) === '') {
                 $input[$nullableField] = null;
             }
+        }
+
+        if (array_key_exists('category_id', $input) && is_string($input['category_id'])) {
+            $input['category_id'] = trim($input['category_id']);
+        }
+
+        if (($input['category_id'] ?? null) === '') {
+            $input['category_id'] = null;
         }
 
         if (isset($input['tags']) && is_array($input['tags'])) {

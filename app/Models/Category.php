@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPrefixedPublicId;
+use App\Support\ScopedPublicIdResolver;
 use App\Support\TenantUserContext;
 use Database\Factories\CategoryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -15,7 +17,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Category extends Model
 {
     /** @use HasFactory<CategoryFactory> */
-    use HasFactory;
+    use HasFactory, HasPrefixedPublicId;
+
+    protected static function publicIdPrefix(): string
+    {
+        return 'cat';
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -108,6 +115,6 @@ class Category extends Model
 
     public static function findForContext(TenantUserContext $context, int|string $id): ?self
     {
-        return static::queryForContext($context)->whereKey($id)->first();
+        return ScopedPublicIdResolver::category($context, $id);
     }
 }

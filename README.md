@@ -16,14 +16,17 @@
 - [API 契約](docs/architecture/api_contract.md)
 - [Fresh start decision](docs/decisions/0001-fresh-start.md)
 - [OpenAPI draft](openapi/bunshin-memory-api.yaml)
+- [別環境での復元とログイン手順](docs/operations/local_restore_login_runbook.md)
 
 ## 開発
 
 ```bash
 composer install
 php artisan test
-php artisan serve
+composer dev
 ```
+
+`composer dev` は起動前に `php artisan migrate --force` と `php artisan db:seed --force` を実行する。local 環境では `admin@example.test` / `password`、固定 Bearer token `local-dev-token`、secret unlock password `secret-password`、確認用 category / memory / tag data が自動で用意される。
 
 ヘルスチェック:
 

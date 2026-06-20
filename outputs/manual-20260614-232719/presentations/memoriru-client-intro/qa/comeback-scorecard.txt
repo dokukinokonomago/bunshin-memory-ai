@@ -1,0 +1,16 @@
+story: 5
+specificity: 5
+rhythm: 5
+whitespace: 4
+chart clarity: 4
+typography: 4
+restraint: 5
+precision: 4
+coherence: 5
+reference delta: n/a
+
+notes
+- Deck is client-facing and product-specific; it would fail a generic SaaS noun swap.
+- Contact sheet shows seven distinct macro layouts.
+- No layout checker errors or warnings remain in the final build.
+- Product proof relies on one real screen and four image2.0-generated concept visuals.

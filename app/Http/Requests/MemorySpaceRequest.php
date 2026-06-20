@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Support\ScopedPublicIdResolver;
+use App\Support\TenantUserContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -26,18 +28,43 @@ class MemorySpaceRequest extends FormRequest
                 'university',
                 'adult',
             ])],
-            'category_id' => ['nullable', 'integer', 'min:1'],
+            'category_id' => [
+                'nullable',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (
+                        ! ScopedPublicIdResolver::isBlankIdentifier($value)
+                        && ! ScopedPublicIdResolver::isCategoryIdentifier($value)
+                    ) {
+                        $fail('The '.$attribute.' field must be a valid category identifier.');
+                    }
+                },
+            ],
             'include_descendants' => ['nullable', 'boolean'],
             'include_secret' => ['nullable', 'boolean'],
         ];
+    }
+
+    public function resolvedCategoryFilterId(): ?int
+    {
+        $value = $this->input('category_id');
+
+        if (ScopedPublicIdResolver::isBlankIdentifier($value)) {
+            return null;
+        }
+
+        $category = ScopedPublicIdResolver::category(TenantUserContext::fromUser($this->user()), $value);
+
+        return $category === null ? 0 : (int) $category->getKey();
     }
 
     protected function prepareForValidation(): void
     {
         $input = $this->all();
 
-        if (array_key_exists('period_key', $input) && is_string($input['period_key'])) {
-            $input['period_key'] = trim($input['period_key']);
+        foreach (['period_key', 'category_id'] as $field) {
+            if (array_key_exists($field, $input) && is_string($input[$field])) {
+                $input[$field] = trim($input[$field]);
+            }
         }
 
         foreach (['include_descendants', 'include_secret'] as $field) {

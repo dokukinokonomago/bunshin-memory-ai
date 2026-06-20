@@ -1,0 +1,1136 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/s9z3z9",
+    "id": "s9z3z9",
+    "slide": 6,
+    "layoutId": "c2a13776-e46b-4474-ba22-963122f47ab1",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "99871197-292c-4743-8463-2b7920ea6c6c",
+    "masterLayoutName": "Master",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Aptos",
+      "Aptos Display"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "c2a13776-e46b-4474-ba22-963122f47ab1",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "99871197-292c-4743-8463-2b7920ea6c6c",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "99871197-292c-4743-8463-2b7920ea6c6c",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4nap4r65",
+      "id": "1",
+      "name": "background",
+      "bbox": [
+        0,
+        0,
+        1280,
+        720
+      ],
+      "geometry": "rect",
+      "fillColor": "#FBF7F2",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/b2hwfyxo",
+      "id": "2",
+      "name": "kicker-06-marker",
+      "bbox": [
+        78,
+        70,
+        10,
+        10
+      ],
+      "geometry": "rect",
+      "fillColor": "#D8B98B",
+      "lineColor": "#D8B98B",
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/mhk3q5o7",
+      "id": "3",
+      "name": "kicker-06-label",
+      "bbox": [
+        96,
+        66,
+        140,
+        18
+      ],
+      "geometry": "rect",
+      "text": "CLIENT VALUE",
+      "textPreview": "CLIENT VALUE",
+      "resolvedFontSize": 11,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 11,
+        "typeface": "Aptos",
+        "color": "#6E6258",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "CLIENT VALUE"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "CLIENT VALUE",
+          "resolvedTextStyle": {
+            "fontSize": 11,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "CLIENT VALUE",
+              "fontSize": 11,
+              "typeface": "Aptos",
+              "color": "#6E6258",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/twra5gbq",
+      "id": "4",
+      "name": "value-title",
+      "bbox": [
+        78,
+        112,
+        470,
+        142
+      ],
+      "geometry": "rect",
+      "text": "記録アプリではなく、\n自己理解を深める基盤になる",
+      "textPreview": "記録アプリではなく、 | 自己理解を深める基盤になる",
+      "resolvedFontSize": 40,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 40,
+        "typeface": "Aptos Display",
+        "color": "#1E1915",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "記録アプリではなく、"
+          },
+          {
+            "index": 2,
+            "text": "自己理解を深める基盤に"
+          },
+          {
+            "index": 3,
+            "text": "なる"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "記録アプリではなく、",
+          "resolvedTextStyle": {
+            "fontSize": 40,
+            "typeface": "Aptos Display",
+            "color": "#1E1915",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "記録アプリではなく、",
+              "fontSize": 40,
+              "typeface": "Aptos Display",
+              "color": "#1E1915",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "自己理解を深める基盤になる",
+          "resolvedTextStyle": {
+            "fontSize": 40,
+            "typeface": "Aptos Display",
+            "color": "#1E1915",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "自己理解を深める基盤になる",
+              "fontSize": 40,
+              "typeface": "Aptos Display",
+              "color": "#1E1915",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4byhgn29",
+      "id": "5",
+      "name": "value-note",
+      "bbox": [
+        78,
+        260,
+        460,
+        60
+      ],
+      "geometry": "rect",
+      "text": "継続しやすい入力、あとで見返しやすい構造、\nそして将来の分身AIへつながる一次データが価値になります。",
+      "textPreview": "継続しやすい入力、あとで見返しやすい構造、 | そして将来の分身AIへつながる一次データが価値になります。",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 17,
+        "typeface": "Aptos",
+        "color": "#6E6258",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "継続しやすい入力、あとで見返しやすい構造、"
+          },
+          {
+            "index": 2,
+            "text": "そして将来の分身AIへつながる一次データが価値になります"
+          },
+          {
+            "index": 3,
+            "text": "。"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "継続しやすい入力、あとで見返しやすい構造、",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "継続しやすい入力、あとで見返しやすい構造、",
+              "fontSize": 17,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "そして将来の分身AIへつながる一次データが価値になります。",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "そして将来の分身AIへつながる一次データが価値になります。",
+              "fontSize": 17,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/bq1oryts",
+      "id": "6",
+      "name": "screen-frame",
+      "bbox": [
+        778,
+        86,
+        424,
+        238
+      ],
+      "geometry": "rect",
+      "fillColor": "#102032",
+      "lineColor": "#B9CAD8",
+      "lineWidth": 1
+    },
+    {
+      "order": 7,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/r2p8nqxs",
+      "id": "7",
+      "bbox": [
+        792,
+        100,
+        396,
+        184
+      ],
+      "contentType": "image/png",
+      "imageFit": "cover",
+      "asset": {
+        "assetId": "17d9007d-c616-40b9-bd20-b099724c6d13",
+        "contentType": "image/png",
+        "byteLength": 1663021
+      }
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/tsvu9kni",
+      "id": "8",
+      "name": "screen-label-bg",
+      "bbox": [
+        794,
+        296,
+        138,
+        20
+      ],
+      "geometry": "rect",
+      "fillColor": "#B9CAD8",
+      "lineColor": "#B9CAD8",
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/47y1kre1",
+      "id": "9",
+      "name": "screen-label",
+      "bbox": [
+        804,
+        298,
+        118,
+        14
+      ],
+      "geometry": "rect",
+      "text": "Future vision",
+      "textPreview": "Future vision",
+      "resolvedFontSize": 10,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 10,
+        "typeface": "Aptos",
+        "color": "#081321",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Future vision"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Future vision",
+          "resolvedTextStyle": {
+            "fontSize": 10,
+            "typeface": "Aptos",
+            "color": "#081321",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Future vision",
+              "fontSize": 10,
+              "typeface": "Aptos",
+              "color": "#081321",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/adsji5sn",
+      "id": "10",
+      "name": "value-card-1",
+      "bbox": [
+        78,
+        378,
+        352,
+        190
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFDF9",
+      "lineColor": "#D9CABB",
+      "lineWidth": 1
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/3ylc7u54",
+      "id": "11",
+      "name": "value-card-1-title",
+      "bbox": [
+        96,
+        394,
+        316,
+        34
+      ],
+      "geometry": "rect",
+      "text": "振り返り支援",
+      "textPreview": "振り返り支援",
+      "resolvedFontSize": 22,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 22,
+        "typeface": "Aptos Display",
+        "color": "#1E1915",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "振り返り支援"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "振り返り支援",
+          "resolvedTextStyle": {
+            "fontSize": 22,
+            "typeface": "Aptos Display",
+            "color": "#1E1915",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "振り返り支援",
+              "fontSize": 22,
+              "typeface": "Aptos Display",
+              "color": "#1E1915",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/sji5snel",
+      "id": "12",
+      "name": "value-card-1-body",
+      "bbox": [
+        96,
+        434,
+        316,
+        120
+      ],
+      "geometry": "rect",
+      "text": "過去の自分を、出来事だけでなく感情ごとたどれる。\n自己理解や内省の質が上がる。",
+      "textPreview": "過去の自分を、出来事だけでなく感情ごとたどれる。 | 自己理解や内省の質が上がる。",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 16,
+        "typeface": "Aptos",
+        "color": "#6E6258",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "過去の自分を、出来事だけでなく感情ごと"
+          },
+          {
+            "index": 2,
+            "text": "たどれる。"
+          },
+          {
+            "index": 3,
+            "text": "自己理解や内省の質が上がる。"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "過去の自分を、出来事だけでなく感情ごとたどれる。",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "過去の自分を、出来事だけでなく感情ごとたどれる。",
+              "fontSize": 16,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "自己理解や内省の質が上がる。",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "自己理解や内省の質が上がる。",
+              "fontSize": 16,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 13,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/h4byhgn2",
+      "id": "13",
+      "name": "value-card-2",
+      "bbox": [
+        454,
+        378,
+        352,
+        190
+      ],
+      "geometry": "rect",
+      "fillColor": "#F4ECE2",
+      "lineColor": "#D9CABB",
+      "lineWidth": 1
+    },
+    {
+      "order": 14,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/a5gbq1or",
+      "id": "14",
+      "name": "value-card-2-title",
+      "bbox": [
+        472,
+        394,
+        316,
+        34
+      ],
+      "geometry": "rect",
+      "text": "継続しやすい記録",
+      "textPreview": "継続しやすい記録",
+      "resolvedFontSize": 22,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 22,
+        "typeface": "Aptos Display",
+        "color": "#1E1915",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "継続しやすい記録"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "継続しやすい記録",
+          "resolvedTextStyle": {
+            "fontSize": 22,
+            "typeface": "Aptos Display",
+            "color": "#1E1915",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "継続しやすい記録",
+              "fontSize": 22,
+              "typeface": "Aptos Display",
+              "color": "#1E1915",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 15,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/3m94fu18",
+      "id": "15",
+      "name": "value-card-2-body",
+      "bbox": [
+        472,
+        434,
+        316,
+        120
+      ],
+      "geometry": "rect",
+      "text": "書くより話すことに近い体験なので、日記より習慣化しやすい。",
+      "textPreview": "書くより話すことに近い体験なので、日記より習慣化しやすい。",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 16,
+        "typeface": "Aptos",
+        "color": "#6E6258",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "書くより話すことに近い体験なので、日記"
+          },
+          {
+            "index": 2,
+            "text": "より習慣化しやすい。"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "書くより話すことに近い体験なので、日記より習慣化しやすい。",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "書くより話すことに近い体験なので、日記より習慣化しやすい。",
+              "fontSize": 16,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 16,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/s72x4nap",
+      "id": "16",
+      "name": "value-card-3",
+      "bbox": [
+        830,
+        378,
+        372,
+        190
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFDF9",
+      "lineColor": "#D9CABB",
+      "lineWidth": 1
+    },
+    {
+      "order": 17,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/lszqtcj6",
+      "id": "17",
+      "name": "value-card-3-title",
+      "bbox": [
+        848,
+        394,
+        336,
+        34
+      ],
+      "geometry": "rect",
+      "text": "将来の分身AI基盤",
+      "textPreview": "将来の分身AI基盤",
+      "resolvedFontSize": 22,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 22,
+        "typeface": "Aptos Display",
+        "color": "#1E1915",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "将来の分身AI基盤"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "将来の分身AI基盤",
+          "resolvedTextStyle": {
+            "fontSize": 22,
+            "typeface": "Aptos Display",
+            "color": "#1E1915",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "将来の分身AI基盤",
+              "fontSize": 22,
+              "typeface": "Aptos Display",
+              "color": "#1E1915",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 18,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/a1gvy90j",
+      "id": "18",
+      "name": "value-card-3-body",
+      "bbox": [
+        848,
+        434,
+        336,
+        120
+      ],
+      "geometry": "rect",
+      "text": "会話・感情・記憶の蓄積が、将来のパーソナルAI精度を支える。",
+      "textPreview": "会話・感情・記憶の蓄積が、将来のパーソナルAI精度を支える。",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 16,
+        "typeface": "Aptos",
+        "color": "#6E6258",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "会話・感情・記憶の蓄積が、将来のパーソナル"
+          },
+          {
+            "index": 2,
+            "text": "AI精度を支える。"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "会話・感情・記憶の蓄積が、将来のパーソナルAI精度を支える。",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "会話・感情・記憶の蓄積が、将来のパーソナルAI精度を支える。",
+              "fontSize": 16,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 19,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/zidonyd0",
+      "id": "19",
+      "name": "footer-rule",
+      "bbox": [
+        72,
+        680,
+        1136,
+        1
+      ],
+      "geometry": "rect",
+      "fillColor": "#D9CABB",
+      "lineColor": "#D9CABB",
+      "lineWidth": 0
+    },
+    {
+      "order": 20,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/val87ed8",
+      "id": "20",
+      "name": "footer-source",
+      "bbox": [
+        72,
+        688,
+        980,
+        18
+      ],
+      "geometry": "rect",
+      "text": "Source: product concept, LP messaging, generated future visual",
+      "textPreview": "Source: product concept, LP messaging, generated future visual",
+      "resolvedFontSize": 10,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 10,
+        "typeface": "Aptos",
+        "color": "#6E6258",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Source: product concept, LP messaging, generated future visual"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Source: product concept, LP messaging, generated future visual",
+          "resolvedTextStyle": {
+            "fontSize": 10,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Source: product concept, LP messaging, generated future visual",
+              "fontSize": 10,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 21,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/6psfil0r",
+      "id": "21",
+      "name": "footer-page",
+      "bbox": [
+        1132,
+        686,
+        76,
+        20
+      ],
+      "geometry": "rect",
+      "text": "06",
+      "textPreview": "06",
+      "resolvedFontSize": 11,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 11,
+        "typeface": "Aptos",
+        "color": "#1E1915",
+        "bold": true,
+        "alignment": "right",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "06"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "06",
+          "resolvedTextStyle": {
+            "fontSize": 11,
+            "typeface": "Aptos",
+            "color": "#1E1915",
+            "bold": true,
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "06",
+              "fontSize": 11,
+              "typeface": "Aptos",
+              "color": "#1E1915",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

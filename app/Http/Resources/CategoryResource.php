@@ -18,7 +18,9 @@ class CategoryResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'public_id' => $this->public_id,
             'parent_id' => $this->parent_id === null ? null : (int) $this->parent_id,
+            'parent_public_id' => $this->parent?->public_id,
             'name' => $this->name,
             'slug' => $this->slug,
             'sort_order' => (int) $this->sort_order,

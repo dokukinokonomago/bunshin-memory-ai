@@ -47,12 +47,17 @@ password unlock は frontend だけの演出にしない。backend が追加認�
 - `GET /api/v1/memory-space?include_secret=1` は Bearer token と unlock token の両方が有効な場合だけ secret memory を含める。
 - unlock token は短 TTL とし、frontend storage には長期保存しない。
 
-password そのものを frontend localStorage に保存しない。初期実装では専用 unlock password 設定 UI がまだないため、user の account password hash を unlock password として検証する。専用 password / recovery / rotation は後続 task で検討する。
+password そのものを frontend localStorage に保存しない。2026-05-13 の方針決定と実装により、`POST /api/v1/secret-unlocks` は account password hash ではなく `users.secret_unlock_password` の専用 hash を検証する。2026-05-14 に `PUT /api/v1/secret-unlock-password` で専用 unlock password の setup / change API を追加済み。recovery / forced rotation contract は `docs/decisions/0019-secret-unlock-password-recovery-rotation.md` で決定済み。
 
 ## Consequences
 
-- 次の正式 backend task は `categories.parent_id` の migration / model / validation / tests を追加する。
+- 最初の正式 backend task は `categories.parent_id` の migration / model / validation / tests 追加で、2026-05-05 に完了済み。
 - その後、memory-space 用 read endpoint、secret unlock endpoint、frontend screen 実装の順に小さく進める。
 - 既存 categories CRUD と admin mockup には後方互換を持たせる。`parent_id` 未指定なら root category として扱う。
 - 既存 `period_key` は維持し、年代別 UI / API は別 task として設計する。
 - smoke test 作成物の削除許可確認 task は未着手に残すが、新しいユーザー指示により優先度は下げる。
+
+## Implementation Status
+
+- 2026-05-05: `categories.parent_id` migration / model relation / create-update validation / Feature tests を追加済み。
+- 2026-05-05: category tree response、descendant filter、memory-space read endpoint、secret unlock endpoint、frontend screen baseline を追加済み。

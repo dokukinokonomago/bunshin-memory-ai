@@ -16,20 +16,34 @@ class MotivationGraphTestDataSeeder extends Seeder
     {
         $tenant = Tenant::query()->firstOrCreate(
             ['slug' => 'default'],
-            ['name' => 'Default'],
+            [
+                'name' => 'Default',
+                'plan_key' => Tenant::PLAN_FREE,
+                'subscription_status' => Tenant::SUBSCRIPTION_STATUS_ACTIVE,
+            ],
         );
 
         $user = User::query()->firstOrCreate(
             ['email' => 'admin@example.test'],
             [
                 'tenant_id' => $tenant->id,
+                'account_status' => User::ACCOUNT_STATUS_ACTIVE,
                 'name' => 'Admin User',
                 'password' => 'password',
+                'secret_unlock_password' => 'secret-password',
             ],
         );
 
         if ((int) $user->tenant_id !== (int) $tenant->id) {
             $user->forceFill(['tenant_id' => $tenant->id])->save();
+        }
+
+        if (! $user->hasActiveAccount()) {
+            $user->forceFill(['account_status' => User::ACCOUNT_STATUS_ACTIVE])->save();
+        }
+
+        if (! $user->hasSecretUnlockPassword()) {
+            $user->forceFill(['secret_unlock_password' => 'secret-password'])->save();
         }
 
         $user->personalAccessTokens()->updateOrCreate(

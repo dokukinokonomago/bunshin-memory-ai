@@ -29,7 +29,26 @@
                 aria-expanded="false"
             >記憶</button>
 
+            <a
+                id="admin-link"
+                class="panel-toggle panel-toggle--admin"
+                href="{{ route('admin') }}"
+                aria-label="管理画面を開く"
+            >管理</a>
+
             <section id="memory-space-controls" class="memory-space__toolbar" aria-label="API controls" hidden>
+                <form id="login-form" class="login-form" autocomplete="on">
+                    <div class="field">
+                        <label for="login-email">Email</label>
+                        <input id="login-email" name="email" type="email" autocomplete="username">
+                    </div>
+                    <div class="field">
+                        <label for="login-password">Password</label>
+                        <input id="login-password" name="password" type="password" autocomplete="current-password">
+                    </div>
+                    <button id="login-submit" class="button button--primary" type="submit">ログイン</button>
+                    <div id="login-status" class="login-status" aria-live="polite"></div>
+                </form>
                 <div class="field field--base">
                     <label for="api-base">API</label>
                     <input id="api-base" name="api-base" type="text" value="/api/v1" autocomplete="off">

@@ -1,0 +1,51 @@
+thesis
+メモリルは、日々の会話や感情を「後から探索できる記憶資産」に変える記憶管理AIであり、将来の分身AIを支える一次データ基盤でもある。
+
+audience
+クライアント向け初回紹介。プロダクトの価値、体験設計、差別化要素を短時間で把握したい意思決定者。
+
+one-line arc
+思い出は残っても文脈が残らない -> メモリルは会話を構造化された記憶へ変える -> 記憶を宇宙のように探索できる -> 秘匿記憶も別管理できる -> 将来の分身AIへつながる。
+
+slide list
+01 cover
+claim: メモリルは会話から人生データを育てる記憶管理AIである。
+proof object: image2.0生成ヒーロービジュアルと3つの能力チップ。
+source: メモリルLP、memory-space設計。
+omission notes: 価格・導入条件は含めない。
+
+02 problem
+claim: 写真や日記だけでは、あとで使える形で気持ちと文脈を残しにくい。
+proof object: 3つの課題カード。
+source: メモリルLP、製品コンセプト。
+omission notes: 市場規模や競合比較は含めない。
+
+03 workflow
+claim: メモリルは会話を、感情や年代まで含む探索可能な記憶に変える。
+proof object: 会話 -> 構造化 -> 探索の3段階フローと属性チップ。
+source: memory-space設計、API契約、LP。
+omission notes: 実装詳細やAPI一覧は含めない。
+
+04 experience
+claim: メモリルでは、記憶を一覧ではなく「宇宙」として振り返れる。
+proof object: 実画面スクリーンショット。
+source: memory-space UIスクリーンショット、設計ドキュメント。
+omission notes: 認証UIや管理機能の詳細は含めない。
+
+05 privacy
+claim: 見せたくない記憶は最初から別導線で保護できる。
+proof object: privacy illustration と3つの保護原則。
+source: secret unlock設計、API契約。
+omission notes: 暗号化方式や内部監査ログの詳細は含めない。
+
+06 value
+claim: メモリルは単なる記録アプリではなく、自己理解と将来拡張の基盤になる。
+proof object: 3つの価値カードと将来像ビジュアル。
+source: LP、memory-space設計、プロダクト方針。
+omission notes: 数値実績や導入事例は未提示。
+
+07 close
+claim: いま残す記憶が、未来の分身AIを育てる。
+proof object: closing hero visual と要約メッセージ。
+source: LP、プロダクトコンセプト。
+omission notes: 商談CTAは抽象度を保つ。

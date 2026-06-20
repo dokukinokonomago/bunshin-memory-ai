@@ -1,0 +1,32 @@
+Slide 01
+- Layout family: cover with full-bleed image and left editorial panel
+- Dominant proof: hero illustration
+
+Slide 02
+- Layout family: clean text slide with stacked problem cards
+- Dominant proof: issue-card rail
+
+Slide 03
+- Layout family: left workflow rail + right concept visual
+- Dominant proof: process cards and attribute chips
+
+Slide 04
+- Layout family: dark product-screen showcase
+- Dominant proof: actual UI screenshot
+
+Slide 05
+- Layout family: left text zone + right privacy visual
+- Dominant proof: protection-principles rail
+
+Slide 06
+- Layout family: top claim with bottom value cards and side visual
+- Dominant proof: value matrix
+
+Slide 07
+- Layout family: closing full-bleed image with left message panel
+- Dominant proof: future-companion hero visual
+
+Rhythm checks
+- Seven slides, seven distinct macro layouts.
+- Card-heavy slides limited to 02 and 06.
+- No three consecutive slides reuse the same composition grammar.
