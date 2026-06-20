@@ -31,10 +31,16 @@ if (root) {
         detailClose: document.getElementById('detail-close'),
         detailCrumb: document.getElementById('detail-crumb'),
         detailTitle: document.getElementById('detail-title'),
+        detailMedia: document.getElementById('detail-media'),
         detailBody: document.getElementById('detail-body'),
         detailEmotions: document.getElementById('detail-emotions'),
         detailBeliefs: document.getElementById('detail-beliefs'),
         detailTags: document.getElementById('detail-tags'),
+        consultOpen: document.getElementById('memory-consult-open'),
+        consult: document.getElementById('memory-consult'),
+        consultLog: document.getElementById('memory-consult-log'),
+        consultForm: document.getElementById('memory-consult-form'),
+        consultInput: document.getElementById('memory-consult-input'),
         unlockDialog: document.getElementById('unlock-dialog'),
         unlockForm: document.getElementById('unlock-form'),
         unlockPassword: document.getElementById('unlock-password'),
@@ -69,6 +75,8 @@ if (root) {
         periods: [],
         secret: { locked: false, locked_count: 0, unlock_expires_at: null },
         activeMemoryId: null,
+        activeDetail: null,
+        activeConsultOpen: false,
         panels: {
             controls: false,
             list: false,
@@ -104,6 +112,41 @@ if (root) {
         緊張: '#fb923c',
         ワクワク: '#60a5fa',
         憧れ: '#a78bfa',
+    };
+
+    const categoryVisuals = {
+        'current-self': {
+            image: '/demo-category-images/current-self.png',
+            caption: '今の自分を起点に、景色の見え方が変わった現在地を見せるカテゴリ。',
+        },
+        personality: {
+            image: '/demo-category-images/personality.png',
+            caption: '性格の変化や自己理解を、柔らかく振り返るカテゴリ。',
+        },
+        'black-history': {
+            image: '/demo-category-images/black-history.png',
+            caption: '見たくなかった記憶を、幸せの鍵として扱い直すカテゴリ。',
+        },
+        searching: {
+            image: '/demo-category-images/searching.png',
+            caption: '自己啓発、心理学、脳科学など、外側に答えを探した時間。',
+        },
+        'turning-point': {
+            image: '/demo-category-images/turning-point.png',
+            caption: '答えが自分の記憶と感情にあったと気づいた転機。',
+        },
+        'memoriru-birth': {
+            image: '/demo-category-images/memoriru-birth.png',
+            caption: '記憶が増えるほど分身体が育つ、メモリルの核。',
+        },
+        'business-mental-health': {
+            image: '/demo-category-images/business-mental-health.png',
+            caption: '人事、メンタルヘルス、新入社員の自己分析につなげる領域。',
+        },
+        'life-events-family': {
+            image: '/demo-category-images/life-events-family.png',
+            caption: '終活、子育て、家族史など、人生の節目を残す領域。',
+        },
     };
 
     const cameraTarget = new THREE.Vector3(0, 0, 0);
@@ -212,6 +255,8 @@ if (root) {
         els.unlockCancel.addEventListener('click', closeUnlockDialog);
         els.unlockForm.addEventListener('submit', submitUnlock);
         els.detailClose.addEventListener('click', hideDetail);
+        els.consultOpen.addEventListener('click', toggleConsult);
+        els.consultForm.addEventListener('submit', submitConsult);
 
         if (isWebglAvailable()) {
             canvas.addEventListener('pointerdown', onPointerDown);
@@ -247,7 +292,7 @@ if (root) {
         }
     }
 
-    async function loadMemorySpace() {
+    async function loadMemorySpace(options = {}) {
         readControls();
         saveSharedApiConfig();
 
@@ -291,7 +336,9 @@ if (root) {
             rebuildScene();
             renderList();
             renderMetrics();
-            hideDetail();
+            if (!options.keepDetail) {
+                hideDetail();
+            }
             setStatus(statusMessage(), 'ok');
         } catch (error) {
             if (error.status === 401) {
@@ -602,11 +649,15 @@ if (root) {
         categoryPositionMap.clear();
         categoryColorMap.clear();
 
-        const roots = state.categories.length > 0
+        const roots = displayCategories().length > 0
+            ? displayCategories()
+            : syntheticRootsForUncategorizedMemories();
+
+        const rootsForMap = state.categories.length > 0
             ? state.categories
             : syntheticRootsForUncategorizedMemories();
 
-        const flattened = flattenCategories(roots);
+        const flattened = flattenCategories(rootsForMap);
 
         for (const category of flattened) {
             categoryMap.set(String(resourceId(category)), category);
@@ -972,9 +1023,33 @@ if (root) {
             return;
         }
 
+        if (hit.type === 'category' && !hit.category.parent_id && !hit.category.parentName) {
+            focusCategory(hit.category);
+            return;
+        }
+
         const position = new THREE.Vector3();
         hit.mesh.parent.getWorldPosition(position);
         flyTo(position, hit.type === 'memory' ? 120 : 520);
+    }
+
+    async function focusCategory(category) {
+        const id = String(resourceId(category));
+
+        if (!id) {
+            return;
+        }
+
+        state.categoryId = id;
+        state.includeDescendants = true;
+        els.category.value = id;
+        els.includeDescendants.checked = true;
+        await loadMemorySpace({ keepDetail: true });
+
+        const focused = findCategoryBranch(state.categories, id) || category;
+        showCategoryDetail(focused);
+        zoomToCategory(id);
+        setStatus(`${focused.name} だけを表示しています。`, 'ok');
     }
 
     function pickObject(clientX, clientY) {
@@ -1008,6 +1083,16 @@ if (root) {
             progress: 0,
             duration: 80,
         };
+    }
+
+    function zoomToCategory(categoryId) {
+        const position = categoryPositionMap.get(String(categoryId));
+
+        if (!position) {
+            return;
+        }
+
+        flyTo(position, 430);
     }
 
     function animate() {
@@ -1171,7 +1256,7 @@ if (root) {
     }
 
     function renderMetrics() {
-        const categories = flattenCategories(state.categories);
+        const categories = flattenCategories(displayCategories());
         els.metricCategoryCount.textContent = String(categories.length);
         els.metricMemoryCount.textContent = String(state.memories.length);
         els.metricSecretCount.textContent = String(state.secret?.locked_count || 0);
@@ -1179,22 +1264,31 @@ if (root) {
 
     function showMemoryDetail(memory, category) {
         state.activeMemoryId = String(resourceId(memory));
+        state.activeDetail = { type: 'memory', memory, category };
+        state.activeConsultOpen = false;
+        els.consultLog.replaceChildren();
         els.detail.hidden = false;
         els.detailCrumb.textContent = detailCrumb(category, memory);
         els.detailTitle.textContent = memory.title || 'Untitled';
+        renderDetailMedia(category);
         els.detailBody.textContent = memory.body || '';
 
         renderEmotionSection(memory);
         renderBeliefSection(memory);
         renderTagSection(memory);
+        renderConsultPanel();
         renderList();
     }
 
     function showCategoryDetail(category) {
         state.activeMemoryId = null;
+        state.activeDetail = { type: 'category', category };
+        state.activeConsultOpen = false;
+        els.consultLog.replaceChildren();
         els.detail.hidden = false;
         els.detailCrumb.textContent = category.parentName || 'カテゴリー';
         els.detailTitle.textContent = category.name || 'カテゴリー';
+        renderDetailMedia(category);
         els.detailBody.textContent = [
             `表示記憶: ${category.memory_count || 0}`,
             `locked secret: ${category.locked_secret_count || 0}`,
@@ -1203,13 +1297,133 @@ if (root) {
         els.detailEmotions.replaceChildren();
         els.detailBeliefs.replaceChildren();
         els.detailTags.replaceChildren();
+        renderConsultPanel();
         renderList();
     }
 
     function hideDetail() {
         state.activeMemoryId = null;
+        state.activeDetail = null;
+        state.activeConsultOpen = false;
         els.detail.hidden = true;
+        renderConsultPanel();
         renderList();
+    }
+
+    function renderDetailMedia(category) {
+        els.detailMedia.replaceChildren();
+
+        const visual = category?.slug ? categoryVisuals[category.slug] : null;
+
+        if (!visual) {
+            els.detailMedia.hidden = true;
+            return;
+        }
+
+        const image = document.createElement('img');
+        image.src = visual.image;
+        image.alt = `${category.name} のイメージ`;
+        image.loading = 'lazy';
+
+        const caption = document.createElement('p');
+        caption.textContent = visual.caption;
+
+        els.detailMedia.append(image, caption);
+        els.detailMedia.hidden = false;
+    }
+
+    function toggleConsult() {
+        state.activeConsultOpen = !state.activeConsultOpen;
+        renderConsultPanel();
+    }
+
+    function renderConsultPanel() {
+        const hasDetail = Boolean(state.activeDetail);
+
+        els.consultOpen.hidden = !hasDetail;
+        els.consult.hidden = !hasDetail || !state.activeConsultOpen;
+
+        if (!hasDetail) {
+            els.consultLog.replaceChildren();
+            return;
+        }
+
+        els.consultOpen.textContent = state.activeConsultOpen ? '相談を閉じる' : '記憶と話す・相談する';
+
+        if (!state.activeConsultOpen) {
+            return;
+        }
+
+        if (els.consultLog.childElementCount === 0) {
+            appendConsultMessage('ai', openingConsultMessage());
+        }
+
+        els.consultInput.focus();
+    }
+
+    function submitConsult(event) {
+        event.preventDefault();
+
+        const question = els.consultInput.value.trim();
+
+        if (!question || !state.activeDetail) {
+            return;
+        }
+
+        appendConsultMessage('user', question);
+        els.consultInput.value = '';
+        appendConsultMessage('ai', consultReply(question));
+        els.consultLog.scrollTop = els.consultLog.scrollHeight;
+    }
+
+    function appendConsultMessage(role, text) {
+        const message = document.createElement('div');
+        message.className = `consult-message consult-message--${role}`;
+        message.textContent = text;
+        els.consultLog.append(message);
+    }
+
+    function openingConsultMessage() {
+        if (state.activeDetail?.type === 'category') {
+            const category = state.activeDetail.category;
+
+            return `${category.name} の記憶を一緒に整理できます。気になる記憶、今の悩み、紹介先への伝え方を聞いてください。`;
+        }
+
+        const memory = state.activeDetail?.memory;
+
+        return `「${memory?.title || 'この記憶'}」について相談できます。感情、意味づけ、次の行動を一緒に整理します。`;
+    }
+
+    function consultReply(question) {
+        const detail = state.activeDetail;
+        const lowerQuestion = question.toLowerCase();
+
+        if (detail?.type === 'category') {
+            const category = detail.category;
+            const categoryMemories = state.memories.filter((memory) => categoryContainsMemory(category, memory));
+            const titles = categoryMemories.slice(0, 3).map((memory) => `「${memory.title}」`).join('、');
+
+            if (lowerQuestion.includes('紹介') || question.includes('業種')) {
+                return '紹介依頼では、人事・メンタルヘルス、終活・人生記録、子育てや家族記録に関わる方の3つに絞ると伝わりやすいです。';
+            }
+
+            return `${category.name} は ${category.memory_count || 0} 件の記憶があります。${titles ? `${titles} から話し始めると流れが作れます。` : 'まず一番感情が強い記憶を選ぶと整理しやすいです。'}`;
+        }
+
+        const memory = detail?.memory || {};
+        const beliefs = Array.isArray(memory.beliefs) ? memory.beliefs : [];
+        const tags = Array.isArray(memory.tags) ? memory.tags : [];
+
+        if (lowerQuestion.includes('what') || question.includes('何') || question.includes('意味')) {
+            return `この記憶の中心は「${memory.emotion_label || '感情'}」です。${beliefs[0] ? `そこから見える信念は「${beliefs[0]}」です。` : 'まず当時の感情を言葉にすると、次の理解に進みやすいです。'}`;
+        }
+
+        if (question.includes('どう') || question.includes('次') || lowerQuestion.includes('next')) {
+            return `次は、当時の自分に一言かけるなら何と言うかを書いてみるのが良いです。${tags.length > 0 ? `関連タグは ${tags.slice(0, 3).join('、')} です。` : ''}`;
+        }
+
+        return `その相談は、この記憶を否定せずに扱うところから始めるのが良さそうです。「${memory.title || 'この記憶'}」に残っている感情を一つ選ぶと、話がほどけやすくなります。`;
     }
 
     function renderEmotionSection(memory) {
@@ -1522,6 +1736,42 @@ if (root) {
                 ...flattenCategories(category.children || [], depth + 1, category.name),
             ];
         });
+    }
+
+    function displayCategories() {
+        if (!state.categoryId) {
+            return state.categories;
+        }
+
+        const selected = findCategoryBranch(state.categories, state.categoryId);
+
+        return selected ? [selected] : state.categories;
+    }
+
+    function findCategoryBranch(categories, id) {
+        for (const category of categories || []) {
+            if (String(resourceId(category)) === String(id)) {
+                return category;
+            }
+
+            const child = findCategoryBranch(category.children || [], id);
+
+            if (child) {
+                return child;
+            }
+        }
+
+        return null;
+    }
+
+    function categoryContainsMemory(category, memory) {
+        const memoryCategory = String(memoryCategoryId(memory));
+
+        if (String(resourceId(category)) === memoryCategory) {
+            return true;
+        }
+
+        return (category.children || []).some((child) => categoryContainsMemory(child, memory));
     }
 
     function syntheticRootsForUncategorizedMemories() {

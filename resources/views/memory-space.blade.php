@@ -100,10 +100,25 @@
                 <button id="detail-close" class="detail-close" type="button" aria-label="Close detail">×</button>
                 <div id="detail-crumb" class="detail-crumb"></div>
                 <h1 id="detail-title" class="detail-title"></h1>
+                <div id="detail-media" class="detail-media" hidden></div>
                 <p id="detail-body" class="detail-body"></p>
                 <div id="detail-emotions" class="detail-section"></div>
                 <div id="detail-beliefs" class="detail-section"></div>
                 <div id="detail-tags" class="detail-section"></div>
+                <button id="memory-consult-open" class="consult-open" type="button">記憶と話す・相談する</button>
+                <section id="memory-consult" class="memory-consult" aria-label="Memory consultation" hidden>
+                    <div id="memory-consult-log" class="memory-consult__log" aria-live="polite"></div>
+                    <form id="memory-consult-form" class="memory-consult__form">
+                        <input
+                            id="memory-consult-input"
+                            name="consult"
+                            type="text"
+                            autocomplete="off"
+                            placeholder="この記憶について相談する"
+                        >
+                        <button class="button button--primary" type="submit">送信</button>
+                    </form>
+                </section>
             </aside>
 
             <dialog id="unlock-dialog" class="unlock-dialog">
