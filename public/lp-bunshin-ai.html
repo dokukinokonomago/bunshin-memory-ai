@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>メモリル | 記憶を話すほど、もう一人の自分が育っていく</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #fffdf8;
+            --bg-2: #f7fbff;
+            --panel: rgba(255, 255, 255, 0.72);
+            --panel-2: rgba(255, 255, 255, 0.58);
+            --line: rgba(150, 170, 190, 0.18);
+            --line-strong: rgba(103, 198, 187, 0.34);
+            --text: #354252;
+            --muted: #667487;
+            --soft: #94a1b2;
+            --aqua: #9de9df;
+            --blue: #b8dcff;
+            --rose: #ffbfd0;
+            --amber: #ffe2a6;
+            --green: #c2efc4;
+            --ink: #354252;
+            --shadow: 0 24px 80px rgba(113, 137, 162, 0.18);
+            --soft-shadow: 0 0 0 1px rgba(255, 255, 255, 0.76), 0 18px 60px rgba(145, 164, 184, 0.18);
+            --blur-border: 0 0 0 1px rgba(132, 153, 176, 0.14), inset 0 0 22px rgba(255, 255, 255, 0.7);
+            font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Noto Sans JP", "Helvetica Neue", system-ui, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            min-width: 320px;
+            overflow-x: hidden;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.78;
+            font-weight: 500;
+        }
+
+        body::before {
+            position: fixed;
+            inset: 0;
+            z-index: -4;
+            content: "";
+            background:
+                radial-gradient(circle at 16% 12%, rgba(157, 233, 223, 0.44), transparent 30%),
+                radial-gradient(circle at 80% 10%, rgba(255, 191, 208, 0.34), transparent 30%),
+                radial-gradient(circle at 52% 62%, rgba(184, 220, 255, 0.36), transparent 34%),
+                linear-gradient(180deg, #fffdf8 0%, #f9fcff 48%, #fff9f3 100%);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            border-bottom: 1px solid rgba(135, 155, 176, 0.12);
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 10px 40px rgba(149, 166, 184, 0.1);
+            backdrop-filter: blur(22px);
+        }
+
+        .nav-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: min(1160px, calc(100% - 32px));
+            min-height: 64px;
+            margin: 0 auto;
+            gap: 20px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 900;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 30px;
+            height: 30px;
+            place-items: center;
+            border: 1px solid rgba(103, 198, 187, 0.3);
+            border-radius: 12px;
+            color: #3c9e94;
+            background: rgba(157, 233, 223, 0.36);
+            box-shadow: var(--blur-border);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            color: #627186;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .nav-links a:hover {
+            color: #2f3d4d;
+        }
+
+        .nav-cta {
+            min-height: 38px;
+            padding: 7px 15px;
+            border-radius: 999px;
+            color: var(--ink);
+            background: linear-gradient(135deg, #aaf2e9, #c8f7ee);
+            box-shadow: 0 12px 28px rgba(91, 190, 180, 0.22);
+        }
+
+        .hero {
+            position: relative;
+            min-height: 94svh;
+            overflow: hidden;
+            padding: 112px 0 56px;
+        }
+
+        .bubble-canvas {
+            position: absolute;
+            inset: 0;
+            z-index: -3;
+            width: 100%;
+            height: 100%;
+            opacity: 0.5;
+            filter: blur(0.5px) saturate(0.9);
+        }
+
+        .hero::after {
+            position: absolute;
+            inset: auto 0 0;
+            z-index: -2;
+            height: 32%;
+            content: "";
+            background: linear-gradient(180deg, transparent, var(--bg));
+        }
+
+        .hero-inner {
+            display: grid;
+            grid-template-columns: minmax(0, 0.96fr) minmax(360px, 0.74fr);
+            align-items: center;
+            width: min(1160px, calc(100% - 32px));
+            min-height: calc(94svh - 168px);
+            margin: 0 auto;
+            gap: 56px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: fit-content;
+            margin: 0 0 18px;
+            padding: 7px 11px;
+            border: 1px solid rgba(103, 198, 187, 0.22);
+            border-radius: 999px;
+            color: #4d7280;
+            background: rgba(255, 255, 255, 0.68);
+            box-shadow: var(--blur-border), 0 12px 38px rgba(142, 165, 188, 0.12);
+            backdrop-filter: blur(18px);
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .eyebrow span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #87d895;
+            box-shadow: 0 0 0 5px rgba(135, 216, 149, 0.18), 0 0 18px rgba(135, 216, 149, 0.4);
+        }
+
+        h1,
+        h2,
+        h3,
+        p {
+            overflow-wrap: anywhere;
+        }
+
+        .hero h1 {
+            max-width: 820px;
+            margin: 0;
+            font-size: clamp(42px, 6.5vw, 82px);
+            line-height: 1.05;
+            letter-spacing: 0;
+            color: #314052;
+            font-weight: 900;
+        }
+
+        .hero-lead {
+            max-width: 720px;
+            margin: 24px 0 0;
+            color: #596b7e;
+            font-size: clamp(17px, 2vw, 22px);
+            line-height: 1.9;
+            font-weight: 700;
+        }
+
+        .hero-lead strong {
+            color: #48aca2;
+            white-space: nowrap;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 34px;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 50px;
+            padding: 11px 20px;
+            border: 1px solid rgba(140, 160, 182, 0.18);
+            border-radius: 999px;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.68);
+            box-shadow: var(--blur-border), 0 12px 34px rgba(145, 164, 184, 0.14);
+            font-weight: 850;
+            cursor: pointer;
+            transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+        }
+
+        .button:hover {
+            transform: translateY(-1px);
+            border-color: rgba(103, 198, 187, 0.32);
+            background: rgba(255, 255, 255, 0.86);
+        }
+
+        .button-primary {
+            border-color: rgba(103, 198, 187, 0.28);
+            color: var(--ink);
+            background: linear-gradient(135deg, #9de9df, #cff7ef);
+            box-shadow: 0 14px 34px rgba(91, 190, 180, 0.24);
+        }
+
+        .button-primary:hover {
+            background: linear-gradient(135deg, #b7f5ee, #effffb);
+        }
+
+        .hero-proof {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 28px;
+            color: #768598;
+            font-size: 13px;
+        }
+
+        .hero-proof span {
+            padding: 6px 10px;
+            border: 1px solid rgba(140, 160, 182, 0.16);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.58);
+            box-shadow: var(--blur-border);
+            backdrop-filter: blur(14px);
+        }
+
+        .memory-orbit {
+            position: relative;
+            min-height: 560px;
+        }
+
+        .phone {
+            position: absolute;
+            right: 8%;
+            top: 8%;
+            z-index: 2;
+            width: min(300px, 72vw);
+            min-height: 530px;
+            overflow: hidden;
+            border: 1px solid rgba(140, 160, 182, 0.18);
+            border-radius: 34px;
+            background: rgba(255, 255, 255, 0.64);
+            box-shadow: var(--soft-shadow), 0 28px 80px rgba(134, 154, 176, 0.18);
+            backdrop-filter: blur(24px);
+        }
+
+        .phone::before {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            width: 72px;
+            height: 5px;
+            border-radius: 999px;
+            content: "";
+            transform: translateX(-50%);
+            background: rgba(120, 142, 164, 0.18);
+        }
+
+        .phone-screen {
+            padding: 36px 16px 18px;
+        }
+
+        .phone-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            color: #6f7f91;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .portal {
+            position: relative;
+            display: grid;
+            height: 210px;
+            place-items: center;
+            overflow: hidden;
+            border: 1px solid rgba(103, 198, 187, 0.16);
+            border-radius: 22px;
+            box-shadow: inset 0 0 44px rgba(255, 255, 255, 0.82), 0 18px 46px rgba(147, 172, 196, 0.12);
+            background:
+                radial-gradient(circle, rgba(157, 233, 223, 0.36), transparent 42%),
+                radial-gradient(circle at 60% 34%, rgba(255, 226, 166, 0.34), transparent 30%),
+                rgba(255, 255, 255, 0.5);
+        }
+
+        .portal-ring {
+            position: absolute;
+            border: 1px solid rgba(103, 198, 187, 0.24);
+            border-radius: 50%;
+            filter: blur(0.3px);
+        }
+
+        .ring-1 {
+            width: 160px;
+            height: 160px;
+        }
+
+        .ring-2 {
+            width: 112px;
+            height: 112px;
+            border-color: rgba(236, 174, 73, 0.26);
+        }
+
+        .avatar-core {
+            display: grid;
+            width: 70px;
+            height: 70px;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.84);
+            border-radius: 50%;
+            color: var(--ink);
+            background: radial-gradient(circle at 34% 24%, #ffffff 0%, var(--aqua) 54%, #83d7ce 100%);
+            box-shadow: 0 0 32px rgba(103, 198, 187, 0.34);
+            font-weight: 950;
+        }
+
+        .memory-card {
+            margin-top: 12px;
+            padding: 13px;
+            border: 1px solid rgba(140, 160, 182, 0.14);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.62);
+            box-shadow: var(--blur-border);
+        }
+
+        .memory-card strong {
+            display: block;
+            color: #344356;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .memory-card span {
+            display: block;
+            margin-top: 5px;
+            color: #78879a;
+            font-size: 12px;
+        }
+
+        .talk-bubble {
+            position: absolute;
+            left: -150px;
+            top: 112px;
+            z-index: 3;
+            max-width: 250px;
+            padding: 16px;
+            border: 1px solid rgba(121, 184, 255, 0.18);
+            border-radius: 22px;
+            color: #435368;
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow: var(--soft-shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .talk-bubble b {
+            display: block;
+            margin-bottom: 6px;
+            color: #5d8fbd;
+            font-size: 13px;
+        }
+
+        .talk-bubble p {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .floating-memory {
+            position: absolute;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.74);
+            border-radius: 50%;
+            color: var(--ink);
+            font-size: 12px;
+            font-weight: 950;
+            box-shadow: 0 0 0 1px rgba(132, 153, 176, 0.1), 0 18px 42px rgba(120, 145, 170, 0.2);
+            filter: saturate(0.88);
+        }
+
+        .memory-a {
+            left: 28px;
+            bottom: 114px;
+            width: 88px;
+            height: 88px;
+            background: radial-gradient(circle at 34% 24%, #fffaf0 0%, var(--amber) 62%, #ffd382 100%);
+        }
+
+        .memory-b {
+            right: 0;
+            bottom: 52px;
+            width: 76px;
+            height: 76px;
+            background: radial-gradient(circle at 34% 24%, #fff7fa 0%, var(--rose) 62%, #ffa2bc 100%);
+        }
+
+        .memory-c {
+            left: 134px;
+            bottom: 18px;
+            width: 56px;
+            height: 56px;
+            background: radial-gradient(circle at 34% 24%, #f9fff8 0%, var(--green) 62%, #9de1a0 100%);
+        }
+
+        .next-strip {
+            width: min(1160px, calc(100% - 32px));
+            margin: -16px auto 0;
+            padding: 15px 0 0;
+            border-top: 1px solid rgba(140, 160, 182, 0.14);
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .section {
+            padding: 92px 0;
+        }
+
+        .section-inner {
+            width: min(1120px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+
+        .kicker {
+            margin: 0 0 10px;
+            color: #4daea4;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .section h2 {
+            max-width: 820px;
+            margin: 0;
+            font-size: clamp(30px, 4.4vw, 54px);
+            line-height: 1.22;
+            letter-spacing: 0;
+            color: #354252;
+            font-weight: 900;
+        }
+
+        .lead {
+            max-width: 820px;
+            margin: 18px 0 0;
+            color: #67788d;
+            font-size: 17px;
+        }
+
+        .split {
+            display: grid;
+            grid-template-columns: minmax(0, 0.92fr) minmax(360px, 0.78fr);
+            align-items: center;
+            gap: 44px;
+        }
+
+        .not-app {
+            border-top: 1px solid rgba(140, 160, 182, 0.12);
+            border-bottom: 1px solid rgba(140, 160, 182, 0.12);
+            background:
+                radial-gradient(circle at 85% 24%, rgba(255, 191, 208, 0.2), transparent 30%),
+                rgba(255, 255, 255, 0.48);
+        }
+
+        .comparison {
+            display: grid;
+            gap: 10px;
+        }
+
+        .compare-row {
+            display: grid;
+            grid-template-columns: 130px 1fr;
+            gap: 12px;
+            align-items: center;
+            padding: 13px;
+            border: 1px solid rgba(140, 160, 182, 0.14);
+            border-radius: 18px;
+            background: var(--panel);
+            box-shadow: var(--blur-border);
+            backdrop-filter: blur(18px);
+        }
+
+        .compare-row b {
+            color: #8b99aa;
+            font-size: 13px;
+        }
+
+        .compare-row strong {
+            color: #344356;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .compare-row.is-current {
+            border-color: var(--line-strong);
+            background: rgba(157, 233, 223, 0.2);
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.76), 0 0 34px rgba(103, 198, 187, 0.18);
+        }
+
+        .compare-row.is-current b {
+            color: #4daea4;
+        }
+
+        .value-grid,
+        .use-grid,
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 38px;
+        }
+
+        .tile {
+            min-width: 0;
+            padding: 24px;
+            border: 1px solid rgba(140, 160, 182, 0.14);
+            border-radius: 22px;
+            background: var(--panel);
+            box-shadow: var(--blur-border), 0 18px 52px rgba(145, 164, 184, 0.1);
+            backdrop-filter: blur(18px);
+        }
+
+        .tile-icon {
+            display: grid;
+            width: 38px;
+            height: 38px;
+            place-items: center;
+            margin-bottom: 16px;
+            border-radius: 15px;
+            color: var(--ink);
+            background: linear-gradient(135deg, #effffb 0%, var(--aqua) 100%);
+            box-shadow: 0 10px 28px rgba(103, 198, 187, 0.2);
+            font-weight: 950;
+        }
+
+        .tile h3 {
+            margin: 0;
+            font-size: 20px;
+            line-height: 1.45;
+        }
+
+        .tile p {
+            margin: 10px 0 0;
+            color: #6e7f93;
+            font-size: 15px;
+        }
+
+        .ai-section {
+            background:
+                linear-gradient(90deg, rgba(184, 220, 255, 0.26), transparent 45%),
+                var(--bg);
+        }
+
+        .learn-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 26px;
+        }
+
+        .learn-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px;
+            border: 1px solid rgba(140, 160, 182, 0.14);
+            border-radius: 18px;
+            color: #435368;
+            background: rgba(255, 255, 255, 0.62);
+            box-shadow: var(--blur-border);
+            font-weight: 750;
+        }
+
+        .learn-item span {
+            display: grid;
+            width: 26px;
+            height: 26px;
+            flex: 0 0 auto;
+            place-items: center;
+            border-radius: 50%;
+            color: var(--ink);
+            background: linear-gradient(135deg, #f7fff6, var(--green));
+            font-size: 13px;
+            font-weight: 950;
+        }
+
+        .chat-demo {
+            display: grid;
+            gap: 12px;
+            padding: 20px;
+            border: 1px solid rgba(121, 184, 255, 0.16);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.68);
+            box-shadow: var(--soft-shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .msg {
+            max-width: 88%;
+            padding: 12px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .msg.user {
+            margin-left: auto;
+            color: var(--ink);
+            background: linear-gradient(135deg, #b7f5ee, #eafffb);
+            box-shadow: 0 12px 28px rgba(103, 198, 187, 0.16);
+            font-weight: 750;
+        }
+
+        .msg.ai {
+            border: 1px solid rgba(140, 160, 182, 0.12);
+            color: #4a5b6f;
+            background: rgba(255, 255, 255, 0.72);
+            box-shadow: var(--blur-border);
+        }
+
+        .explore {
+            border-top: 1px solid rgba(140, 160, 182, 0.12);
+            border-bottom: 1px solid rgba(140, 160, 182, 0.12);
+            background:
+                radial-gradient(circle at 18% 20%, rgba(157, 233, 223, 0.24), transparent 34%),
+                rgba(255, 255, 255, 0.5);
+        }
+
+        .explore-ui {
+            position: relative;
+            min-height: 420px;
+            overflow: hidden;
+            margin-top: 42px;
+            border: 1px solid rgba(140, 160, 182, 0.14);
+            border-radius: 28px;
+            box-shadow: var(--soft-shadow);
+            backdrop-filter: blur(18px);
+            background:
+                radial-gradient(circle at 30% 42%, rgba(157, 233, 223, 0.34), transparent 30%),
+                radial-gradient(circle at 72% 46%, rgba(255, 191, 208, 0.28), transparent 26%),
+                rgba(255, 255, 255, 0.64);
+        }
+
+        .explore-toolbar {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            right: 16px;
+            z-index: 2;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pill {
+            padding: 7px 10px;
+            border: 1px solid rgba(140, 160, 182, 0.15);
+            border-radius: 999px;
+            color: #52657b;
+            background: rgba(255, 255, 255, 0.68);
+            box-shadow: var(--blur-border);
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+        .pill.is-on {
+            color: var(--ink);
+            background: linear-gradient(135deg, #fff6d8, var(--amber));
+        }
+
+        .memory-dot {
+            position: absolute;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.78);
+            border-radius: 50%;
+            color: var(--ink);
+            font-size: 12px;
+            font-weight: 950;
+            box-shadow: 0 0 0 1px rgba(140, 160, 182, 0.08), 0 18px 48px rgba(120, 145, 170, 0.2);
+            filter: saturate(0.86);
+        }
+
+        .dot-1 {
+            top: 118px;
+            left: 12%;
+            width: 116px;
+            height: 116px;
+            background: radial-gradient(circle at 34% 24%, #ffffff 0%, var(--aqua) 64%, #86d7cd 100%);
+        }
+
+        .dot-2 {
+            top: 180px;
+            left: 38%;
+            width: 82px;
+            height: 82px;
+            background: radial-gradient(circle at 34% 24%, #fffaf0 0%, var(--amber) 64%, #ffd382 100%);
+        }
+
+        .dot-3 {
+            right: 17%;
+            top: 104px;
+            width: 132px;
+            height: 132px;
+            background: radial-gradient(circle at 34% 24%, #fff7fa 0%, var(--rose) 64%, #ffa7be 100%);
+        }
+
+        .dot-4 {
+            right: 32%;
+            bottom: 72px;
+            width: 66px;
+            height: 66px;
+            background: radial-gradient(circle at 34% 24%, #f9fff8 0%, var(--green) 64%, #9ee2a2 100%);
+        }
+
+        .dot-5 {
+            left: 23%;
+            bottom: 58px;
+            width: 58px;
+            height: 58px;
+            background: radial-gradient(circle at 34% 24%, #f6fbff 0%, var(--blue) 64%, #92c6f9 100%);
+        }
+
+        .timeline {
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            bottom: 18px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .year {
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(140, 160, 182, 0.16);
+        }
+
+        .year:nth-child(2),
+        .year:nth-child(4) {
+            background: var(--aqua);
+        }
+
+        .secret {
+            background:
+                linear-gradient(180deg, transparent, rgba(255, 191, 208, 0.18), transparent),
+                var(--bg);
+        }
+
+        .secret-panel {
+            padding: 24px;
+            border: 1px solid rgba(255, 156, 181, 0.2);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.68);
+            box-shadow: var(--soft-shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .secret-panel h3 {
+            margin: 0 0 10px;
+        }
+
+        .secret-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .secret-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 13px;
+            border: 1px solid rgba(140, 160, 182, 0.12);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.58);
+            box-shadow: var(--blur-border);
+        }
+
+        .secret-row strong {
+            filter: blur(2.5px);
+            user-select: none;
+        }
+
+        .secret-row span {
+            color: #d56c86;
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+        .share {
+            border-top: 1px solid rgba(140, 160, 182, 0.12);
+            border-bottom: 1px solid rgba(140, 160, 182, 0.12);
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .badge {
+            display: inline-flex;
+            width: fit-content;
+            margin-bottom: 12px;
+            padding: 6px 9px;
+            border-radius: 999px;
+            color: #7a5c12;
+            background: linear-gradient(135deg, #fff7dd, var(--amber));
+            box-shadow: 0 10px 24px rgba(219, 168, 70, 0.16);
+            font-size: 12px;
+            font-weight: 950;
+        }
+
+        .future {
+            text-align: center;
+            background:
+                radial-gradient(circle at 50% 0%, rgba(157, 233, 223, 0.34), transparent 36%),
+                var(--bg-2);
+        }
+
+        .future h2 {
+            margin-inline: auto;
+        }
+
+        .future .lead {
+            margin-inline: auto;
+        }
+
+        .quote {
+            max-width: 780px;
+            margin: 38px auto 0;
+            padding: 28px;
+            border: 1px solid var(--line-strong);
+            border-radius: 26px;
+            background: rgba(255, 255, 255, 0.64);
+            color: #3d5663;
+            box-shadow: var(--soft-shadow);
+            font-size: clamp(22px, 3vw, 34px);
+            line-height: 1.45;
+            font-weight: 950;
+        }
+
+        .cta {
+            padding: 94px 0;
+            background:
+                radial-gradient(circle at 74% 18%, rgba(255, 191, 208, 0.24), transparent 30%),
+                #fffdf8;
+        }
+
+        .cta-box {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 360px;
+            gap: 30px;
+            align-items: center;
+            padding: 34px;
+            border: 1px solid rgba(103, 198, 187, 0.2);
+            border-radius: 28px;
+            background: var(--panel);
+            box-shadow: var(--soft-shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .cta h2 {
+            margin: 0;
+            font-size: clamp(30px, 4vw, 46px);
+            line-height: 1.22;
+        }
+
+        .cta p {
+            margin: 14px 0 0;
+            color: #66788d;
+        }
+
+        .form {
+            display: grid;
+            gap: 10px;
+        }
+
+        .form input {
+            width: 100%;
+            min-height: 50px;
+            padding: 12px 13px;
+            border: 1px solid rgba(140, 160, 182, 0.18);
+            border-radius: 18px;
+            outline: none;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.72);
+            box-shadow: var(--blur-border);
+        }
+
+        .form input:focus {
+            border-color: rgba(103, 198, 187, 0.4);
+            box-shadow: 0 0 0 4px rgba(103, 198, 187, 0.12), var(--blur-border);
+        }
+
+        .form-message {
+            min-height: 20px;
+            margin: 0;
+            color: var(--green);
+            font-size: 13px;
+        }
+
+        .footer {
+            padding: 28px 0;
+            border-top: 1px solid rgba(140, 160, 182, 0.12);
+            color: var(--soft);
+            font-size: 13px;
+        }
+
+        .footer-inner {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            width: min(1120px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(18px);
+            transition: opacity 520ms ease, transform 520ms ease;
+        }
+
+        .reveal.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 940px) {
+            .nav-links a:not(.nav-cta) {
+                display: none;
+            }
+
+            .hero-inner,
+            .split,
+            .cta-box {
+                grid-template-columns: 1fr;
+            }
+
+            .memory-orbit {
+                min-height: 520px;
+            }
+
+            .phone {
+                right: 2%;
+            }
+
+            .value-grid,
+            .use-grid,
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .nav-inner {
+                min-height: 58px;
+            }
+
+            .nav-cta {
+                min-height: 34px;
+                padding: 6px 10px;
+                font-size: 13px;
+            }
+
+            .hero {
+                min-height: auto;
+                padding-top: 92px;
+            }
+
+            .bubble-canvas {
+                opacity: 0.38;
+            }
+
+            .hero-inner {
+                min-height: 0;
+                gap: 34px;
+            }
+
+            .hero-actions {
+                display: grid;
+            }
+
+            .button {
+                width: 100%;
+            }
+
+            .hero-proof {
+                display: grid;
+            }
+
+            .memory-orbit {
+                min-height: 470px;
+            }
+
+            .phone {
+                left: 50%;
+                right: auto;
+                width: min(310px, 100%);
+                min-height: 430px;
+                transform: translateX(-50%);
+            }
+
+            .portal {
+                height: 176px;
+            }
+
+            .talk-bubble {
+                position: relative;
+                top: auto;
+                left: auto;
+                z-index: auto;
+                max-width: none;
+                margin-top: 12px;
+            }
+
+            .floating-memory {
+                display: none;
+            }
+
+            .section {
+                padding: 66px 0;
+            }
+
+            .compare-row {
+                grid-template-columns: 1fr;
+                gap: 4px;
+            }
+
+            .explore-ui {
+                min-height: 360px;
+            }
+
+            .dot-1 {
+                left: 8%;
+                width: 92px;
+                height: 92px;
+            }
+
+            .dot-2 {
+                left: 43%;
+                width: 64px;
+                height: 64px;
+            }
+
+            .dot-3 {
+                right: 7%;
+                width: 96px;
+                height: 96px;
+            }
+
+            .dot-4,
+            .dot-5 {
+                bottom: 66px;
+            }
+
+            .cta-box {
+                padding: 22px;
+            }
+
+            .footer-inner {
+                display: grid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="nav">
+        <div class="nav-inner">
+            <a class="brand" href="#top">
+                <span class="brand-mark">M</span>
+                <span>メモリル</span>
+            </a>
+            <nav class="nav-links" aria-label="メインナビゲーション">
+                <a href="#not-app">できること</a>
+                <a href="#ai">分身AI</a>
+                <a href="#explore">探索</a>
+                <a href="#usecases">使い方</a>
+                <a class="nav-cta" href="#signup">事前登録</a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="top">
+        <section class="hero">
+            <canvas id="bubbleCanvas" class="bubble-canvas" aria-hidden="true"></canvas>
+            <div class="hero-inner">
+                <div class="reveal">
+                    <p class="eyebrow"><span></span> 人生を保存し、再体験し、対話する記憶分身アプリ</p>
+                    <h1>記憶を話すほど、もう一人の自分が育っていく。</h1>
+                    <p class="hero-lead">
+                        メモリルは、思い出や感情を記録しながら、<strong>あなた専用のAI</strong>を育てていく場所です。昔の自分に会い、人生を探検し、未来の自分へ記憶を残せます。
+                    </p>
+                    <div class="hero-actions">
+                        <a class="button button-primary" href="#signup">事前登録する</a>
+                        <a class="button" href="#not-app">何ができるか見る</a>
+                    </div>
+                    <div class="hero-proof">
+                        <span>感情ごと記録</span>
+                        <span>記憶玉で探索</span>
+                        <span>分身AIと対話</span>
+                        <span>シークレット対応</span>
+                    </div>
+                </div>
+
+                <div class="memory-orbit reveal" aria-label="メモリル体験イメージ">
+                    <div class="talk-bubble">
+                        <b>過去の自分から返事がくる感覚</b>
+                        <p>「高校の時も、同じことで悩んでいたよ。あの時は友だちに話して前に進めた。」</p>
+                    </div>
+                    <div class="phone">
+                        <div class="phone-screen">
+                            <div class="phone-title">
+                                <span>Memory Portal</span>
+                                <span>AI growing</span>
+                            </div>
+                            <div class="portal">
+                                <span class="portal-ring ring-1"></span>
+                                <span class="portal-ring ring-2"></span>
+                                <span class="avatar-core">分身</span>
+                            </div>
+                            <div class="memory-card">
+                                <strong>初恋の帰り道</strong>
+                                <span>中学生 / 懐かしい / 胸が苦しい</span>
+                            </div>
+                            <div class="memory-card">
+                                <strong>人生が変わった一言</strong>
+                                <span>大学生 / 救われた / 家族</span>
+                            </div>
+                            <div class="memory-card">
+                                <strong>子どもが初めて歩いた日</strong>
+                                <span>成人期 / 嬉しい / 家族共有</span>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="floating-memory memory-a">初恋</span>
+                    <span class="floating-memory memory-b">家族</span>
+                    <span class="floating-memory memory-c">夢</span>
+                </div>
+            </div>
+            <div class="next-strip">これはメモアプリではありません。あなたの人生そのものを保存するアプリです。</div>
+        </section>
+
+        <section id="not-app" class="section not-app">
+            <div class="section-inner split">
+                <div class="reveal">
+                    <p class="kicker">NEW CATEGORY</p>
+                    <h2>これはメモアプリではありません。</h2>
+                    <p class="lead">
+                        メモリルは、出来事を保存するだけではなく、その時の感情、時代、相手、価値観まで残します。忘れていた自分に、また会うための人生アーカイブです。
+                    </p>
+                </div>
+                <div class="comparison reveal" aria-label="メモリルの位置づけ">
+                    <div class="compare-row">
+                        <b>メモアプリ</b>
+                        <strong>文章を残す</strong>
+                    </div>
+                    <div class="compare-row">
+                        <b>日記アプリ</b>
+                        <strong>日々を振り返る</strong>
+                    </div>
+                    <div class="compare-row">
+                        <b>AIチャット</b>
+                        <strong>質問に答える</strong>
+                    </div>
+                    <div class="compare-row is-current">
+                        <b>メモリル</b>
+                        <strong>人生を保存し、再体験し、対話する</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-inner">
+                <p class="kicker reveal">EMOTIONAL VALUE</p>
+                <h2 class="reveal">忘れていた自分に、また会える。</h2>
+                <p class="lead reveal">
+                    昔の夢、初恋、学生時代、家族との会話、悩んでいた時期、人生が変わった瞬間。メモリルでは、それらを“感情ごと”記録できます。
+                </p>
+                <div class="value-grid">
+                    <article class="tile reveal">
+                        <div class="tile-icon">夢</div>
+                        <h3>昔の夢を残す</h3>
+                        <p>当時なりたかったもの、諦めた理由、まだ残っている気持ちまで保存します。</p>
+                    </article>
+                    <article class="tile reveal">
+                        <div class="tile-icon">恋</div>
+                        <h3>初恋や青春を残す</h3>
+                        <p>名前だけではなく、その時の高鳴りや言えなかった言葉も記憶として残せます。</p>
+                    </article>
+                    <article class="tile reveal">
+                        <div class="tile-icon">家</div>
+                        <h3>家族との時間を残す</h3>
+                        <p>何気ない会話、子どもの成長、親の言葉を未来の自分や大切な人へ渡せます。</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="ai" class="section ai-section">
+            <div class="section-inner split">
+                <div class="reveal">
+                    <p class="kicker">MEMORY AVATAR</p>
+                    <h2>AIが、あなたになっていく。</h2>
+                    <p class="lead">
+                        普通のAIは、誰にでも同じように答えます。メモリルのAIは、あなたが話した記憶をもとに、話し方、感情傾向、思考パターン、大切にしている価値観を少しずつ理解していきます。
+                    </p>
+                    <div class="learn-list">
+                        <div class="learn-item"><span>1</span> 話し方や口ぐせ</div>
+                        <div class="learn-item"><span>2</span> 喜びや傷つきのパターン</div>
+                        <div class="learn-item"><span>3</span> 人生経験と価値観</div>
+                        <div class="learn-item"><span>4</span> あなたが大切にしてきた人や場所</div>
+                    </div>
+                </div>
+                <div class="chat-demo reveal" aria-label="分身AIとの対話例">
+                    <div class="msg user">最近また自信がなくなってきた。</div>
+                    <div class="msg ai">大学の発表前にも同じ気持ちを書いていました。あの時は、準備を小さく分けたことで落ち着いていました。</div>
+                    <div class="msg user">そういえば、あの時も怖かった。</div>
+                    <div class="msg ai">でも最後には「怖いまま進めた」と記録しています。今回も、まず一つだけ進めてみませんか。</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="explore" class="section explore">
+            <div class="section-inner">
+                <p class="kicker reveal">EXPLORE YOUR LIFE</p>
+                <h2 class="reveal">人生を、探検する。</h2>
+                <p class="lead reveal">
+                    普通のメモアプリは検索します。メモリルは探検します。記憶玉、シャボン玉、ズーム探索、年代フィルター、感情フィルターで、人生そのものを歩き回るように振り返れます。
+                </p>
+                <div class="explore-ui reveal" aria-label="記憶探索UIイメージ">
+                    <div class="explore-toolbar">
+                        <span class="pill is-on">懐かしさ</span>
+                        <span class="pill">学生時代</span>
+                        <span class="pill">家族</span>
+                        <span class="pill">嬉しい</span>
+                        <span class="pill">悩んだ時期</span>
+                    </div>
+                    <span class="memory-dot dot-1">学生時代</span>
+                    <span class="memory-dot dot-2">初恋</span>
+                    <span class="memory-dot dot-3">家族</span>
+                    <span class="memory-dot dot-4">仕事</span>
+                    <span class="memory-dot dot-5">夢</span>
+                    <div class="timeline" aria-hidden="true">
+                        <span class="year"></span>
+                        <span class="year"></span>
+                        <span class="year"></span>
+                        <span class="year"></span>
+                        <span class="year"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="usecases" class="section">
+            <div class="section-inner">
+                <p class="kicker reveal">USE CASES</p>
+                <h2 class="reveal">こんな使い方ができます。</h2>
+                <p class="lead reveal">
+                    メモリルは、自己理解、家族の記録、教育、カウンセリング、終活まで、人生の記憶を扱う場面で使えます。
+                </p>
+                <div class="use-grid">
+                    <article class="tile reveal">
+                        <div class="tile-icon">自</div>
+                        <h3>自己理解ツール</h3>
+                        <p>感情の変化を見返し、自分が何に傷つき、何に喜び、どう変化してきたかを知る。</p>
+                    </article>
+                    <article class="tile reveal">
+                        <div class="tile-icon">家</div>
+                        <h3>家族アルバム</h3>
+                        <p>人生の出来事や家族との会話を、大切な人へ残せる記録空間にする。</p>
+                    </article>
+                    <article class="tile reveal">
+                        <div class="tile-icon">学</div>
+                        <h3>教育現場</h3>
+                        <p>子どもたちの日々の記録、感情変化、成長、自分を表現する力を蓄積する。</p>
+                    </article>
+                    <article class="tile reveal">
+                        <div class="tile-icon">癒</div>
+                        <h3>感情整理の支援</h3>
+                        <p>過去の自分との対話を通じて、ジャーナリングやカウンセリングの補助に使う。</p>
+                    </article>
+                    <article class="tile reveal">
+                        <div class="tile-icon">声</div>
+                        <h3>終活ツール</h3>
+                        <p>声や想い、人生の記録を未来へ残し、家族があとから振り返れるようにする。</p>
+                    </article>
+                    <article class="tile reveal">
+                        <div class="tile-icon">友</div>
+                        <h3>思い出共有</h3>
+                        <p>友だち、同級生、仲間と懐かしい記憶を見ながら、自然に会話を生む。</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="secret" class="section secret">
+            <div class="section-inner split">
+                <div class="reveal">
+                    <p class="kicker">PRIVATE MEMORY</p>
+                    <h2>見られたくない記憶は、守れる。</h2>
+                    <p class="lead">
+                        本音や弱さも残せるように、シークレットモード、ロック機能、記憶ごとの公開制御を用意します。自分だけの記憶と、共有したい記憶を分けて扱えます。
+                    </p>
+                </div>
+                <div class="secret-panel reveal">
+                    <h3>シークレット領域</h3>
+                    <p class="lead">明示的に開いた時だけ表示される記憶。</p>
+                    <div class="secret-list">
+                        <div class="secret-row"><strong>誰にも言えなかった本音</strong><span>locked</span></div>
+                        <div class="secret-row"><strong>傷ついた時期の記録</strong><span>locked</span></div>
+                        <div class="secret-row"><strong>未来の自分だけに残す言葉</strong><span>locked</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section share">
+            <div class="section-inner">
+                <p class="kicker reveal">SHARING</p>
+                <h2 class="reveal">友だちと、思い出を共有する。</h2>
+                <p class="lead reveal">
+                    有料版では、家族、友だち、同級生、仲間と記憶を共有できます。同じ思い出を見返すことで、忘れていた会話が自然に生まれます。
+                </p>
+                <div class="feature-grid">
+                    <article class="tile reveal">
+                        <span class="badge">有料版</span>
+                        <h3>家族共有</h3>
+                        <p>子どもの成長や家族旅行を、家族だけの記憶空間で振り返る。</p>
+                    </article>
+                    <article class="tile reveal">
+                        <span class="badge">有料版</span>
+                        <h3>同級生共有</h3>
+                        <p>学生時代の記憶を共有し、懐かしい出来事を一緒に思い出す。</p>
+                    </article>
+                    <article class="tile reveal">
+                        <span class="badge">有料版</span>
+                        <h3>仲間共有</h3>
+                        <p>チームや友人との出来事を残し、関係性の記録として育てる。</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section future">
+            <div class="section-inner">
+                <p class="kicker reveal">TO YOUR FUTURE</p>
+                <h2 class="reveal">10年後、あなたは今の自分を覚えていますか？</h2>
+                <p class="lead reveal">
+                    今の悩み、好きな人、守りたいもの、変わりたい理由。時間が経つほど薄れていくものを、メモリルは未来へ残します。
+                </p>
+                <div class="quote reveal">メモリルは、人生を忘れないための場所。</div>
+            </div>
+        </section>
+
+        <section id="signup" class="cta">
+            <div class="section-inner">
+                <div class="cta-box reveal">
+                    <div>
+                        <h2>あなたの人生が、消えなくなる。</h2>
+                        <p>メモリルの先行案内を受け取る。テスト公開や新機能の情報をメールでお知らせします。</p>
+                    </div>
+                    <form id="signupForm" class="form">
+                        <input id="email" type="email" name="email" placeholder="メールアドレス" autocomplete="email" required>
+                        <button class="button button-primary" type="submit">先行案内を受け取る</button>
+                        <p id="formMessage" class="form-message" aria-live="polite"></p>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>メモリル</span>
+            <span>人生を保存し、再体験し、対話できる記憶分身アプリ</span>
+        </div>
+    </footer>
+
+    <script>
+        const canvas = document.getElementById("bubbleCanvas");
+        const ctx = canvas.getContext("2d");
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        let width = 0;
+        let height = 0;
+        let bubbles = [];
+
+        function resizeCanvas() {
+            const ratio = Math.min(window.devicePixelRatio || 1, 2);
+            width = window.innerWidth;
+            height = Math.max(window.innerHeight, 760);
+            canvas.width = Math.floor(width * ratio);
+            canvas.height = Math.floor(height * ratio);
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${height}px`;
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+            bubbles = Array.from({ length: width < 720 ? 26 : 44 }, (_, index) => ({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                r: 10 + Math.random() * 42,
+                vx: (Math.random() - 0.5) * 0.18,
+                vy: -0.08 - Math.random() * 0.12,
+                hue: index % 5,
+                alpha: 0.12 + Math.random() * 0.28
+            }));
+        }
+
+        function drawBubbles() {
+            ctx.clearRect(0, 0, width, height);
+            const colors = ["105, 232, 217", "121, 184, 255", "255, 138, 165", "255, 212, 122", "147, 226, 154"];
+
+            bubbles.forEach((bubble) => {
+                const color = colors[bubble.hue];
+                const gradient = ctx.createRadialGradient(bubble.x - bubble.r * 0.32, bubble.y - bubble.r * 0.38, 1, bubble.x, bubble.y, bubble.r);
+                gradient.addColorStop(0, `rgba(255, 255, 255, ${bubble.alpha + 0.22})`);
+                gradient.addColorStop(0.45, `rgba(${color}, ${bubble.alpha})`);
+                gradient.addColorStop(1, `rgba(${color}, 0.02)`);
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(bubble.x, bubble.y, bubble.r, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = `rgba(${color}, ${bubble.alpha + 0.1})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                if (!reduceMotion) {
+                    bubble.x += bubble.vx;
+                    bubble.y += bubble.vy;
+                    if (bubble.y + bubble.r < 0) {
+                        bubble.y = height + bubble.r;
+                        bubble.x = Math.random() * width;
+                    }
+                    if (bubble.x < -bubble.r) bubble.x = width + bubble.r;
+                    if (bubble.x > width + bubble.r) bubble.x = -bubble.r;
+                }
+            });
+
+            if (!reduceMotion) {
+                requestAnimationFrame(drawBubbles);
+            }
+        }
+
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+        drawBubbles();
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add("is-visible");
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.16 });
+
+        document.querySelectorAll(".reveal").forEach((element) => observer.observe(element));
+
+        document.getElementById("signupForm").addEventListener("submit", (event) => {
+            event.preventDefault();
+            const email = document.getElementById("email");
+            const message = document.getElementById("formMessage");
+            if (!email.validity.valid) {
+                message.textContent = "メールアドレスを入力してください。";
+                return;
+            }
+            message.textContent = "送信先を接続すると登録できます。";
+            email.value = "";
+        });
+    </script>
+</body>
+</html>

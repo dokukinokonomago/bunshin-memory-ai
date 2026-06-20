@@ -1,0 +1,560 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/ug2fop",
+    "id": "ug2fop",
+    "slide": 7,
+    "layoutId": "c2a13776-e46b-4474-ba22-963122f47ab1",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "99871197-292c-4743-8463-2b7920ea6c6c",
+    "masterLayoutName": "Master",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Aptos",
+      "Aptos Display"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "c2a13776-e46b-4474-ba22-963122f47ab1",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "99871197-292c-4743-8463-2b7920ea6c6c",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "99871197-292c-4743-8463-2b7920ea6c6c",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/ytsvu9kn",
+      "id": "1",
+      "bbox": [
+        624,
+        0,
+        656,
+        650
+      ],
+      "contentType": "image/png",
+      "imageFit": "cover",
+      "asset": {
+        "assetId": "c3dce79b-190e-4903-8fe0-f35b40311759",
+        "contentType": "image/png",
+        "byteLength": 1663021
+      }
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/8z25kb6x",
+      "id": "2",
+      "name": "close-panel",
+      "bbox": [
+        0,
+        0,
+        624,
+        720
+      ],
+      "geometry": "rect",
+      "fillColor": "#F7F1EA",
+      "lineColor": "#F7F1EA",
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/1gvy90je",
+      "id": "3",
+      "name": "kicker-07-marker",
+      "bbox": [
+        78,
+        74,
+        10,
+        10
+      ],
+      "geometry": "rect",
+      "fillColor": "#D8B98B",
+      "lineColor": "#D8B98B",
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/q1orytsv",
+      "id": "4",
+      "name": "kicker-07-label",
+      "bbox": [
+        96,
+        70,
+        120,
+        18
+      ],
+      "geometry": "rect",
+      "text": "CLOSING",
+      "textPreview": "CLOSING",
+      "resolvedFontSize": 11,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 11,
+        "typeface": "Aptos",
+        "color": "#6E6258",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "CLOSING"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "CLOSING",
+          "resolvedTextStyle": {
+            "fontSize": 11,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "CLOSING",
+              "fontSize": 11,
+              "typeface": "Aptos",
+              "color": "#6E6258",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fmlkjm1c",
+      "id": "5",
+      "name": "close-title",
+      "bbox": [
+        78,
+        126,
+        460,
+        156
+      ],
+      "geometry": "rect",
+      "text": "いま残す記憶が、\n未来の分身AIを育てる",
+      "textPreview": "いま残す記憶が、 | 未来の分身AIを育てる",
+      "resolvedFontSize": 46,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 46,
+        "typeface": "Aptos Display",
+        "color": "#1E1915",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "いま残す記憶が、"
+          },
+          {
+            "index": 2,
+            "text": "未来の分身AIを育てる"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "いま残す記憶が、",
+          "resolvedTextStyle": {
+            "fontSize": 46,
+            "typeface": "Aptos Display",
+            "color": "#1E1915",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "いま残す記憶が、",
+              "fontSize": 46,
+              "typeface": "Aptos Display",
+              "color": "#1E1915",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "未来の分身AIを育てる",
+          "resolvedTextStyle": {
+            "fontSize": 46,
+            "typeface": "Aptos Display",
+            "color": "#1E1915",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "未来の分身AIを育てる",
+              "fontSize": 46,
+              "typeface": "Aptos Display",
+              "color": "#1E1915",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/87ed8bat",
+      "id": "6",
+      "name": "close-body",
+      "bbox": [
+        78,
+        296,
+        404,
+        144
+      ],
+      "geometry": "rect",
+      "text": "メモリルは、日々の気持ちを静かに蓄積し、\nあとで探索できる人生データへ変えるプロダクトです。\n\n記録 -> 整理 -> 探索 -> 分身AI",
+      "textPreview": "メモリルは、日々の気持ちを静かに蓄積し、 | あとで探索できる人生データへ変えるプロダクトです。 |  | 記録 -> 整理 -> 探索 -> 分身AI",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 19,
+        "typeface": "Aptos",
+        "color": "#6E6258",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 5,
+        "lines": [
+          {
+            "index": 1,
+            "text": "メモリルは、日々の気持ちを静かに蓄積し、"
+          },
+          {
+            "index": 2,
+            "text": "あとで探索できる人生データへ変えるプロダク"
+          },
+          {
+            "index": 3,
+            "text": "トです。"
+          },
+          {
+            "index": 4,
+            "text": ""
+          },
+          {
+            "index": 5,
+            "text": "記録 -> 整理 -> 探索 -> 分身AI"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "メモリルは、日々の気持ちを静かに蓄積し、",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "メモリルは、日々の気持ちを静かに蓄積し、",
+              "fontSize": 19,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "あとで探索できる人生データへ変えるプロダクトです。",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "あとで探索できる人生データへ変えるプロダクトです。",
+              "fontSize": 19,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 4,
+          "text": "記録 -> 整理 -> 探索 -> 分身AI",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "記録 -> 整理 -> 探索 -> 分身AI",
+              "fontSize": 19,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/xs72x4na",
+      "id": "7",
+      "name": "footer-rule",
+      "bbox": [
+        72,
+        680,
+        1136,
+        1
+      ],
+      "geometry": "rect",
+      "fillColor": "#D9CABB",
+      "lineColor": "#D9CABB",
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/qd4vmtwr",
+      "id": "8",
+      "name": "footer-source",
+      "bbox": [
+        72,
+        688,
+        980,
+        18
+      ],
+      "geometry": "rect",
+      "text": "Memoriru product overview / generated closing visual",
+      "textPreview": "Memoriru product overview / generated closing visual",
+      "resolvedFontSize": 10,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 10,
+        "typeface": "Aptos",
+        "color": "#6E6258",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Memoriru product overview / generated closing visual"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Memoriru product overview / generated closing visual",
+          "resolvedTextStyle": {
+            "fontSize": 10,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Memoriru product overview / generated closing visual",
+              "fontSize": 10,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fyxobm58",
+      "id": "9",
+      "name": "footer-page",
+      "bbox": [
+        1132,
+        686,
+        76,
+        20
+      ],
+      "geometry": "rect",
+      "text": "07",
+      "textPreview": "07",
+      "resolvedFontSize": 11,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 11,
+        "typeface": "Aptos",
+        "color": "#1E1915",
+        "bold": true,
+        "alignment": "right",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "07"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "07",
+          "resolvedTextStyle": {
+            "fontSize": 11,
+            "typeface": "Aptos",
+            "color": "#1E1915",
+            "bold": true,
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "07",
+              "fontSize": 11,
+              "typeface": "Aptos",
+              "color": "#1E1915",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

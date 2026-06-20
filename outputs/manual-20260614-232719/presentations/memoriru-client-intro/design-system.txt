@@ -1,0 +1,72 @@
+Slide Geometry
+- Slide size: 1280x720
+- Safe margins: 72px left/right, 56px top, 48px bottom
+- Grid: 12-column feel with 32px gutters; image-led slides use strong left text zone and right visual zone.
+
+Background System
+- Warm paper base for explanatory slides: `#F7F1EA`
+- Deep ink base for product screen slide: `#081321`
+- Full-bleed image slides use opaque editorial panels instead of translucent dashboard overlays.
+
+Typography
+- Claim title: Aptos Display, 46-62px, bold
+- Cover/close claim: Aptos Display, 58-64px, bold
+- Body: Aptos, 18-23px
+- Kicker: Aptos, 11-12px, bold
+- Footer/source: Aptos, 10px
+- Japanese copy stays short and manually line-broken.
+
+Palette
+- Ink: `#1E1915`
+- Warm paper: `#F7F1EA`
+- Sand: `#DCCDBB`
+- Gold accent: `#D8B98B`
+- Mist blue: `#B9CAD8`
+- Deep navy: `#081321`
+- White: `#FFFDF9`
+- Usage: warm paper dominates light slides, deep navy reserved for product-screen slide, gold and mist blue used only as accents.
+
+Chart / Diagram Grammar
+- No fake charts.
+- Workflow and value relationships are shown as cards, rails, chips, and editorial layout blocks.
+- Connectors are omitted unless they carry real directionality.
+
+Container / Box Grammar
+- Large editorial panels on image-led slides.
+- Soft filled rectangles for cards.
+- Minimal outlines; prefer fill separation and hairline rules.
+
+Source / Footer Grammar
+- Hairline footer rule.
+- Small single-line source note aligned left.
+- Page number aligned right.
+
+Title / Kicker Grammar
+- English uppercase kicker with small square marker.
+- Kicker marker and label share a centered y-axis.
+- Claim titles are conclusion-led, not topic labels.
+
+Data Label Grammar
+- Chips and short labels stay single-line.
+- Attribute chips are warm paper or navy pills with strong contrast.
+
+Brand Asset Policy
+- No invented logos or mascots.
+- Use only product name as text and real app screenshot.
+- Generated imagery is atmospheric support only, never factual UI.
+
+Allowed Layout Families
+- Cover with full-bleed image + left panel
+- Clean problem slide with stacked issue cards
+- Workflow slide with text rail + right visual
+- Dark product screenshot slide
+- Privacy slide with left text zone + right sanctuary visual
+- Value slide with top claim + bottom value cards
+- Closing slide with full-bleed image + message panel
+
+Banned Motifs
+- Generic SaaS dashboard chrome
+- Repeated rounded card grids across consecutive slides
+- Imagegen text, fake UI, or pseudo-logos
+- Decorative connector spaghetti with no semantics
+- Overcrowded KPI stacks

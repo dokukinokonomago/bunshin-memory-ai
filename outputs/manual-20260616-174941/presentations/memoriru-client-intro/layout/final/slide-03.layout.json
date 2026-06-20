@@ -1,0 +1,1527 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/zhaqiw",
+    "id": "zhaqiw",
+    "slide": 3,
+    "layoutId": "c2a13776-e46b-4474-ba22-963122f47ab1",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "99871197-292c-4743-8463-2b7920ea6c6c",
+    "masterLayoutName": "Master",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Aptos",
+      "Aptos Display"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "c2a13776-e46b-4474-ba22-963122f47ab1",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "99871197-292c-4743-8463-2b7920ea6c6c",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "99871197-292c-4743-8463-2b7920ea6c6c",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/e1w7mp0b",
+      "id": "1",
+      "name": "background",
+      "bbox": [
+        0,
+        0,
+        1280,
+        720
+      ],
+      "geometry": "rect",
+      "fillColor": "#FBF7F2",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/psfil0rq",
+      "id": "2",
+      "name": "kicker-03-marker",
+      "bbox": [
+        78,
+        70,
+        10,
+        10
+      ],
+      "geometry": "rect",
+      "fillColor": "#D8B98B",
+      "lineColor": "#D8B98B",
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/w7mp0bi9",
+      "id": "3",
+      "name": "kicker-03-label",
+      "bbox": [
+        96,
+        66,
+        160,
+        18
+      ],
+      "geometry": "rect",
+      "text": "HOW IT WORKS",
+      "textPreview": "HOW IT WORKS",
+      "resolvedFontSize": 11,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 11,
+        "typeface": "Aptos",
+        "color": "#6E6258",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "HOW IT WORKS"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "HOW IT WORKS",
+          "resolvedTextStyle": {
+            "fontSize": 11,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "HOW IT WORKS",
+              "fontSize": 11,
+              "typeface": "Aptos",
+              "color": "#6E6258",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/7adsji5s",
+      "id": "4",
+      "name": "workflow-title",
+      "bbox": [
+        78,
+        114,
+        432,
+        138
+      ],
+      "geometry": "rect",
+      "text": "メモリルは、会話を\n“使える記憶”に変える",
+      "textPreview": "メモリルは、会話を | “使える記憶”に変える",
+      "resolvedFontSize": 42,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 42,
+        "typeface": "Aptos Display",
+        "color": "#1E1915",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "メモリルは、会話を"
+          },
+          {
+            "index": 2,
+            "text": "“使える記憶”に変える"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "メモリルは、会話を",
+          "resolvedTextStyle": {
+            "fontSize": 42,
+            "typeface": "Aptos Display",
+            "color": "#1E1915",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "メモリルは、会話を",
+              "fontSize": 42,
+              "typeface": "Aptos Display",
+              "color": "#1E1915",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "“使える記憶”に変える",
+          "resolvedTextStyle": {
+            "fontSize": 42,
+            "typeface": "Aptos Display",
+            "color": "#1E1915",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "“使える記憶”に変える",
+              "fontSize": 42,
+              "typeface": "Aptos Display",
+              "color": "#1E1915",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/epkzupwb",
+      "id": "5",
+      "name": "workflow-note",
+      "bbox": [
+        78,
+        252,
+        350,
+        50
+      ],
+      "geometry": "rect",
+      "text": "会話のしやすさはそのままに、\nあとから振り返れる構造へ変換します。",
+      "textPreview": "会話のしやすさはそのままに、 | あとから振り返れる構造へ変換します。",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 18,
+        "typeface": "Aptos",
+        "color": "#6E6258",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "会話のしやすさはそのままに、"
+          },
+          {
+            "index": 2,
+            "text": "あとから振り返れる構造へ変換します。"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "会話のしやすさはそのままに、",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "会話のしやすさはそのままに、",
+              "fontSize": 18,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "あとから振り返れる構造へ変換します。",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "あとから振り返れる構造へ変換します。",
+              "fontSize": 18,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/pg3ex0nu",
+      "id": "6",
+      "name": "workflow-step-1",
+      "bbox": [
+        78,
+        338,
+        356,
+        100
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFDF9",
+      "lineColor": "#D9CABB",
+      "lineWidth": 1
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wval87ed",
+      "id": "7",
+      "name": "workflow-step-1-title",
+      "bbox": [
+        96,
+        354,
+        320,
+        34
+      ],
+      "geometry": "rect",
+      "text": "01 話す",
+      "textPreview": "01 話す",
+      "resolvedFontSize": 20,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 20,
+        "typeface": "Aptos Display",
+        "color": "#1E1915",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "01 話す"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "01 話す",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "typeface": "Aptos Display",
+            "color": "#1E1915",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "01 話す",
+              "fontSize": 20,
+              "typeface": "Aptos Display",
+              "color": "#1E1915",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/36hcrmhk",
+      "id": "8",
+      "name": "workflow-step-1-body",
+      "bbox": [
+        96,
+        394,
+        320,
+        30
+      ],
+      "geometry": "rect",
+      "text": "その日の出来事や感情を自然な言葉で残す。",
+      "textPreview": "その日の出来事や感情を自然な言葉で残す。",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 16,
+        "typeface": "Aptos",
+        "color": "#6E6258",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "その日の出来事や感情を自然な言葉で残す。"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "その日の出来事や感情を自然な言葉で残す。",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "その日の出来事や感情を自然な言葉で残す。",
+              "fontSize": 16,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/eloj2t83",
+      "id": "9",
+      "name": "workflow-step-2",
+      "bbox": [
+        78,
+        450,
+        356,
+        100
+      ],
+      "geometry": "rect",
+      "fillColor": "#F4ECE2",
+      "lineColor": "#D9CABB",
+      "lineWidth": 1
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wra5gbq1",
+      "id": "10",
+      "name": "workflow-step-2-title",
+      "bbox": [
+        96,
+        466,
+        320,
+        34
+      ],
+      "geometry": "rect",
+      "text": "02 構造化する",
+      "textPreview": "02 構造化する",
+      "resolvedFontSize": 20,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 20,
+        "typeface": "Aptos Display",
+        "color": "#1E1915",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "02 構造化する"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "02 構造化する",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "typeface": "Aptos Display",
+            "color": "#1E1915",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "02 構造化する",
+              "fontSize": 20,
+              "typeface": "Aptos Display",
+              "color": "#1E1915",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/lc7u54zi",
+      "id": "11",
+      "name": "workflow-step-2-body",
+      "bbox": [
+        96,
+        506,
+        320,
+        30
+      ],
+      "geometry": "rect",
+      "text": "AIが感情や年代を整理する。",
+      "textPreview": "AIが感情や年代を整理する。",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 16,
+        "typeface": "Aptos",
+        "color": "#6E6258",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "AIが感情や年代を整理する。"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "AIが感情や年代を整理する。",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "AIが感情や年代を整理する。",
+              "fontSize": 16,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/eloj2t83",
+      "id": "12",
+      "name": "workflow-step-3",
+      "bbox": [
+        78,
+        562,
+        356,
+        100
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFDF9",
+      "lineColor": "#D9CABB",
+      "lineWidth": 1
+    },
+    {
+      "order": 13,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/36hcrmhk",
+      "id": "13",
+      "name": "workflow-step-3-title",
+      "bbox": [
+        96,
+        578,
+        320,
+        34
+      ],
+      "geometry": "rect",
+      "text": "03 探索する",
+      "textPreview": "03 探索する",
+      "resolvedFontSize": 20,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 20,
+        "typeface": "Aptos Display",
+        "color": "#1E1915",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "03 探索する"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "03 探索する",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "typeface": "Aptos Display",
+            "color": "#1E1915",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "03 探索する",
+              "fontSize": 20,
+              "typeface": "Aptos Display",
+              "color": "#1E1915",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 14,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wfyxobm5",
+      "id": "14",
+      "name": "workflow-step-3-body",
+      "bbox": [
+        96,
+        618,
+        320,
+        30
+      ],
+      "geometry": "rect",
+      "text": "後から振り返り、将来のAI活用へつなげる。",
+      "textPreview": "後から振り返り、将来のAI活用へつなげる。",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 16,
+        "typeface": "Aptos",
+        "color": "#6E6258",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "後から振り返り、将来のAI活用へつなげる。"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "後から振り返り、将来のAI活用へつなげる。",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "後から振り返り、将来のAI活用へつなげる。",
+              "fontSize": 16,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 15,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/l0rqd4vm",
+      "id": "15",
+      "name": "screen-frame",
+      "bbox": [
+        512,
+        88,
+        690,
+        480
+      ],
+      "geometry": "rect",
+      "fillColor": "#102032",
+      "lineColor": "#B9CAD8",
+      "lineWidth": 1
+    },
+    {
+      "order": 16,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/5kb6xkf6",
+      "id": "16",
+      "bbox": [
+        526,
+        102,
+        662,
+        426
+      ],
+      "contentType": "image/png",
+      "imageFit": "cover",
+      "asset": {
+        "assetId": "83ff530b-85ab-4210-933c-915c102dac7c",
+        "contentType": "image/png",
+        "byteLength": 1660580
+      }
+    },
+    {
+      "order": 17,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/7u54zido",
+      "id": "17",
+      "name": "screen-label-bg",
+      "bbox": [
+        528,
+        540,
+        138,
+        20
+      ],
+      "geometry": "rect",
+      "fillColor": "#B9CAD8",
+      "lineColor": "#B9CAD8",
+      "lineWidth": 0
+    },
+    {
+      "order": 18,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/w7mp0bi9",
+      "id": "18",
+      "name": "screen-label",
+      "bbox": [
+        538,
+        542,
+        118,
+        14
+      ],
+      "geometry": "rect",
+      "text": "Concept visual",
+      "textPreview": "Concept visual",
+      "resolvedFontSize": 10,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 10,
+        "typeface": "Aptos",
+        "color": "#081321",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Concept visual"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Concept visual",
+          "resolvedTextStyle": {
+            "fontSize": 10,
+            "typeface": "Aptos",
+            "color": "#081321",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Concept visual",
+              "fontSize": 10,
+              "typeface": "Aptos",
+              "color": "#081321",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 19,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/psfil0rq",
+      "id": "19",
+      "name": "attr-1",
+      "bbox": [
+        520,
+        590,
+        76,
+        28
+      ],
+      "geometry": "rect",
+      "fillColor": "#081321",
+      "lineColor": "#102032",
+      "lineWidth": 0
+    },
+    {
+      "order": 20,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/9w3m94fu",
+      "id": "20",
+      "name": "attr-1-text",
+      "bbox": [
+        532,
+        594,
+        52,
+        18
+      ],
+      "geometry": "rect",
+      "text": "感情",
+      "textPreview": "感情",
+      "resolvedFontSize": 12,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 12,
+        "typeface": "Aptos",
+        "color": "#FFFDF9",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "感情"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "感情",
+          "resolvedTextStyle": {
+            "fontSize": 12,
+            "typeface": "Aptos",
+            "color": "#FFFDF9",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "感情",
+              "fontSize": 12,
+              "typeface": "Aptos",
+              "color": "#FFFDF9",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 21,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/kb6xkf6d",
+      "id": "21",
+      "name": "attr-2",
+      "bbox": [
+        606,
+        590,
+        76,
+        28
+      ],
+      "geometry": "rect",
+      "fillColor": "#081321",
+      "lineColor": "#102032",
+      "lineWidth": 0
+    },
+    {
+      "order": 22,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/rqd4vmtw",
+      "id": "22",
+      "name": "attr-2-text",
+      "bbox": [
+        618,
+        594,
+        52,
+        18
+      ],
+      "geometry": "rect",
+      "text": "年代",
+      "textPreview": "年代",
+      "resolvedFontSize": 12,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 12,
+        "typeface": "Aptos",
+        "color": "#FFFDF9",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "年代"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "年代",
+          "resolvedTextStyle": {
+            "fontSize": 12,
+            "typeface": "Aptos",
+            "color": "#FFFDF9",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "年代",
+              "fontSize": 12,
+              "typeface": "Aptos",
+              "color": "#FFFDF9",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 23,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/25kb6xkf",
+      "id": "23",
+      "name": "attr-3",
+      "bbox": [
+        692,
+        590,
+        92,
+        28
+      ],
+      "geometry": "rect",
+      "fillColor": "#081321",
+      "lineColor": "#102032",
+      "lineWidth": 0
+    },
+    {
+      "order": 24,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/9knih4by",
+      "id": "24",
+      "name": "attr-3-text",
+      "bbox": [
+        704,
+        594,
+        68,
+        18
+      ],
+      "geometry": "rect",
+      "text": "カテゴリ",
+      "textPreview": "カテゴリ",
+      "resolvedFontSize": 12,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 12,
+        "typeface": "Aptos",
+        "color": "#FFFDF9",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "カテゴリ"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "カテゴリ",
+          "resolvedTextStyle": {
+            "fontSize": 12,
+            "typeface": "Aptos",
+            "color": "#FFFDF9",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "カテゴリ",
+              "fontSize": 12,
+              "typeface": "Aptos",
+              "color": "#FFFDF9",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 25,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/kzupwb2h",
+      "id": "25",
+      "name": "attr-4",
+      "bbox": [
+        794,
+        590,
+        76,
+        28
+      ],
+      "geometry": "rect",
+      "fillColor": "#081321",
+      "lineColor": "#102032",
+      "lineWidth": 0
+    },
+    {
+      "order": 26,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/re1w7mp0",
+      "id": "26",
+      "name": "attr-4-text",
+      "bbox": [
+        806,
+        594,
+        52,
+        18
+      ],
+      "geometry": "rect",
+      "text": "タグ",
+      "textPreview": "タグ",
+      "resolvedFontSize": 12,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 12,
+        "typeface": "Aptos",
+        "color": "#FFFDF9",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "タグ"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "タグ",
+          "resolvedTextStyle": {
+            "fontSize": 12,
+            "typeface": "Aptos",
+            "color": "#FFFDF9",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "タグ",
+              "fontSize": 12,
+              "typeface": "Aptos",
+              "color": "#FFFDF9",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 27,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/2t83itgf",
+      "id": "27",
+      "name": "attr-5",
+      "bbox": [
+        880,
+        590,
+        104,
+        28
+      ],
+      "geometry": "rect",
+      "fillColor": "#081321",
+      "lineColor": "#102032",
+      "lineWidth": 0
+    },
+    {
+      "order": 28,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/9gr2p8nq",
+      "id": "28",
+      "name": "attr-5-text",
+      "bbox": [
+        892,
+        594,
+        80,
+        18
+      ],
+      "geometry": "rect",
+      "text": "秘匿設定",
+      "textPreview": "秘匿設定",
+      "resolvedFontSize": 12,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 12,
+        "typeface": "Aptos",
+        "color": "#FFFDF9",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "秘匿設定"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "秘匿設定",
+          "resolvedTextStyle": {
+            "fontSize": 12,
+            "typeface": "Aptos",
+            "color": "#FFFDF9",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "秘匿設定",
+              "fontSize": 12,
+              "typeface": "Aptos",
+              "color": "#FFFDF9",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 29,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/gvy90je9",
+      "id": "29",
+      "name": "footer-rule",
+      "bbox": [
+        72,
+        680,
+        1136,
+        1
+      ],
+      "geometry": "rect",
+      "fillColor": "#D9CABB",
+      "lineColor": "#D9CABB",
+      "lineWidth": 0
+    },
+    {
+      "order": 30,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/upwb2hwf",
+      "id": "30",
+      "name": "footer-source",
+      "bbox": [
+        72,
+        688,
+        980,
+        18
+      ],
+      "geometry": "rect",
+      "text": "Source: memory-space設計 / API契約 / generated workflow visual",
+      "textPreview": "Source: memory-space設計 / API契約 / generated workflow visual",
+      "resolvedFontSize": 10,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 10,
+        "typeface": "Aptos",
+        "color": "#6E6258",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Source: memory-space設計 / API契約 / generated workflow visual"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Source: memory-space設計 / API契約 / generated workflow visual",
+          "resolvedTextStyle": {
+            "fontSize": 10,
+            "typeface": "Aptos",
+            "color": "#6E6258",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Source: memory-space設計 / API契約 / generated workflow visual",
+              "fontSize": 10,
+              "typeface": "Aptos",
+              "color": "#6E6258"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    },
+    {
+      "order": 31,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/nap4r65w",
+      "id": "31",
+      "name": "footer-page",
+      "bbox": [
+        1132,
+        686,
+        76,
+        20
+      ],
+      "geometry": "rect",
+      "text": "03",
+      "textPreview": "03",
+      "resolvedFontSize": 11,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 11,
+        "typeface": "Aptos",
+        "color": "#1E1915",
+        "bold": true,
+        "alignment": "right",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "03"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "03",
+          "resolvedTextStyle": {
+            "fontSize": 11,
+            "typeface": "Aptos",
+            "color": "#1E1915",
+            "bold": true,
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "03",
+              "fontSize": 11,
+              "typeface": "Aptos",
+              "color": "#1E1915",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "fillColor": "rgba(0, 0, 0, 0)",
+      "lineColor": "rgba(0, 0, 0, 0)",
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

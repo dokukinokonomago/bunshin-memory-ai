@@ -1,0 +1,36 @@
+task mode
+create
+
+primary deck-profile
+product-platform
+
+secondary profile gates
+- consumer-retail image quality discipline for hero slides
+
+required proof objects
+- product positioning cover
+- problem framing
+- workflow architecture
+- actual product experience screen
+- privacy-by-design proof
+- client value / future extension slide
+
+source / asset requirements
+- use product copy and behavior from local LP and architecture docs
+- use actual memory-space screenshot for product proof
+- use image2.0 generated editorial visuals for mood and concept reinforcement
+
+brand authenticity constraints
+- no invented logos
+- no fabricated customer marks
+- no fake UI used as factual proof
+
+profile-specific QA gates
+- show the product system, not just a feature list
+- tie core capabilities to user value and future AI extensibility
+- keep architecture labels concrete: conversation, memory, emotion, category, secret
+
+known missing inputs
+- no customer case studies
+- no adoption or usage metrics
+- no pricing or deployment scope

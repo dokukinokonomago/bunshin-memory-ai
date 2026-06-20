@@ -143,6 +143,21 @@ if (root) {
         loadMemorySpace();
     }
 
+    function applySavedApiConfig() {
+        const saved = loadSharedApiConfig();
+
+        if (saved.baseUrl) {
+            state.apiBase = trimTrailingSlash(saved.baseUrl);
+            els.apiBase.value = state.apiBase;
+        }
+
+        if (saved.token) {
+            applyToken(saved.token, saved.tokenSource, false);
+        }
+
+        applyBootstrapConfigFromHash();
+    }
+
     function createGraphics(targetCanvas) {
         try {
             const webglRenderer = new THREE.WebGLRenderer({
@@ -444,19 +459,6 @@ if (root) {
         state.includeDescendants = els.includeDescendants.checked;
     }
 
-    function applySavedApiConfig() {
-        const saved = loadSharedApiConfig();
-
-        if (saved.baseUrl) {
-            state.apiBase = trimTrailingSlash(saved.baseUrl);
-            els.apiBase.value = state.apiBase;
-        }
-
-        if (saved.token) {
-            applyToken(saved.token, saved.tokenSource, false);
-        }
-    }
-
     function loadSharedApiConfig() {
         try {
             const saved = JSON.parse(localStorage.getItem(SHARED_API_CONFIG_STORAGE_KEY) || '{}');
@@ -483,6 +485,42 @@ if (root) {
         }
 
         return { token: savedToken, tokenSource };
+    }
+
+    function applyBootstrapConfigFromHash() {
+        const hash = window.location.hash.startsWith('#')
+            ? window.location.hash.slice(1)
+            : window.location.hash;
+
+        if (!hash) {
+            return;
+        }
+
+        const params = new URLSearchParams(hash);
+        const token = params.get('token')?.trim() || '';
+        const apiBase = params.get('api_base')?.trim() || '';
+
+        if (apiBase) {
+            state.apiBase = trimTrailingSlash(apiBase);
+            els.apiBase.value = state.apiBase;
+        }
+
+        if (token) {
+            applyToken(token, 'bootstrap');
+            setStatus('ログイン情報をリンクから適用しました。', 'ok');
+        }
+
+        if (token || apiBase) {
+            clearBootstrapHash();
+        }
+    }
+
+    function clearBootstrapHash() {
+        try {
+            window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.search}`);
+        } catch {
+            window.location.hash = '';
+        }
     }
 
     function isLocalDevHost() {
