@@ -100,6 +100,7 @@ if (root) {
         ドキドキ: '#f472b6',
         達成感: '#34d399',
         幸せ: '#fbbf24',
+        希望: '#60a5fa',
         緊張: '#fb923c',
         ワクワク: '#60a5fa',
         憧れ: '#a78bfa',
@@ -107,7 +108,7 @@ if (root) {
 
     const cameraTarget = new THREE.Vector3(0, 0, 0);
     const cameraTargetGoal = new THREE.Vector3(0, 0, 0);
-    const spherical = { theta: 0, phi: Math.PI / 2, radius: 3800 };
+    const spherical = { theta: 0, phi: Math.PI / 2, radius: 2200 };
     const sphericalGoal = { ...spherical };
 
     let dragging = false;
@@ -119,7 +120,7 @@ if (root) {
     if (isWebglAvailable()) {
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setClearColor(0x030406, 1);
-        scene.fog = new THREE.FogExp2(0x030406, 0.00034);
+            scene.fog = new THREE.FogExp2(0x030406, 0.00024);
         raycaster.params.Mesh.threshold = 5;
         addStarField();
         resize();
@@ -1455,7 +1456,7 @@ if (root) {
 
         cameraTarget.set(0, 0, 0);
         cameraTargetGoal.copy(cameraTarget);
-        sphericalGoal.radius = 3600;
+        sphericalGoal.radius = 2200;
     }
 
     function resize() {

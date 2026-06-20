@@ -31,22 +31,22 @@ class LocalDevSeederTest extends TestCase
             ->withHeader('Authorization', 'Bearer local-dev-token')
             ->getJson('/api/v1/categories?tree=1')
             ->assertOk()
-            ->assertJsonCount(10, 'data')
-            ->assertJsonPath('data.0.name', '音楽')
+            ->assertJsonCount(4, 'data')
+            ->assertJsonPath('data.0.name', '自己紹介')
             ->assertJsonCount(2, 'data.0.children');
 
         $this
             ->withHeader('Authorization', 'Bearer local-dev-token')
             ->getJson('/api/v1/memories')
             ->assertOk()
-            ->assertJsonCount(53, 'data')
+            ->assertJsonCount(11, 'data')
             ->assertJsonMissing(['visibility' => Memory::VISIBILITY_SECRET]);
 
         $this
             ->withHeader('Authorization', 'Bearer local-dev-token')
             ->getJson('/api/v1/memory-space')
             ->assertOk()
-            ->assertJsonCount(53, 'data.memories')
+            ->assertJsonCount(11, 'data.memories')
             ->assertJsonPath('data.secret.locked', true)
             ->assertJsonPath('data.secret.locked_count', 1);
     }
